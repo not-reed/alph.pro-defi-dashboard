@@ -1,8 +1,8 @@
-import type { TransactionHash } from "./brands";
+import type { ContractAddress, TransactionHash } from "./brands";
 import type { BlockEvent } from "./events";
 
 interface TokenOutput {
-	tokenAddress: string;
+	tokenAddress: ContractAddress;
 	amount: bigint;
 }
 

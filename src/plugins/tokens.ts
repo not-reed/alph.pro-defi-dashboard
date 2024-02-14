@@ -8,8 +8,10 @@ import type { NewToken } from "../database/schemas/public/Token";
 import { db } from "../database/db";
 import { binToHex, contractIdFromAddress, hexToString } from "@alephium/web3";
 import { config } from "../config";
+import type { ContractAddress } from "../services/common/types/brands";
 
-const ALPH_ADDRESS = "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq";
+const ALPH_ADDRESS =
+	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
 
 // little flag to include alph every run at startup
 let hasAlph = false;
@@ -18,16 +20,25 @@ let hasAlph = false;
 // - tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs
 // - 26j4viXkBzJd5SaDtQzyGM6joqoECmajncT4QS3tmT9hb
 
-const skipped = new Set(["tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs"]);
+const skipped = new Set<ContractAddress>([
+	"tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs" as ContractAddress,
+]);
 
 export class TokenPlugin extends Plugin<NewToken> {
 	PLUGIN_NAME = "tokens";
+
+	graphql = {
+		tables: ["Token"],
+		resolvers: {
+			tokens: async (ctx) => await db.selectFrom("Token").selectAll().execute(),
+		},
+	};
 
 	// process data to prepare for inserts
 	// return data to be saved.
 	// whatever is returned here will be passed to the insert function
 	async process(blocks: Block[]): Promise<NewToken[]> {
-		const tokenAddresses = new Set<string>();
+		const tokenAddresses = new Set<ContractAddress>();
 		for (const block of blocks) {
 			for (const transaction of block.transactions) {
 				for (const token of transaction.outputs) {
@@ -40,14 +51,6 @@ export class TokenPlugin extends Plugin<NewToken> {
 					}
 				}
 			}
-		}
-
-		if (
-			tokenAddresses.size === 1 &&
-			hasAlph &&
-			tokenAddresses.has(ALPH_ADDRESS)
-		) {
-			return [];
 		}
 
 		if (tokenAddresses.size === 0 && hasAlph) {
@@ -71,21 +74,7 @@ export class TokenPlugin extends Plugin<NewToken> {
 				return [];
 			}
 
-			const body = JSON.stringify(
-				Array.from(missingSet).map((a) => binToHex(contractIdFromAddress(a))),
-			);
-
-			const metadata = await fetch(
-				`${config.EXPLORER_URL}/tokens/fungible-metadata`,
-				{
-					method: "POST",
-					headers: {
-						accept: "application/json",
-						"Content-Type": "application/json",
-					},
-					body,
-				},
-			).then((a) => a.json());
+			const metadata = await this.loadMetadata(missingSet);
 
 			for (const address of tokenAddresses) {
 				if (!foundSet.has(address) && address !== ALPH_ADDRESS) {
@@ -129,5 +118,35 @@ export class TokenPlugin extends Plugin<NewToken> {
 			.values(tokens)
 			.onConflict((col) => col.doNothing())
 			.execute();
+	}
+
+	private async loadMetadata(tokens: Set<ContractAddress>) {
+		const chunks = Array.from(tokens).reduce((all, one, i) => {
+			const ch = Math.floor(i / 80);
+			if (all[ch]) {
+				all[ch].push(one);
+				return all;
+			}
+
+			all[ch] = [one];
+			return all;
+		}, [] as string[][]);
+
+		const results = await Promise.all(
+			chunks.map(async (chunk) => {
+				return await fetch(`${config.EXPLORER_URL}/tokens/fungible-metadata`, {
+					method: "POST",
+					headers: {
+						accept: "application/json",
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(
+						chunk.map((a) => binToHex(contractIdFromAddress(a))),
+					),
+				}).then((a) => a.json());
+			}),
+		);
+
+		return results.flat();
 	}
 }

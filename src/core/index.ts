@@ -6,6 +6,7 @@ import { join } from "node:path";
 
 import { Plugin } from "../common/plugins/abstract";
 import { db } from "../database/db";
+import { logger } from "../services/logger";
 
 const TRIBUTE_TS = 1231006505000;
 const GENESIS_TS = 1636383299070;
@@ -33,7 +34,7 @@ export async function core() {
 	for (const [, task] of cron.getTasks()) {
 		task.stop();
 	}
-	console.log("Jobs Cleared");
+	logger.debug("Old Jobs Cleared");
 
 	const plugins = await loadPlugins();
 
@@ -44,13 +45,13 @@ export async function core() {
 	}
 
 	for (const plugin of plugins) {
-		console.log(`Loaded Plugin: ${plugin.PLUGIN_NAME}`);
+		logger.info(`Loaded Plugin: ${plugin.PLUGIN_NAME}`);
 		// one at a time, initialize and load plugin state.
 		// if brand new, initialize with TRIBUTE_TS block
 
 		const latestTimestamp = latestMap.get(plugin.PLUGIN_NAME);
 		if (!latestTimestamp) {
-			console.log(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
+			logger.info(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
 			const blocks = await getBlocks(TRIBUTE_TS, TRIBUTE_TS + 1, true);
 
 			const data = await plugin.process(blocks);
@@ -95,7 +96,7 @@ export async function core() {
 					let to = from + MAX_DURATION;
 					const startFrom = from;
 
-					console.log(
+					logger.debug(
 						`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
 							from,
 						).toLocaleString()}`,
@@ -103,10 +104,10 @@ export async function core() {
 					const now = Date.now();
 
 					while (from < now) {
-						if (Date.now() - start > 4_500) {
+						if (Date.now() - start > 4_800) {
 							// Do at most 4.5 seconds of work so that we can release the lock
 							// and not tie up CPU usage so much
-							console.log(
+							logger.debug(
 								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
 									from,
 								).toLocaleString()}(${
@@ -117,7 +118,7 @@ export async function core() {
 						}
 
 						if (signal.aborted) {
-							console.log(" Signal Aborted ");
+							logger.warn(" Signal Aborted ");
 							throw signal.error;
 						}
 						// TODO: use dataloader so that multiple requests in the same time frame
@@ -148,15 +149,11 @@ export async function core() {
 						});
 					}
 
-					console.log(
-						`Finished Processing '${plugin.PLUGIN_NAME}' from ${
-							from + OVERLAP_WINDOW
-						}`,
-					);
+					logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
 				});
 			} catch (e) {
-				console.log({ e });
-				console.log(`Error with ${plugin.PLUGIN_NAME}`);
+				logger.error({ e });
+				logger.error(`Error with ${plugin.PLUGIN_NAME}`);
 			}
 		});
 	});

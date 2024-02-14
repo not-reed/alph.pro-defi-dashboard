@@ -6,6 +6,7 @@ import { Kysely, PostgresDialect } from "kysely";
 
 import { config } from "../config.ts";
 import type Database from "./schemas/Database.ts";
+import { logger } from "../services/logger/index.ts";
 
 // int8
 types.setTypeParser(types.builtins.INT8, (val) => BigInt(val));
@@ -36,5 +37,5 @@ const db = new Kysely<Database>({
 	dialect,
 });
 
-console.log("Database connected");
+logger.info("Database connected");
 export { db };
