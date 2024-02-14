@@ -1,10 +1,11 @@
 import { type Env, Hono, type Schema } from "hono";
-import status from "./api/status";
-import sse from "./api/sse";
+
+import { IndexerStatus } from "../pages/indexer-status";
 
 const app = new Hono<Env, Schema, "/api">();
 
-app.route("/status", status);
-app.route("/sse", sse);
+app.get("", (c) => {
+  return c.html(<IndexerStatus />);
+});
 
 export default app;
