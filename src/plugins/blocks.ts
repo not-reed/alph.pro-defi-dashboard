@@ -5,7 +5,7 @@ import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 
-export class BlocksPlugin extends Plugin<NewBlock> {
+export class BlocksPlugin extends Plugin<NewBlock[]> {
 	PLUGIN_NAME = "blocks";
 
 	async process(blocks: Block[]) {

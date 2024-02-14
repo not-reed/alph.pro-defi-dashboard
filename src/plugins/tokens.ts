@@ -24,15 +24,15 @@ const skipped = new Set<ContractAddress>([
 	"tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs" as ContractAddress,
 ]);
 
-export class TokenPlugin extends Plugin<NewToken> {
+export class TokenPlugin extends Plugin<NewToken[]> {
 	PLUGIN_NAME = "tokens";
 
-	graphql = {
-		tables: ["Token"],
-		resolvers: {
-			tokens: async (ctx) => await db.selectFrom("Token").selectAll().execute(),
-		},
-	};
+	// graphql = {
+	// 	tables: ["Token"],
+	// 	resolvers: {
+	// 		tokens: async (ctx) => await db.selectFrom("Token").selectAll().execute(),
+	// 	},
+	// };
 
 	// process data to prepare for inserts
 	// return data to be saved.

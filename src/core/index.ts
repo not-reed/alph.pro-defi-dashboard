@@ -38,6 +38,16 @@ export async function core() {
 
 	const plugins = await loadPlugins();
 
+	const pluginNames = new Set();
+	for (const plugin of plugins) {
+		pluginNames.add(plugin.PLUGIN_NAME);
+	}
+
+	if (pluginNames.size !== plugins.length) {
+		logger.error("Plugins cannot have duplicate names - please review");
+		process.exit(1);
+	}
+
 	const pluginState = await db.selectFrom("Plugin").selectAll().execute();
 	const latestMap = new Map<string, number>();
 	for (const state of pluginState) {
@@ -82,6 +92,7 @@ export async function core() {
 	// if there are some that should be slow, and some that should be fast
 	cron.schedule("*/5 * * * * *", async () => {
 		const start = Date.now();
+
 		await plugins.map(async (plugin) => {
 			try {
 				await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {

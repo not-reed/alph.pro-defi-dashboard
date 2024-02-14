@@ -15,7 +15,7 @@ import { addressFromContractId } from "@alephium/web3";
 
 const AYIN_FACTORY = "vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R";
 
-export class AyinPoolsPlugin extends Plugin<NewPool> {
+export class AyinPoolsPlugin extends Plugin<NewPool[]> {
 	PLUGIN_NAME = "ayin-pools";
 
 	async process(blocks: Block[]) {
