@@ -11,6 +11,7 @@ import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 import type { NewPool } from "../database/schemas/public/Pool";
+import { addressFromContractId } from "@alephium/web3";
 
 const AYIN_FACTORY = "vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R";
 
@@ -31,11 +32,12 @@ export class AyinPoolsPlugin extends Plugin<NewPool> {
 							(field) => field.value,
 						);
 						const pool = {
-							token0: token0,
-							token1: token1,
-							pair: pair,
+							token0: addressFromContractId(token0),
+							token1: addressFromContractId(token1),
+							pair: addressFromContractId(pair),
 							factory: event.contractAddress,
 						} satisfies NewPool;
+
 						pools.set(pool.pair, pool);
 					}
 				}
