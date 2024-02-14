@@ -6,49 +6,56 @@ import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 import type { NewToken } from "../database/schemas/public/Token";
 import { db } from "../database/db";
-import { binToHex, contractIdFromAddress } from "@alephium/web3";
+import { binToHex, contractIdFromAddress, hexToString } from "@alephium/web3";
 import { config } from "../config";
+import type { ContractAddress } from "../services/common/types/brands";
 
-const ALPH_ADDRESS = "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq";
+const ALPH_ADDRESS =
+	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
 
 // little flag to include alph every run at startup
 let hasAlph = false;
 
+// missing
+// - tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs
+// - 26j4viXkBzJd5SaDtQzyGM6joqoECmajncT4QS3tmT9hb
+
+const skipped = new Set<ContractAddress>([
+	"tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs" as ContractAddress,
+]);
+
 export class TokenPlugin extends Plugin<NewToken> {
 	PLUGIN_NAME = "tokens";
+
+	graphql = {
+		tables: ["Token"],
+		resolvers: {
+			tokens: async (ctx) => await db.selectFrom("Token").selectAll().execute(),
+		},
+	};
 
 	// process data to prepare for inserts
 	// return data to be saved.
 	// whatever is returned here will be passed to the insert function
 	async process(blocks: Block[]): Promise<NewToken[]> {
-		const tokenAddresses = new Set<string>();
+		const tokenAddresses = new Set<ContractAddress>();
 		for (const block of blocks) {
 			for (const transaction of block.transactions) {
 				for (const token of transaction.outputs) {
-					// console.log({ process: token });
 					// don't track alph
-					if (token.tokenAddress !== ALPH_ADDRESS) {
+					if (
+						token.tokenAddress !== ALPH_ADDRESS &&
+						!skipped.has(token.tokenAddress)
+					) {
 						tokenAddresses.add(token.tokenAddress);
 					}
 				}
 			}
 		}
 
-		if (
-			tokenAddresses.size === 1 &&
-			hasAlph &&
-			tokenAddresses.has(ALPH_ADDRESS)
-		) {
-			console.log("skipping alph only");
-			return [];
-		}
-
 		if (tokenAddresses.size === 0 && hasAlph) {
-			// console.log("Aborting now tokens");
 			return [];
 		}
-		console.log("has tokens");
-		console.log({ tokenAddresses });
 
 		const newTokens = new Map<string, NewToken>();
 		if (tokenAddresses.size > 0) {
@@ -58,27 +65,16 @@ export class TokenPlugin extends Plugin<NewToken> {
 				.where("address", "in", Array.from(tokenAddresses))
 				.execute();
 
-			console.log({ found, tokenAddresses });
-
 			const foundSet = new Set(found.map((token) => token.address));
-			const missingSet = new Set([]);
+			const missingSet = new Set(
+				Array.from(tokenAddresses).filter((a) => !foundSet.has(a)),
+			);
 
-			const metadata = await fetch(
-				`${config.EXPLORER_URL}/tokens/fungible-metadata`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(
-						Array.from(missingSet).map((a) =>
-							binToHex(contractIdFromAddress(a)),
-						),
-					),
-				},
-			).then((a) => a.json());
+			if (!missingSet.size) {
+				return [];
+			}
 
-			console.log({ metadata });
+			const metadata = await this.loadMetadata(missingSet);
 
 			for (const address of tokenAddresses) {
 				if (!foundSet.has(address) && address !== ALPH_ADDRESS) {
@@ -88,18 +84,22 @@ export class TokenPlugin extends Plugin<NewToken> {
 							return a.id === id;
 						}
 					});
-					newTokens.set(address, {
-						address: address,
-						symbol: meta.symbol,
-						name: meta.name,
-						decimals: Number(meta.decimals),
-						totalSupply: BigInt(0),
-					} as NewToken);
+
+					if (meta) {
+						newTokens.set(address, {
+							address: address,
+							symbol: meta.symbol,
+							name: meta.name,
+							decimals: Number(meta.decimals),
+							totalSupply: BigInt(0),
+						} as NewToken);
+					}
 				}
 			}
 		}
 
 		if (!hasAlph) {
+			hasAlph = true;
 			newTokens.set(ALPH_ADDRESS, {
 				address: ALPH_ADDRESS,
 				symbol: "ALPH",
@@ -107,17 +107,7 @@ export class TokenPlugin extends Plugin<NewToken> {
 				decimals: 18,
 				totalSupply: BigInt(0),
 			} as NewToken);
-			hasAlph = true;
 		}
-
-		// fetch existing ones from database
-		// load name,symbol,decimals for missing/new tokens
-		// filter out NFT's
-		// load total supply for all incase it changed since last event
-		// return all tokens to be saved
-
-		// if (newTokens.size === 0) {
-		console.log({ newTokens });
 		return Array.from(newTokens.values());
 	}
 
@@ -128,5 +118,35 @@ export class TokenPlugin extends Plugin<NewToken> {
 			.values(tokens)
 			.onConflict((col) => col.doNothing())
 			.execute();
+	}
+
+	private async loadMetadata(tokens: Set<ContractAddress>) {
+		const chunks = Array.from(tokens).reduce((all, one, i) => {
+			const ch = Math.floor(i / 80);
+			if (all[ch]) {
+				all[ch].push(one);
+				return all;
+			}
+
+			all[ch] = [one];
+			return all;
+		}, [] as string[][]);
+
+		const results = await Promise.all(
+			chunks.map(async (chunk) => {
+				return await fetch(`${config.EXPLORER_URL}/tokens/fungible-metadata`, {
+					method: "POST",
+					headers: {
+						accept: "application/json",
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(
+						chunk.map((a) => binToHex(contractIdFromAddress(a))),
+					),
+				}).then((a) => a.json());
+			}),
+		);
+
+		return results.flat();
 	}
 }

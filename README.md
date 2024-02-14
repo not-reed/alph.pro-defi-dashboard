@@ -1,26 +1,36 @@
-# Hackathon#1 : Alephium
+# Hackathon #1 : Alephium
 
 **To install dependencies:**
 
+**QuickStart**
+
 ```bash
 bun install
+cp .env.example .env
+bun start:services
+bun migrate
+bun dev
 ```
 
-**Using Docker:** will setup redis+postgres for you in the background
-
-_If you don't want to use Docker, you have have to install redis and postgres_
+**Start Redis & Postgres Using Docker:**
 
 ```bash
+# Starts services with docker
+# reads connection parameters
+# from .env file
 bun run start:services
 ```
 
-**Create database on postgres**
+**Alternatively if not using docker: Create database on postgres:**
+
+_Start Redis & Postgres however you choose and create a database.
+Make sure your .env file is filled before starting the app or running migrations_
 
 ```bash
-postgres=# CREATE DATABASE hackthon;
+postgres=# CREATE DATABASE hackathon;
 ```
 
-**Migrations:**
+**Run Migrations:**
 
 ```bash
 bun run migrate

@@ -29,7 +29,7 @@ export default {
 				blocksAndEvents: unknown[][];
 				detail?: string;
 			};
-			// console.log({ blocks });
+
 			if (detail) {
 				throw new Error(`BlockFlow.blocksAndEvents: ${detail}`);
 			}
@@ -158,10 +158,6 @@ export default {
 										},
 									].concat(
 										output.tokens.map((token: unknown) => {
-											// console.log({
-											// 	token,
-											// 	time: new Date(Number(timestamp)).toLocaleString(),
-											// });
 											if (
 												!token ||
 												typeof token !== "object" ||

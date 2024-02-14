@@ -8,9 +8,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 		.addColumn("id", "uuid", (col) =>
 			col.primaryKey().defaultTo(sql`gen_random_uuid()`),
 		)
-		.addColumn("address", "text", (col) => col.notNull())
+		.addColumn("address", "text", (col) => col.unique().notNull())
 		.addColumn("symbol", "text", (col) => col.notNull())
-		.addColumn("name", "text", (col) => col.unique().notNull())
+		.addColumn("name", "text", (col) => col.notNull())
 		.addColumn("decimals", "int2", (col) => col.notNull())
 		.addColumn("totalSupply", "bigint", (col) => col.notNull()) // TODO: this could change, need to track to be sure
 		.execute();

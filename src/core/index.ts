@@ -6,6 +6,7 @@ import { join } from "node:path";
 
 import { Plugin } from "../common/plugins/abstract";
 import { db } from "../database/db";
+import { logger } from "../services/logger";
 
 const TRIBUTE_TS = 1231006505000;
 const GENESIS_TS = 1636383299070;
@@ -33,7 +34,7 @@ export async function core() {
 	for (const [, task] of cron.getTasks()) {
 		task.stop();
 	}
-	console.log("Jobs Cleared");
+	logger.debug("Old Jobs Cleared");
 
 	const plugins = await loadPlugins();
 
@@ -44,13 +45,13 @@ export async function core() {
 	}
 
 	for (const plugin of plugins) {
-		console.log(`Loaded Plugin: ${plugin.PLUGIN_NAME}`);
+		logger.info(`Loaded Plugin: ${plugin.PLUGIN_NAME}`);
 		// one at a time, initialize and load plugin state.
 		// if brand new, initialize with TRIBUTE_TS block
 
 		const latestTimestamp = latestMap.get(plugin.PLUGIN_NAME);
 		if (!latestTimestamp) {
-			console.log(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
+			logger.info(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
 			const blocks = await getBlocks(TRIBUTE_TS, TRIBUTE_TS + 1, true);
 
 			const data = await plugin.process(blocks);
@@ -79,91 +80,83 @@ export async function core() {
 	// or speed up to improve realtime processing
 	// could also be modified so that cron schedule is configured per plugin
 	// if there are some that should be slow, and some that should be fast
-	cron.schedule(
-		"*/5 * * * * *",
-		async () => {
-			const start = Date.now();
-			await plugins.map(async (plugin) => {
-				try {
-					await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {
-						const latest = latestMap.get(plugin.PLUGIN_NAME);
-						if (!latest) {
-							throw new Error(
-								`No latest timestamp found - ${plugin.PLUGIN_NAME}`,
+	cron.schedule("*/5 * * * * *", async () => {
+		const start = Date.now();
+		await plugins.map(async (plugin) => {
+			try {
+				await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {
+					const latest = latestMap.get(plugin.PLUGIN_NAME);
+					if (!latest) {
+						throw new Error(
+							`No latest timestamp found - ${plugin.PLUGIN_NAME}`,
+						);
+					}
+
+					let from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
+					let to = from + MAX_DURATION;
+					const startFrom = from;
+
+					logger.debug(
+						`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
+							from,
+						).toLocaleString()}`,
+					);
+					const now = Date.now();
+
+					while (from < now) {
+						if (Date.now() - start > 4_800) {
+							// Do at most 4.5 seconds of work so that we can release the lock
+							// and not tie up CPU usage so much
+							logger.debug(
+								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
+									from,
+								).toLocaleString()}(${
+									Math.round(((from - startFrom) / 1000 / 60 / 60) * 10) / 10
+								} Hours)`,
 							);
+							return;
 						}
 
-						let from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
-						let to = from + MAX_DURATION;
-						const startFrom = from;
-
-						console.log(
-							`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
-								from,
-							).toLocaleString()}`,
-						);
-						const now = Date.now();
-
-						while (from < now) {
-							if (Date.now() - start > 4_500) {
-								// Do at most 4.5 seconds of work so that we can release the lock
-								// and not tie up CPU usage so much
-								console.log(
-									`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
-										from,
-									).toLocaleString()}(${
-										Math.round(((from - startFrom) / 1000 / 60 / 60) * 10) / 10
-									} Hours)`,
-								);
-								return;
-							}
-
-							if (signal.aborted) {
-								console.log(" Signal Aborted ");
-								throw signal.error;
-							}
-							// TODO: use dataloader so that multiple requests in the same time frame
-							// don't result in multiple requests to the node
-							const blocks = await getBlocks(from, to, true);
-							const flat = blocks.flat();
-							const data = await plugin.process(flat);
-
-							await db.transaction().execute(async (trx) => {
-								if (data.length) {
-									await plugin.insert(trx, data);
-								}
-
-								await trx
-									.updateTable("Plugin")
-									.set({ timestamp: new Date(to) })
-									.where("name", "=", plugin.PLUGIN_NAME)
-									.execute();
-
-								// update local cache
-								latestMap.set(plugin.PLUGIN_NAME, to);
-
-								// update local state
-								from = to - OVERLAP_WINDOW;
-								to = from + MAX_DURATION;
-
-								// renew lock on success
-							});
+						if (signal.aborted) {
+							logger.warn(" Signal Aborted ");
+							throw signal.error;
 						}
+						// TODO: use dataloader so that multiple requests in the same time frame
+						// don't result in multiple requests to the node
+						const blocks = await getBlocks(from, to, true);
+						const flat = blocks.flat();
+						const data = await plugin.process(flat);
 
-						console.log(
-							`Finished Processing '${plugin.PLUGIN_NAME}' from ${
-								from + OVERLAP_WINDOW
-							}`,
-						);
-					});
-				} catch (e) {
-					console.log({ e });
-					console.log(`Error with ${plugin.PLUGIN_NAME}`);
-				}
-			});
-		},
-		{ runOnInit: true },
-	);
+						await db.transaction().execute(async (trx) => {
+							if (data.length) {
+								await plugin.insert(trx, data);
+							}
+
+							await trx
+								.updateTable("Plugin")
+								.set({ timestamp: new Date(to) })
+								.where("name", "=", plugin.PLUGIN_NAME)
+								.execute();
+
+							// update local cache
+							latestMap.set(plugin.PLUGIN_NAME, to);
+
+							// update local state
+							from = to - OVERLAP_WINDOW;
+							to = from + MAX_DURATION;
+
+							// renew lock on success
+						});
+					}
+
+					logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
+				});
+			} catch (e) {
+				logger.error({ e });
+				logger.error(`Error with ${plugin.PLUGIN_NAME}`);
+			}
+		});
+	});
 }
 
 async function loadPlugins(): Promise<Plugin<unknown>[]> {

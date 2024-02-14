@@ -1,0 +1,12 @@
+{
+  "colorizeObjects": true,
+  "crlf": false,
+  "errorLikeObjectKeys": ["err", "error"],
+  "errorProps": "",
+  "levelFirst": false,
+  "ignore": "pid,hostname",
+  "singleLine": true,
+  "destination": 1,
+
+  "hideObject": false
+}
