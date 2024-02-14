@@ -1,0 +1,37 @@
+{
+  "name": "hackathon",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.js",
+    "dev": "bun --hot src/index.ts",
+    "start:services": "docker compose up -d",
+    "migrate:create": "bun ./src/database/migrator create",
+    "migrate:types": "kanel --config=.kanelrc.cjs",
+    "migrate:up": "bun ./src/database/migrator latest",
+    "migrate:down": "bun ./src/database/migrator down",
+    "migrate": "bun run migrate:up && bun run migrate:types",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
+    "@types/bun": "latest",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.11.0",
+    "kanel": "^3.8.7",
+    "kanel-kysely": "^0.3.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@alephium/web3": "^0.29.2",
+    "hono": "^4.0.1",
+    "ioredis": "^5.3.2",
+    "kysely": "^0.27.2",
+    "kysely-migration-cli": "^0.2.3",
+    "node-cron": "^3.0.3",
+    "pg": "^8.11.3",
+    "redlock": "^5.0.0-beta.2"
+  }
+}
