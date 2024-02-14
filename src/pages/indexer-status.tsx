@@ -27,6 +27,12 @@ export const IndexerStatus: FC = () => {
                 />
                 <div>Now</div>
               </div>
+
+              <div class="flex justify-between">
+                <div x-html="plugin.startDate" />
+                <div x-html="plugin.currentDate" class="text-center" />
+                <div x-html="plugin.endDate" class="text-end" />
+              </div>
             </li>
           </template>
         </ul>
