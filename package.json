@@ -3,9 +3,7 @@
   "private": true,
   "scripts": {},
   "devDependencies": {
-    "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "prettier": "^3.1.1",
     "turbo": "latest"
   },
   "engines": {

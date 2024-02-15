@@ -1,4 +1,4 @@
-# Hackathon #1 : Alephium
+# Hackathon #1 : Indexer
 
 **To install dependencies:**
 
@@ -18,7 +18,10 @@ bun dev
 # Starts services with docker
 # reads connection parameters
 # from .env file
-bun run start:services
+bun run services:start
+
+# And to stop
+bun run services:stop
 ```
 
 **Alternatively if not using docker: Create database on postgres:**

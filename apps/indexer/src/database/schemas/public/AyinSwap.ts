@@ -19,6 +19,8 @@ export default interface AyinSwapTable {
   amount1: ColumnType<bigint, bigint, bigint>;
 
   timestamp: ColumnType<Date, Date | string, Date | string>;
+
+  transactionHash: ColumnType<string, string, string>;
 }
 
 export type AyinSwap = Selectable<AyinSwapTable>;

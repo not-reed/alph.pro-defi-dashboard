@@ -23,6 +23,8 @@ export default interface AyinLiquidityEventTable {
   action: ColumnType<string, string, string>;
 
   timestamp: ColumnType<Date, Date | string, Date | string>;
+
+  transactionHash: ColumnType<string, string, string>;
 }
 
 export type AyinLiquidityEvent = Selectable<AyinLiquidityEventTable>;

@@ -1,6 +1,6 @@
 import { Kysely, sql } from "kysely";
 
-const tableName = "AyinSwap";
+const tableName = "AyinLiquidityEvent";
 
 export async function up(db: Kysely<unknown>): Promise<void> {
 	await db.schema
@@ -12,6 +12,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 		.addColumn("pairAddress", "text", (col) => col.notNull())
 		.addColumn("amount0", "numeric", (col) => col.notNull())
 		.addColumn("amount1", "numeric", (col) => col.notNull())
+		.addColumn("liquidity", "numeric", (col) => col.notNull())
+		.addColumn("action", "text", (col) => col.notNull()) // Mint/Burn
 		.addColumn("timestamp", "timestamptz", (col) => col.notNull())
 		.addColumn("transactionHash", "text", (col) => col.notNull())
 		.execute();

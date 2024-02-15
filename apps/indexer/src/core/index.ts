@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { Plugin } from "../common/plugins/abstract";
 import { db } from "../database/db";
 import { logger } from "../services/logger";
+import type { Block } from "../services/common/types/blocks";
 
 const TRIBUTE_TS = 1231006505000;
 const GENESIS_TS = 1636383299070;
@@ -27,6 +28,24 @@ async function getBlocks(from: number, to: number, withEvents: boolean) {
 
 	// TODO: sort flattened blocks by timestamp to ensure insert consistency
 	return blocks.flat();
+}
+
+async function fetchUnprocessedBlocks(pluginName: string, blocks: Block[]) {
+	const processedBlocks = new Set(
+		await db
+			.selectFrom("PluginBlock")
+			.select("blockHash")
+			.where("pluginName", "=", pluginName)
+			.where(
+				"blockHash",
+				"in",
+				blocks.map((b) => b.blockHash),
+			)
+			.execute()
+			.then((res) => res.map((r) => r.blockHash)),
+	);
+
+	return blocks.filter((b) => !processedBlocks.has(b.blockHash));
 }
 
 export async function core() {
@@ -64,7 +83,15 @@ export async function core() {
 			logger.info(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
 			const blocks = await getBlocks(TRIBUTE_TS, TRIBUTE_TS + 1, true);
 
-			const data = await plugin.process(blocks);
+			const blocksToProcess = await fetchUnprocessedBlocks(
+				plugin.PLUGIN_NAME,
+				blocks,
+			);
+			if (!blocksToProcess.length) {
+				continue;
+			}
+
+			const data = await plugin.process(blocksToProcess);
 
 			await db.transaction().execute(async (trx) => {
 				await plugin.insert(trx, data);
@@ -134,9 +161,15 @@ export async function core() {
 						// TODO: use dataloader so that multiple requests in the same time frame
 						// don't result in multiple requests to the node
 						const blocks = await getBlocks(from, to, true);
+						const blocksToProcess = await fetchUnprocessedBlocks(
+							plugin.PLUGIN_NAME,
+							blocks,
+						);
+						if (!blocksToProcess.length) {
+							return;
+						}
 
-						const flat = blocks.flat();
-						const data = await plugin.process(flat);
+						const data = await plugin.process(blocksToProcess);
 
 						await db.transaction().execute(async (trx) => {
 							await plugin.insert(trx, data);

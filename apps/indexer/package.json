@@ -1,11 +1,12 @@
 {
-  "name": "hackathon",
+  "name": "@repo/indexer",
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
     "start": "bun src/index.js",
     "dev": "bun --hot src/index.ts | pino-pretty",
-    "start:services": "docker compose up -d",
+    "services:start": "docker compose up -d",
+    "services:stop": "docker compose down",
     "migrate:create": "bun ./src/database/migrator create",
     "migrate:types": "kanel --config=.kanelrc.cjs",
     "migrate:up": "bun ./src/database/migrator latest",

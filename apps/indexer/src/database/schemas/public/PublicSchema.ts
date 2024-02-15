@@ -7,9 +7,9 @@ import { type default as BlockTable } from './Block';
 import { type default as PluginTable } from './Plugin';
 import { type default as PoolTable } from './Pool';
 import { type default as TokenTable } from './Token';
-import { type default as PluginLogTable } from './PluginLog';
-import { type default as AyinReserveTable } from './AyinReserve';
+import { type default as PluginBlockTable } from './PluginBlock';
 import { type default as AyinLiquidityEventTable } from './AyinLiquidityEvent';
+import { type default as AyinReserveTable } from './AyinReserve';
 import { type default as AyinSwapTable } from './AyinSwap';
 
 export default interface PublicSchema {
@@ -25,11 +25,11 @@ export default interface PublicSchema {
 
   Token: TokenTable;
 
-  PluginLog: PluginLogTable;
-
-  AyinReserve: AyinReserveTable;
+  PluginBlock: PluginBlockTable;
 
   AyinLiquidityEvent: AyinLiquidityEventTable;
+
+  AyinReserve: AyinReserveTable;
 
   AyinSwap: AyinSwapTable;
 }

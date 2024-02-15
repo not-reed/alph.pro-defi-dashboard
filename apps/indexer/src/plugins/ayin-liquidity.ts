@@ -13,19 +13,35 @@ import type { Transaction } from "kysely";
 import type { NewPool } from "../database/schemas/public/Pool";
 import { addressFromContractId } from "@alephium/web3";
 import { db } from "../database/db";
-import type { NewPluginLog } from "../database/schemas/public/PluginLog";
+import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 
 import type { NewAyinSwap } from "../database/schemas/public/AyinSwap";
-import type { ContractAddress } from "../services/common/types/brands";
+import type {
+	BlockHash,
+	ContractAddress,
+} from "../services/common/types/brands";
 import type { NewAyinLiquidityEvent } from "../database/schemas/public/AyinLiquidityEvent";
+import type {
+	AyinReserve,
+	NewAyinReserve,
+} from "../database/schemas/public/AyinReserve";
 
 const AYIN_FACTORY = "vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R";
 
 interface PluginData {
 	liquidity: NewAyinLiquidityEvent[];
-	// swap: NewAyinSwap[]; // TODO:
-	// reserves: NewAyinReserve[]; // TODO:
-	blocks: NewPluginLog[];
+	swap: NewAyinSwap[];
+	reserves: NewAyinReserve[];
+	blocks: NewPluginBlock[];
+}
+
+function newAyinReserve(pairAddress: ContractAddress) {
+	return {
+		pairAddress: pairAddress,
+		amount0: BigInt(0),
+		amount1: BigInt(0),
+		totalSupply: BigInt(0),
+	} satisfies NewAyinReserve;
 }
 export class AyinPoolsPlugin extends Plugin<PluginData> {
 	PLUGIN_NAME = "ayin-liquidity";
@@ -39,14 +55,8 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 			),
 		);
 		if (!contractEvents.size) {
-			return { liquidity: [], blocks: [] };
+			return { liquidity: [], blocks: [], swap: [], reserves: [] };
 		}
-
-		const pools = await db
-			.selectFrom("Pool")
-			.selectAll()
-			.where("pair", "in", Array.from(contractEvents))
-			.execute();
 
 		const reserves = await db
 			.selectFrom("AyinReserve")
@@ -54,12 +64,11 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 			.where("pairAddress", "in", Array.from(contractEvents))
 			.execute();
 
-		const poolMap = new Map(pools.map((pool) => [pool.pair, pool]));
-		const reserveMap = new Map(
+		const reserveMap = new Map<string, AyinReserve | NewAyinReserve>(
 			reserves.map((reserve) => [reserve.pairAddress, reserve]),
 		);
 
-		const processedBlocks = new Set<NewPluginLog>();
+		const processedBlocks = new Set<BlockHash>();
 		const newLiquidity = new Set<NewAyinLiquidityEvent>();
 		const newSwap = new Set<NewAyinSwap>();
 
@@ -87,39 +96,63 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 							liquidity: BigInt(liquidity.value),
 							action: event.eventIndex === 0 ? "Mint" : "Burn",
 							timestamp: new Date(block.timestamp),
+							transactionHash: transaction.transactionHash,
 						});
 
-						processedBlocks.add({
-							pluginName: this.PLUGIN_NAME,
-							blockHash: block.blockHash,
-						});
+						const reserve =
+							reserveMap.get(event.contractAddress) ??
+							newAyinReserve(event.contractAddress);
+
+						// update reserves from swap
+						if (event.eventIndex === 0) {
+							// mint
+							reserve.amount0 += BigInt(amount0.value);
+							reserve.amount1 += BigInt(amount1.value);
+							reserve.totalSupply += BigInt(liquidity.value);
+						} else {
+							// burn
+							reserve.amount0 -= BigInt(amount0.value);
+							reserve.amount1 -= BigInt(amount1.value);
+							reserve.totalSupply -= BigInt(liquidity.value);
+						}
+
+						reserveMap.set(event.contractAddress, reserve);
+
+						processedBlocks.add(block.blockHash);
 					} else if (event.fields.length === 6 && event.eventIndex === 2) {
-						// const [sender, amount0In, amount1In, amount0Out, amount1Out, to] =
-						// 	event.fields;
-						// if (
-						// 	sender.type !== "Address" ||
-						// 	amount0In.type !== "U256" ||
-						// 	amount1In.type !== "U256" ||
-						// 	amount0Out.type !== "U256" ||
-						// 	amount1Out.type !== "U256" ||
-						// 	to.type !== "Address"
-						// ) {
-						// 	continue;
-						// }
-						// TODO:
-						// newSwap.add({
-						// 	pairAddress: event.contractAddress,
-						// 	userAddress: sender.value,
-						// 	amount0: BigInt(amount0.value),
-						// 	amount1: BigInt(amount1.value),
-						// 	liquidity: BigInt(liquidity.value),
-						// 	action: event.eventIndex === 0 ? "Mint" : "Burn",
-						// 	timestamp: new Date(block.timestamp),
-						// });
-						// processedBlocks.add({
-						// 	pluginName: this.PLUGIN_NAME,
-						// 	blockHash: block.blockHash,
-						// });
+						const [sender, amount0In, amount1In, amount0Out, amount1Out, to] =
+							event.fields;
+						if (
+							sender.type !== "Address" ||
+							amount0In.type !== "U256" ||
+							amount1In.type !== "U256" ||
+							amount0Out.type !== "U256" ||
+							amount1Out.type !== "U256" ||
+							to.type !== "Address"
+						) {
+							continue;
+						}
+						newSwap.add({
+							pairAddress: event.contractAddress,
+							userAddress: sender.value,
+							amount0: BigInt(amount0In.value) - BigInt(amount0Out.value),
+							amount1: BigInt(amount1In.value) - BigInt(amount1Out.value),
+							timestamp: new Date(block.timestamp),
+							transactionHash: transaction.transactionHash,
+						});
+
+						const reserve =
+							reserveMap.get(event.contractAddress) ??
+							newAyinReserve(event.contractAddress);
+
+						// update reserves from swap
+						reserve.amount0 +=
+							BigInt(amount0In.value) - BigInt(amount0Out.value);
+						reserve.amount1 +=
+							BigInt(amount1In.value) - BigInt(amount1Out.value);
+						reserveMap.set(event.contractAddress, reserve);
+
+						processedBlocks.add(block.blockHash);
 					}
 				}
 			}
@@ -128,27 +161,50 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 		// // on LP create, load token0, token1, pair, factory
 		return {
 			liquidity: Array.from(newLiquidity),
-			// swap: Array.from(newSwap),
-			// reserves: Array.from(newReserves),
-			blocks: Array.from(processedBlocks),
+			swap: Array.from(newSwap),
+			reserves: Array.from(reserveMap.values()),
+			blocks: Array.from(processedBlocks).map((hash) => ({
+				blockHash: hash,
+				pluginName: this.PLUGIN_NAME,
+			})),
 		};
 	}
 
 	// insert data
 	async insert(trx: Transaction<Database>, data: PluginData) {
-		if (!data.liquidity?.length) {
+		if (!data.blocks?.length) {
 			return;
 		}
-		// await trx
-		// 	.insertInto("PluginLog")
-		// 	.values(data.blocks) // throw on conflict
-		// 	.execute();
 
 		await trx
-			.insertInto("AyinLiquidityEvent")
-			.values(data.liquidity)
-			.onConflict((col) => col.doNothing())
+			.insertInto("PluginBlock")
+			.values(data.blocks) // throw on conflict
 			.execute();
+
+		if (data.liquidity?.length) {
+			await trx
+				.insertInto("AyinLiquidityEvent")
+				.values(data.liquidity)
+				.execute();
+		}
+
+		if (data.swap?.length) {
+			await trx.insertInto("AyinSwap").values(data.swap).execute();
+		}
+
+		if (data.reserves?.length) {
+			await trx
+				.insertInto("AyinReserve")
+				.values(data.reserves)
+				.onConflict((col) =>
+					col.column("pairAddress").doUpdateSet((eb) => ({
+						amount0: eb.ref("excluded.amount0"),
+						amount1: eb.ref("excluded.amount1"),
+						totalSupply: eb.ref("excluded.totalSupply"),
+					})),
+				)
+				.execute();
+		}
 		return;
 	}
 }
