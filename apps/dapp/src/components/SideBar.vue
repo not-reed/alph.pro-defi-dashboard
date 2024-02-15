@@ -15,8 +15,9 @@ const { links } = useNavLinks()
             <li class="py-2 px-4" v-for="link in links ">
                 <div class=" border-b border-emerald-200 border-opacity-25" v-if="link.path && !link.children?.length">
                     <RouterLink :to="link.path">
-                        <div class="py-4">{{
-                            link.name }}</div>
+                        <div class="py-4">
+                            {{ link.name }}
+                        </div>
                     </RouterLink>
                 </div>
 
@@ -37,4 +38,3 @@ const { links } = useNavLinks()
         </ul>
     </nav>
 </template>
-e
