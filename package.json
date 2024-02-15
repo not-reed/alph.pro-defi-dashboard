@@ -13,5 +13,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "zx": "^7.2.3"
+  }
 }
