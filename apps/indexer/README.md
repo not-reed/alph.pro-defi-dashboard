@@ -5,6 +5,7 @@
 **QuickStart**
 
 ```bash
+cp .env.example .env
 bun start:services
 bun migrate
 bun dev
