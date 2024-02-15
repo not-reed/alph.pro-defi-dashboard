@@ -1,10 +1,8 @@
-import type { ByteVec, U256 } from "./brands";
-
-export type FieldType = "ByteVec" | "U256";
+import type { Address, ByteVec, FieldType, FieldValue, U256 } from "./brands";
 
 interface FieldGeneric {
 	type: FieldType;
-	value: U256 | ByteVec;
+	value: FieldValue;
 }
 interface FieldByteVec extends FieldGeneric {
 	type: "ByteVec";
@@ -14,8 +12,12 @@ interface FieldU256 extends FieldGeneric {
 	type: "U256";
 	value: U256;
 }
+interface FieldAddress extends FieldGeneric {
+	type: "Address";
+	value: Address;
+}
 
-export type Field = FieldByteVec | FieldU256;
+export type Field = FieldByteVec | FieldU256 | FieldAddress;
 
 export function transformField(obj: unknown): Field {
 	if (typeof obj !== "object" || obj === null) {

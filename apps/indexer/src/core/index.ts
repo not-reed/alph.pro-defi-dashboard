@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { Plugin } from "../common/plugins/abstract";
 import { db } from "../database/db";
 import { logger } from "../services/logger";
+import type { Block } from "../services/common/types/blocks";
 
 const TRIBUTE_TS = 1231006505000;
 const GENESIS_TS = 1636383299070;
@@ -29,6 +30,24 @@ async function getBlocks(from: number, to: number, withEvents: boolean) {
 	return blocks.flat();
 }
 
+async function fetchUnprocessedBlocks(pluginName: string, blocks: Block[]) {
+	const processedBlocks = new Set(
+		await db
+			.selectFrom("PluginBlock")
+			.select("blockHash")
+			.where("pluginName", "=", pluginName)
+			.where(
+				"blockHash",
+				"in",
+				blocks.map((b) => b.blockHash),
+			)
+			.execute()
+			.then((res) => res.map((r) => r.blockHash)),
+	);
+
+	return blocks.filter((b) => !processedBlocks.has(b.blockHash));
+}
+
 export async function core() {
 	// clear existing jobs when `bun --hot` is being used
 	for (const [, task] of cron.getTasks()) {
@@ -37,6 +56,16 @@ export async function core() {
 	logger.debug("Old Jobs Cleared");
 
 	const plugins = await loadPlugins();
+
+	const pluginNames = new Set();
+	for (const plugin of plugins) {
+		pluginNames.add(plugin.PLUGIN_NAME);
+	}
+
+	if (pluginNames.size !== plugins.length) {
+		logger.error("Plugins cannot have duplicate names - please review");
+		process.exit(1);
+	}
 
 	const pluginState = await db.selectFrom("Plugin").selectAll().execute();
 	const latestMap = new Map<string, number>();
@@ -54,12 +83,18 @@ export async function core() {
 			logger.info(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
 			const blocks = await getBlocks(TRIBUTE_TS, TRIBUTE_TS + 1, true);
 
-			const data = await plugin.process(blocks);
+			const blocksToProcess = await fetchUnprocessedBlocks(
+				plugin.PLUGIN_NAME,
+				blocks,
+			);
+			if (!blocksToProcess.length) {
+				continue;
+			}
+
+			const data = await plugin.process(blocksToProcess);
 
 			await db.transaction().execute(async (trx) => {
-				if (data.length) {
-					await plugin.insert(trx, data);
-				}
+				await plugin.insert(trx, data);
 				await trx
 					.insertInto("Plugin")
 					.values({
@@ -82,6 +117,7 @@ export async function core() {
 	// if there are some that should be slow, and some that should be fast
 	cron.schedule("*/5 * * * * *", async () => {
 		const start = Date.now();
+
 		await plugins.map(async (plugin) => {
 			try {
 				await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {
@@ -96,18 +132,18 @@ export async function core() {
 					let to = from + MAX_DURATION;
 					const startFrom = from;
 
-					logger.debug(
+					logger.info(
 						`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
 							from,
 						).toLocaleString()}`,
 					);
 					const now = Date.now();
-
+					logger.info(`now: ${now} from: ${from} => ${from < now}`);
 					while (from < now) {
 						if (Date.now() - start > 4_800) {
 							// Do at most 4.5 seconds of work so that we can release the lock
 							// and not tie up CPU usage so much
-							logger.debug(
+							logger.info(
 								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
 									from,
 								).toLocaleString()}(${
@@ -121,20 +157,26 @@ export async function core() {
 							logger.warn(" Signal Aborted ");
 							throw signal.error;
 						}
+
 						// TODO: use dataloader so that multiple requests in the same time frame
 						// don't result in multiple requests to the node
 						const blocks = await getBlocks(from, to, true);
-						const flat = blocks.flat();
-						const data = await plugin.process(flat);
+						const blocksToProcess = await fetchUnprocessedBlocks(
+							plugin.PLUGIN_NAME,
+							blocks,
+						);
+						if (!blocksToProcess.length) {
+							return;
+						}
+
+						const data = await plugin.process(blocksToProcess);
 
 						await db.transaction().execute(async (trx) => {
-							if (data.length) {
-								await plugin.insert(trx, data);
-							}
+							await plugin.insert(trx, data);
 
 							await trx
 								.updateTable("Plugin")
-								.set({ timestamp: new Date(to) })
+								.set({ timestamp: new Date(Math.min(to, now)) })
 								.where("name", "=", plugin.PLUGIN_NAME)
 								.execute();
 

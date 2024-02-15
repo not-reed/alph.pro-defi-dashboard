@@ -5,6 +5,7 @@
 **QuickStart**
 
 ```bash
+bun install
 cp .env.example .env
 bun start:services
 bun migrate
@@ -17,7 +18,10 @@ bun dev
 # Starts services with docker
 # reads connection parameters
 # from .env file
-bun run start:services
+bun run services:start
+
+# And to stop
+bun run services:stop
 ```
 
 **Alternatively if not using docker: Create database on postgres:**

@@ -7,6 +7,10 @@ import { type default as BlockTable } from './Block';
 import { type default as PluginTable } from './Plugin';
 import { type default as PoolTable } from './Pool';
 import { type default as TokenTable } from './Token';
+import { type default as PluginBlockTable } from './PluginBlock';
+import { type default as AyinLiquidityEventTable } from './AyinLiquidityEvent';
+import { type default as AyinReserveTable } from './AyinReserve';
+import { type default as AyinSwapTable } from './AyinSwap';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -20,4 +24,12 @@ export default interface PublicSchema {
   Pool: PoolTable;
 
   Token: TokenTable;
+
+  PluginBlock: PluginBlockTable;
+
+  AyinLiquidityEvent: AyinLiquidityEventTable;
+
+  AyinReserve: AyinReserveTable;
+
+  AyinSwap: AyinSwapTable;
 }

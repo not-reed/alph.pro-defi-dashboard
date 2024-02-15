@@ -1,11 +1,12 @@
 {
-  "name": "indexer",
+  "name": "@repo/indexer",
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
     "start": "bun src/index.js",
     "dev": "bun --hot src/index.ts | pino-pretty",
-    "start:services": "docker compose up -d",
+    "services:start": "docker compose up -d",
+    "services:stop": "docker compose down",
     "migrate:create": "bun ./src/database/migrator create",
     "migrate:types": "kanel --config=.kanelrc.cjs",
     "migrate:up": "bun ./src/database/migrator latest",
@@ -26,9 +27,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@alephium/web3": "^0.29.3",
-    "typescript-config": "*",
-    "eslint-config": "*",
+    "@alephium/web3": "^0.29.2",
     "hono": "^4.0.1",
     "ioredis": "^5.3.2",
     "kysely": "^0.27.2",
