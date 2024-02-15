@@ -1,10 +1,11 @@
-# Hackathon #1 : Indexer
+# Hackathon #1 : Alephium
 
 **To install dependencies:**
 
 **QuickStart**
 
 ```bash
+bun install
 cp .env.example .env
 bun start:services
 bun migrate

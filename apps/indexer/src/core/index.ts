@@ -38,6 +38,16 @@ export async function core() {
 
 	const plugins = await loadPlugins();
 
+	const pluginNames = new Set();
+	for (const plugin of plugins) {
+		pluginNames.add(plugin.PLUGIN_NAME);
+	}
+
+	if (pluginNames.size !== plugins.length) {
+		logger.error("Plugins cannot have duplicate names - please review");
+		process.exit(1);
+	}
+
 	const pluginState = await db.selectFrom("Plugin").selectAll().execute();
 	const latestMap = new Map<string, number>();
 	for (const state of pluginState) {
@@ -57,9 +67,7 @@ export async function core() {
 			const data = await plugin.process(blocks);
 
 			await db.transaction().execute(async (trx) => {
-				if (data.length) {
-					await plugin.insert(trx, data);
-				}
+				await plugin.insert(trx, data);
 				await trx
 					.insertInto("Plugin")
 					.values({
@@ -82,6 +90,7 @@ export async function core() {
 	// if there are some that should be slow, and some that should be fast
 	cron.schedule("*/5 * * * * *", async () => {
 		const start = Date.now();
+
 		await plugins.map(async (plugin) => {
 			try {
 				await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {
@@ -96,18 +105,18 @@ export async function core() {
 					let to = from + MAX_DURATION;
 					const startFrom = from;
 
-					logger.debug(
+					logger.info(
 						`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
 							from,
 						).toLocaleString()}`,
 					);
 					const now = Date.now();
-
+					logger.info(`now: ${now} from: ${from} => ${from < now}`);
 					while (from < now) {
 						if (Date.now() - start > 4_800) {
 							// Do at most 4.5 seconds of work so that we can release the lock
 							// and not tie up CPU usage so much
-							logger.debug(
+							logger.info(
 								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
 									from,
 								).toLocaleString()}(${
@@ -121,20 +130,20 @@ export async function core() {
 							logger.warn(" Signal Aborted ");
 							throw signal.error;
 						}
+
 						// TODO: use dataloader so that multiple requests in the same time frame
 						// don't result in multiple requests to the node
 						const blocks = await getBlocks(from, to, true);
+
 						const flat = blocks.flat();
 						const data = await plugin.process(flat);
 
 						await db.transaction().execute(async (trx) => {
-							if (data.length) {
-								await plugin.insert(trx, data);
-							}
+							await plugin.insert(trx, data);
 
 							await trx
 								.updateTable("Plugin")
-								.set({ timestamp: new Date(to) })
+								.set({ timestamp: new Date(Math.min(to, now)) })
 								.where("name", "=", plugin.PLUGIN_NAME)
 								.execute();
 
