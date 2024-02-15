@@ -1,0 +1,3 @@
+<template>
+    New NFTs
+</template>

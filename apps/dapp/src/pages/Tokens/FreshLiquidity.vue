@@ -1,0 +1,3 @@
+<template>
+    Fresh Liquidity
+</template>

@@ -1,0 +1,3 @@
+<template>
+    Liquidity Pools
+</template>

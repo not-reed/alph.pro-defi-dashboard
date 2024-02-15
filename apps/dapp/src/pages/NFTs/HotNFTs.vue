@@ -1,0 +1,3 @@
+<template>
+    Hot NFTs
+</template>
