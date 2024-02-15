@@ -39,7 +39,7 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 			),
 		);
 		if (!contractEvents.size) {
-			return [];
+			return { liquidity: [], blocks: [] };
 		}
 
 		const pools = await db
@@ -136,10 +136,13 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 
 	// insert data
 	async insert(trx: Transaction<Database>, data: PluginData) {
-		await trx
-			.insertInto("PluginLog")
-			.values(data.blocks) // throw on conflict
-			.execute();
+		if (!data.liquidity?.length) {
+			return;
+		}
+		// await trx
+		// 	.insertInto("PluginLog")
+		// 	.values(data.blocks) // throw on conflict
+		// 	.execute();
 
 		await trx
 			.insertInto("AyinLiquidityEvent")

@@ -113,6 +113,9 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 
 	// insert data
 	async insert(trx: Transaction<Database>, tokens: NewToken[]) {
+		if (!tokens?.length) {
+			return;
+		}
 		await trx
 			.insertInto("Token")
 			.values(tokens)

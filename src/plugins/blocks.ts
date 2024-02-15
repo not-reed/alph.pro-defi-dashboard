@@ -23,6 +23,9 @@ export class BlocksPlugin extends Plugin<NewBlock[]> {
 
 	// insert data
 	async insert(trx: Transaction<Database>, blocks: NewBlock[]) {
+		if (!blocks?.length) {
+			return;
+		}
 		await trx
 			.insertInto("Block")
 			.values(blocks)

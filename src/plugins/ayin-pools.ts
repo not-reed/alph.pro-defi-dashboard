@@ -50,6 +50,9 @@ export class AyinPoolsPlugin extends Plugin<NewPool[]> {
 
 	// insert data
 	async insert(trx: Transaction<Database>, pools: NewPool[]) {
+		if (!pools?.length) {
+			return;
+		}
 		await trx
 			.insertInto("Pool")
 			.values(pools)
