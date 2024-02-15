@@ -1,0 +1,3 @@
+<template>
+    New Tokens
+</template>
