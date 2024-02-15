@@ -31,10 +31,10 @@
     "hono": "^4.0.1",
     "ioredis": "^5.3.2",
     "kysely": "^0.27.2",
-    "kysely-migration-cli": "^0.2.3",
     "node-cron": "^3.0.3",
     "pg": "^8.11.3",
     "pino": "^8.18.0",
-    "redlock": "^5.0.0-beta.2"
+    "redlock": "^5.0.0-beta.2",
+    "zx": "^7.2.3"
   }
 }
