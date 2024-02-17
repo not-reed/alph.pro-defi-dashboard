@@ -1,0 +1,12 @@
+Contract RandomNumberGenerator(
+    mut randomHash: ByteVec
+){
+
+    @using(updateFields = true,checkExternalCaller = false)
+    pub fn getRandomNumber(userHash_: ByteVec) -> U256{
+        let randomNumber = u256From32Byte!(blake2b!(userHash_ ++ randomHash ++ toByteVec!( blockTimeStamp!()) ++ toByteVec!(blockTarget!()) ++ toByteVec!(txGasPrice!()) ++ toByteVec!(txGasAmount!()) ++ toByteVec!(txGasFee!()) ++ txId!() 
+        ))
+        randomHash = (blake2b!(randomHash ++ toByteVec!(randomNumber)))
+        return randomNumber
+    }
+}

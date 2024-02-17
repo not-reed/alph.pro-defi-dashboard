@@ -2,7 +2,7 @@
   "name": "vendingmachine",
   "type": "module",
   "scripts": {
-    "cli": "bun node_modules/@alephium/cli/cli_internal.ts",
+    "cli": "bun ../../node_modules/@alephium/cli/cli_internal.ts",
     "compile": "bun cli compile",
     "compile:testnet": "bun run cli compile -n testnet",
     "compile:devnet": "bun run cli compile -n devnet",

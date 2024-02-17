@@ -1,0 +1,62 @@
+{
+  "fullNodeVersion": "v2.8.3",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": false,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "Foods": {
+      "sourceFile": "Foods.ral",
+      "sourceCodeHash": "b71f0daa143f8e4c552ec876e298a189a6a77b09da11efc54ac9c1128e3ed756",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "7386b370672aff98393754e2785b59018eed34a07e7a7eab3d18b4289f627b72",
+      "warnings": []
+    },
+    "INFT": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_interface.ral",
+      "sourceCodeHash": "7f7514adf9fee057049d1c162701725b3377c01a0a102e6f0f5cf747039926b6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "INFTCollection": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_collection_interface.ral",
+      "sourceCodeHash": "738a3440b686d94c9f7db58f23e22b7512d229540392b426ecb190b82db3fb4f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "INFTCollectionWithRoyalty": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_collection_with_royalty_interface.ral",
+      "sourceCodeHash": "6407fb10136b21e191c5cf1f695be89f9e427ce2b01c039dd525dac587f3fc05",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "IRandomNumberGenerator": {
+      "sourceFile": "VendingMachine.ral",
+      "sourceCodeHash": "36bc789bc421f252b3fd99248846166a03746b64ea24dd8d4890e9e490dff978",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "RandomNumberGenerator": {
+      "sourceFile": "randomNumberGenerator/RandomNumberGenerator.ral",
+      "sourceCodeHash": "8585afe96594265f265b01a67deaee52dfb90c8dfa690bb6d4cf83b40a4590f8",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "18634f0c26e9de3cc81d5d3a7654ab990a2a2b2ac187e02df1fe551828fef5e3",
+      "warnings": []
+    },
+    "VendingMachine": {
+      "sourceFile": "VendingMachine.ral",
+      "sourceCodeHash": "36bc789bc421f252b3fd99248846166a03746b64ea24dd8d4890e9e490dff978",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "d5ccc1c0d53ea3b17c889117dbe571d409b96e37bc3f3d8942cc173c081b9d44",
+      "warnings": []
+    }
+  }
+}

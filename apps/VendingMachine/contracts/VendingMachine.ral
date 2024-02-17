@@ -1,0 +1,174 @@
+import "std/nft_collection_interface"
+import "std/nft_collection_with_royalty_interface"
+
+Interface IRandomNumberGenerator{
+    @using(updateFields = true,checkExternalCaller = false)
+    pub fn getRandomNumber(userHash_: ByteVec) -> (U256)
+}
+
+Contract VendingMachine(
+    foodsContractId: ByteVec,
+    collectionOwner: Address,
+    collectionUri: ByteVec,
+    mut nftBaseUri: ByteVec,
+    mut totalSupply: U256, 
+    mut mintIsPaused: Bool // true
+) implements INFTCollectionWithRoyalty {
+
+    event NftMinted(minter: Address, id: ByteVec, index: U256)
+
+    // const CollectionUri = b`Vending Machine`
+    const MaxSupply = 1000
+    const MintPrice = 1 alph const // 
+    RoyaltyRate = 500 // 5 %  == 500 basis point // 
+
+    enum ErrorCodes {
+        MaxSupplyReached = 0
+        OnlyCollectionOwner = 3
+        MintIsPaused = 5
+        NFTNotPartOfCollection = 7
+        NotMintedYet = 8
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn getRandom() -> U256{
+        return IRandomNumberGenerator(addressToContractId!(@xeCgiV9x2sFysJiubJZjviUoaCEkVofeBJeUh4B1EF5R)).getRandomNumber(toByteVec!(callerAddress!()))
+
+    }
+
+    // *  *  * Read Functions *  *  * // 
+
+    pub fn getCollectionUri() -> ByteVec {
+        return collectionUri
+    }
+
+    pub fn getOwner() -> Address {
+        return collectionOwner
+    }
+
+    pub fn getMaxSupply() -> U256 {
+        return MaxSupply
+    }
+
+    pub fn totalSupply() -> U256 {
+        return totalSupply
+    }
+
+    pub fn getMintPrice() -> U256 {
+        return MintPrice
+    }
+    
+    pub fn isMintPaused() -> Bool{
+        return mintIsPaused
+    }
+
+    pub fn getFoodsContract() -> Address{
+       return contractIdToAddress!(foodsContractId)
+    }
+
+    pub fn getBaseUri() -> ByteVec{
+        return nftBaseUri
+    }
+
+    pub fn getNFTUri(index: U256) -> ByteVec {
+        nftByIndex(index)
+        return nftBaseUri ++ u256ToString!(index)
+    }
+
+    pub fn validateNFT(nftId: ByteVec, nftIndex: U256) -> () {
+      let expectedTokenContract = nftByIndex(nftIndex)
+      assert!(nftId == contractId!(expectedTokenContract), ErrorCodes.NFTNotPartOfCollection)
+    }
+
+    pub fn nftByIndex(index: U256) -> INFT {
+        let nftTokenId = subContractId!(toByteVec!(index))
+        assert!(contractExists!(nftTokenId), ErrorCodes.NotMintedYet)
+
+        return INFT(nftTokenId)
+    }
+    
+    // *  *  * Write Functions *  *  * // 
+
+    @using(preapprovedAssets = true, updateFields = true, assetsInContract = true, checkExternalCaller = false)
+    pub fn mint(foodType: U256) -> ByteVec {
+        assert!(!mintIsPaused, ErrorCodes.MintIsPaused)
+        assert!(totalSupply + 1 <= MaxSupply, ErrorCodes.MaxSupplyReached)
+        let minter = callerAddress!()
+
+        let mut contractId = #
+        let random_ = IRandomNumberGenerator(addressToContractId!(@xeCgiV9x2sFysJiubJZjviUoaCEkVofeBJeUh4B1EF5R)).getRandomNumber(toByteVec!(minter))
+        // if (foodType == 1){
+
+        // }else if (foodType == 2){
+
+        // } else {
+            
+        // }
+
+        contractId = contractId ++ mint_{minter -> ALPH: 1 alph}(minter,  random_ + 1)
+
+
+        transferTokenToSelf!(minter, ALPH, MintPrice)
+
+        totalSupply = totalSupply + 1
+
+        emit NftMinted(minter, contractId, 1)
+        return toByteVec!(foodType) // return contract id later
+    }
+
+    // *  *  * Only Owner *  *  * // 
+    
+
+    @using(updateFields = true)
+    pub fn updateBaseUri(newNftBaseUri: ByteVec) -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        nftBaseUri = newNftBaseUri
+    }
+
+    @using(updateFields = true)
+    pub fn toggleMintState() -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        mintIsPaused = !mintIsPaused
+    }
+    
+    @using(assetsInContract = true)
+    pub fn withdrawAlph(to_: Address,amount_: U256) -> (){
+        checkCaller!(to_ == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        transferTokenFromSelf!(callerAddress!(), ALPH, amount_)
+    }
+
+    // *  *  * Royalty *  *  * // 
+
+    pub fn royaltyAmount(@unused tokenId: ByteVec, salePrice: U256) -> (U256) {
+        return salePrice * RoyaltyRate / 10000
+    }
+
+    @using(assetsInContract = true, preapprovedAssets = true, checkExternalCaller = false)
+    pub fn payRoyalty(payer_: Address, amount_: U256) -> () {
+        transferTokenToSelf!(payer_, ALPH, amount_)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn withdrawRoyalty(to_: Address, amount_: U256) -> () {
+        withdrawAlph(to_,amount_)
+    }
+    
+    // *  *  * Supporting Functions *  *  * // 
+    
+    @using(preapprovedAssets = true)
+    fn mint_(minter: Address, index: U256) -> ByteVec {
+        let (encodeImmutableFields, encodeMutableFields) = Foods.encodeFields!(nftBaseUri ++ u256ToString!(index), selfContractId!(), index)
+            return copyCreateSubContractWithToken!{minter -> ALPH: 1 alph}(
+                toByteVec!(index),
+                foodsContractId,
+                encodeImmutableFields,
+                encodeMutableFields,
+                1,
+                minter
+            )
+    }
+}
+
+
+
+
