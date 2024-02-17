@@ -1,18 +1,22 @@
 {
   "name": "alphhack",
-  "private": true,
-  "scripts": {},
   "devDependencies": {
     "@repo/typescript-config": "*",
     "turbo": "latest"
   },
-  "engines": {
-    "node": ">=18"
-  },
   "packageManager": "bun@1.0.25",
+  "private": true,
+  "scripts": {
+    "services:start": "turbo run services:start",
+    "services:stop": "turbo run services:stop",
+    "dev:dapp": "turbo run dev --filter=@repo/dapp",
+    "dev:indexer": "turbo run dev --filter=@repo/indexer"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
 }
