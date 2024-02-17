@@ -34,9 +34,9 @@ async function lp(interaction) {
   const first_token = interaction.options.getString('first_token')
   const second_token=interaction.options.getString('second_token')
 
-    const lp_amount=interaction.options.getNumber('lp_amount')??'NoLP'
+    const lp_amount=interaction.options.getNumber('lp_amount')??'NoLpAmount'
 
-    if(lp_amount=="NoLP"){
+    if(lp_amount=="NoLpAmount"){
         await messageDisplay.success(interaction, `${first_token} ${second_token} LP`, "No LP amount");
     }else{
         await messageDisplay.success(interaction, `${first_token} ${second_token} LP`, "LP amount provided");

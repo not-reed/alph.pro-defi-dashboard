@@ -1,0 +1,36 @@
+{
+  "name": "vendingmachine",
+  "type": "module",
+  "scripts": {
+    "cli": "bun node_modules/@alephium/cli/cli_internal.ts",
+    "compile": "bun cli compile",
+    "compile:testnet": "bun run cli compile -n testnet",
+    "compile:devnet": "bun run cli compile -n devnet",
+    "compile:mainnet": "bun run cli compile -n mainnet",
+    "deploy ": "bun cli deploy",
+    "deploy:testnet": "bun run cli deploy --network testnet",
+    "deploy:devnet": "bun run cli deploy --network devnet",
+    "deploy:mainnet": "bun run cli deploy --network mainnet",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@alephium/cli": "^0.29.3",
+    "@alephium/web3": "^0.29.3",
+    "@alephium/web3-test": "^0.29.3"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "bracketSameLine": false,
+    "trailingComma": "none"
+  }
+}
