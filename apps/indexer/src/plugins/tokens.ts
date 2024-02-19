@@ -1,12 +1,11 @@
-import type { Block } from "../services/common/types/blocks";
+import type { Block } from "../services/sdk/types/block";
 
-import type { NewBlock } from "../database/schemas/public/Block";
 import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 import type { NewToken } from "../database/schemas/public/Token";
 import { db } from "../database/db";
-import { binToHex, contractIdFromAddress, hexToString } from "@alephium/web3";
+import { binToHex, contractIdFromAddress } from "@alephium/web3";
 import { config } from "../config";
 import type { ContractAddress } from "../services/common/types/brands";
 
@@ -21,7 +20,7 @@ let hasAlph = false;
 // - 26j4viXkBzJd5SaDtQzyGM6joqoECmajncT4QS3tmT9hb
 
 const skipped = new Set<ContractAddress>([
-	"tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs" as ContractAddress,
+	// "tx1Uck1idLzfyjAbyqrFkNWrxz1MfKCV5FELnJdtbVUs" as ContractAddress,
 ]);
 
 export class TokenPlugin extends Plugin<NewToken[]> {
@@ -52,12 +51,12 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 				}
 			}
 		}
-
 		if (tokenAddresses.size === 0 && hasAlph) {
 			return [];
 		}
 
 		const newTokens = new Map<string, NewToken>();
+
 		if (tokenAddresses.size > 0) {
 			const found = await db
 				.selectFrom("Token")
@@ -69,7 +68,6 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 			const missingSet = new Set(
 				Array.from(tokenAddresses).filter((a) => !foundSet.has(a)),
 			);
-
 			if (!missingSet.size) {
 				return [];
 			}
@@ -106,6 +104,8 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 				name: "Alephium",
 				decimals: 18,
 				totalSupply: BigInt(0),
+				verified: true,
+				logo: "https://www.ayin.app/assets/alephium-2142ce63.svg",
 			} as NewToken);
 		}
 		return Array.from(newTokens.values());
@@ -137,6 +137,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 
 		const results = await Promise.all(
 			chunks.map(async (chunk) => {
+				// TODO: would be much better to get onchain
 				return await fetch(`${config.EXPLORER_URL}/tokens/fungible-metadata`, {
 					method: "POST",
 					headers: {
@@ -150,6 +151,24 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 			}),
 		);
 
-		return results.flat();
+		interface RawMetadata {
+			id: string;
+			symbol: string;
+			name: string;
+			decimals: string;
+		}
+
+		return results
+			.flat()
+			.filter((a): a is RawMetadata =>
+				Boolean(
+					a &&
+						typeof a === "object" &&
+						"id" in a &&
+						"symbol" in a &&
+						"name" in a &&
+						"decimals" in a,
+				),
+			) satisfies RawMetadata[];
 	}
 }

@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
+import NProgress from "nprogress";
 import Home from "./pages/Home.vue";
 import PortfolioVue from "./pages/Portfolio.vue";
 import PortfolioOverviewVue from "./pages/Portfolio/Overview.vue";
@@ -17,30 +18,50 @@ import LiquidityPoolsVue from "./pages/DeFi/LiquidityPools.vue";
 import SwapsVue from "./pages/DeFi/Swaps.vue";
 import OpportunitiesVue from "./pages/DeFi/Opportunities.vue";
 
+import { icons } from "./utils/icons";
+import { useUser } from "./hooks/useUser";
+import { loadWalletData } from "./api/wallet";
+
+declare module "vue-router" {
+	interface RouteMeta {
+		title: string;
+		icon?: keyof typeof icons;
+		defaultOpen?: boolean;
+	}
+}
+
+// used for guards & prefetching data
+const { user } = useUser();
+
 export const routes = [
 	{ path: "/", name: "Home", component: Home },
 	{
 		path: "/portfolio",
 		name: "Portfolio",
 		component: PortfolioVue,
+		meta: { title: "Portfolio", defaultOpen: true },
 		children: [
 			{
 				path: "/portfolio/overview",
 				name: "PortfolioOverview",
 				component: PortfolioOverviewVue,
-				meta: { title: "Overview" },
+				meta: { title: "Overview", icon: "home", needsWallet: true },
+				beforeEnter: async (to, from, next) => {
+					await loadWalletData();
+					next();
+				},
 			},
 			{
 				path: "/portfolio/wallet",
 				name: "PortfolioWallet",
 				component: PortfolioWalletVue,
-				meta: { title: "Wallet" },
+				meta: { title: "Wallet", icon: "wallet", needsWallet: true },
 			},
 			{
 				path: "/portfolio/defi",
 				name: "PortfolioDeFi",
 				component: PortfolioDeFiVue,
-				meta: { title: "DeFi" },
+				meta: { title: "DeFi", icon: "banknotes", needsWallet: true },
 			},
 		],
 	},
@@ -65,7 +86,7 @@ export const routes = [
 				path: "/defi/opportunities",
 				name: "Opportunities",
 				component: OpportunitiesVue,
-				meta: { title: "Opportunities" },
+				meta: { title: "Opportunities", icon: "currency" },
 			},
 		],
 	},
@@ -119,9 +140,36 @@ export const routes = [
 			},
 		],
 	},
-];
+
+	{
+		path: "/",
+		name: "More",
+		component: Home,
+		children: [
+			{ path: "/", name: "Twitter", component: Home },
+			{ path: "/", name: "Discord", component: Home },
+			{ path: "/", name: "Github", component: Home },
+			{ path: "/", name: "Docs", component: Home },
+			{ path: "/", name: "API", component: Home },
+			{ path: "/", name: "Brand Kit", component: Home },
+		],
+	},
+] satisfies Readonly<RouteRecordRaw[]>;
 
 export const router = createRouter({
 	history: createWebHistory(),
 	routes,
+});
+
+router.beforeEach((to, from, next) => {
+	NProgress.start();
+	if (to.meta.needsWallet && !user.wallet) {
+		return next("/");
+	}
+	return next();
+});
+
+router.afterEach(() => {
+	// Complete the animation of the route progress bar.
+	NProgress.done();
 });

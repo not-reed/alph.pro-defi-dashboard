@@ -1,4 +1,4 @@
-import type { Block } from "../services/common/types/blocks";
+import type { Block } from "../services/sdk/types/block";
 
 import type { NewBlock } from "../database/schemas/public/Block";
 import { Plugin } from "../common/plugins/abstract";

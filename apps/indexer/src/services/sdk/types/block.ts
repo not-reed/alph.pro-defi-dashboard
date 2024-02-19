@@ -1,6 +1,5 @@
-import type { BlockHash, ChainId } from "./brands";
-import type { ContractEvent } from "./events";
-import type { Transaction } from "./transactions";
+import type { BlockHash, ChainId } from "../../common/types/brands";
+import type { Transaction } from "./transaction";
 
 export interface Block {
 	blockHash: BlockHash;

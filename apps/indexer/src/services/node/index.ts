@@ -1,16 +1,17 @@
 import { config } from "../../config";
-import type { Block } from "../common/types/blocks";
+import type { Block } from "../node/types/blocks";
 import type {
 	BlockHash,
 	ChainId,
 	ContractAddress,
 	TransactionHash,
-	UserAddress,
 } from "../common/types/brands";
-import type { BlockEvent, ContractEvent } from "../common/types/events";
+import type { BlockEvent } from "../node/types/events";
+
+import type { NodeTransaction } from "../node/types/transactions";
+
+import { mapRawInputToTokenBalance } from "../common/utils/token";
 import type { Field } from "../common/types/fields";
-import type { Transaction } from "../common/types/transactions";
-import { addressFromContractId } from "@alephium/web3";
 
 export default {
 	blockFlow: {
@@ -20,7 +21,9 @@ export default {
 		): Promise<Block[][]> => {
 			const url = `${config.NODE_URL}/blockflow/blocks-with-events?fromTs=${fromTs}&toTs=${toTs}`;
 
+			// fetch all blocks with events
 			const result = await fetch(url).then((a) => a.json());
+
 			if (!result || typeof result !== "object") {
 				throw new Error("Invalid BlockFlow.blocksAndEvents");
 			}
@@ -146,47 +149,15 @@ export default {
 
 							const outputs = fixedOutputs
 								.concat(generatedOutputs)
-								.flatMap((output) => {
-									return [
-										{
-											userAddress: output.address as UserAddress,
-											// alephium
-											tokenAddress: addressFromContractId(
-												"0000000000000000000000000000000000000000000000000000000000000000",
-											) as ContractAddress,
-											amount: BigInt(output.attoAlphAmount),
-										},
-									].concat(
-										output.tokens.map((token: unknown) => {
-											if (
-												!token ||
-												typeof token !== "object" ||
-												!("id" in token) ||
-												!("amount" in token) ||
-												typeof token.id !== "string" ||
-												typeof token.amount !== "string"
-											) {
-												throw new Error(
-													"Invalid BlockFlow.blocksAndEvents.block.transactions.transaction.output.tokens.token",
-												);
-											}
-
-											return {
-												userAddress: output.address as UserAddress,
-												tokenAddress: addressFromContractId(
-													token.id,
-												) as ContractAddress,
-												amount: BigInt(token.amount),
-											};
-										}),
-									);
-								});
+								.flatMap(mapRawInputToTokenBalance);
 
 							return {
 								transactionHash: txId as TransactionHash,
+								gasAmount: BigInt(transaction.unsigned.gasAmount),
+								gasPrice: BigInt(transaction.unsigned.gasPrice),
 								outputs,
 								events,
-							} satisfies Transaction;
+							} satisfies NodeTransaction;
 						}),
 					} satisfies Block;
 				});
@@ -261,9 +232,11 @@ export default {
 
 							return {
 								transactionHash: txId as TransactionHash,
+								gasAmount: BigInt(transaction.unsigned.gasAmount),
+								gasPrice: BigInt(transaction.unsigned.gasPrice),
 								outputs: [], // TODO: ?? maybe remove this whole function
 								events: [],
-							} satisfies Transaction;
+							} satisfies NodeTransaction;
 						}),
 					} satisfies Block;
 				});

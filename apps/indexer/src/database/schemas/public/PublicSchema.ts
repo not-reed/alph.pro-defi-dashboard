@@ -11,6 +11,7 @@ import { type default as PluginBlockTable } from './PluginBlock';
 import { type default as AyinLiquidityEventTable } from './AyinLiquidityEvent';
 import { type default as AyinReserveTable } from './AyinReserve';
 import { type default as AyinSwapTable } from './AyinSwap';
+import { type default as BalanceTable } from './Balance';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -32,4 +33,6 @@ export default interface PublicSchema {
   AyinReserve: AyinReserveTable;
 
   AyinSwap: AyinSwapTable;
+
+  Balance: BalanceTable;
 }

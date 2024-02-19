@@ -1,32 +1,24 @@
-// NGU: '21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu
-// http://10.11.12.13:9090/contracts/21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu/parent
-// http://10.11.12.13:9090/contract-events/contract-address/21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu?page=1&limit=100
-// Ayin Factory: 'vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R'
-// http://10.11.12.13:9090/contracts/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R/sub-contracts?page=1&limit=100
-// http://10.11.12.13:9090/contract-events/contract-address/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R?page=1&limit=100
-
-import type { Block } from "../services/common/types/blocks";
+import type { Block } from "../services/sdk/types/block";
 
 import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
-import type { NewPool } from "../database/schemas/public/Pool";
-import { addressFromContractId } from "@alephium/web3";
+
 import { db } from "../database/db";
 import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 
 import type { NewAyinSwap } from "../database/schemas/public/AyinSwap";
-import type {
-	BlockHash,
-	ContractAddress,
-} from "../services/common/types/brands";
+
 import type { NewAyinLiquidityEvent } from "../database/schemas/public/AyinLiquidityEvent";
 import type {
 	AyinReserve,
 	NewAyinReserve,
 } from "../database/schemas/public/AyinReserve";
-
-const AYIN_FACTORY = "vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R";
+import type {
+	BlockHash,
+	ContractAddress,
+} from "../services/common/types/brands";
+import { logger } from "../services/logger";
 
 interface PluginData {
 	liquidity: NewAyinLiquidityEvent[];

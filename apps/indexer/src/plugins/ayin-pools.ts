@@ -4,8 +4,7 @@
 // Ayin Factory: 'vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R'
 // http://10.11.12.13:9090/contracts/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R/sub-contracts?page=1&limit=100
 // http://10.11.12.13:9090/contract-events/contract-address/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R?page=1&limit=100
-
-import type { Block } from "../services/common/types/blocks";
+import type { Block } from "../services/sdk/types/block";
 
 import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";

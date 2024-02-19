@@ -6,5 +6,5 @@ defineProps({
 </script>
 
 <template>
-    <router-link :to="to">{{ label }}</router-link>
+    <router-link class="hover:underline" :to="to">{{ label }}</router-link>
 </template>

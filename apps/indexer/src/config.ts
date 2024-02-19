@@ -2,6 +2,9 @@ export const config = {
 	// 'fatal', 'error', 'warn', 'info', 'debug', 'trace' or 'silent'
 	LOG_LEVEL: process.env.LOG_LEVEL || "info",
 
+	// disable indexing, and only serve API
+	INDEXING_DISABLED: process.env.INDEXING_DISABLED === "true",
+
 	REDIS_PORT: Number(process.env.REDIS_PORT || 6379),
 
 	DB_HOST: process.env.DB_HOST || "localhost",

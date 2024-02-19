@@ -12,20 +12,21 @@ document.addEventListener("alpine:init", () => {
       const end = new Date();
       return this.items
         .map((p) => {
-          const current = Math.min(new Date(p.timestamp).getTime(), Date.now());
+          const current = new Date(
+            Math.min(new Date(p.timestamp).getTime(), Date.now())
+          );
           return {
             name: p.name,
             start: genesis, //genesis block
-            startDate: `${genesisDate.toLocaleDateString()}<br>${genesisDate.toLocaleTimeString()}`,
-            current,
-            currentDate: `${new Date(
-              current
-            ).toLocaleDateString()}<br>${new Date(
-              current
-            ).toLocaleTimeString()}`,
+            // startDate: `${genesisDate.toLocaleDateString()}<br>${genesisDate.toLocaleTimeString()}`,
+            startDate: `${genesisDate.toLocaleString()}`,
+            current: current.getTime(),
+            currentDate: `${current.toLocaleString()}`,
+            // currentDate: `${current.toLocaleDateString()}<br>${current.toLocaleTimeString()}`,
 
             end: end.getTime(),
-            endDate: `${end.toLocaleDateString()}<br>${end.toLocaleTimeString()}`,
+            endDate: `${end.toLocaleString()}`,
+            // endDate: `${end.toLocaleDateString()}<br>${end.toLocaleTimeString()}`,
           };
         })
         .sort((a, b) => a.name.localeCompare(b.name));

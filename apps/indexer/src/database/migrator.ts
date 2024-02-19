@@ -7,7 +7,8 @@ import {
 
 import path from "path";
 import { db } from "./db";
-import { argv } from "zx";
+import { argv, chalk } from "zx";
+import { $ } from "bun";
 
 const migrationFolder = path.join(
 	import.meta.dir,
@@ -26,10 +27,25 @@ const migrator = new Migrator({
 function showResults({ error, results }: MigrationResultSet) {
 	if (results) {
 		for (const it of results) {
-			console.log(`> ${it.status}: ${it.migrationName} (${it.direction})`);
+			const color =
+				it.status === "Success"
+					? it.direction === "Up"
+						? chalk.green
+						: chalk.blue
+					: it.status === "Error"
+					  ? chalk.red
+					  : chalk.yellow;
+			console.log(
+				color(
+					`${it.status.replace("Success", "✅")} ${it.direction.padEnd(
+						8,
+						" ",
+					)} ${it.migrationName}`,
+				),
+			);
 		}
 		if (results.length === 0) {
-			console.log("> No pending migrations to execute");
+			console.log(chalk.green("No pending migrations to execute"));
 		}
 	}
 	if (error) {
@@ -76,7 +92,24 @@ if (argv._[0] === "latest") {
 	}
 	await fs.writeFile(fileName, TEMPLATE, "utf8");
 	console.log("Created Migration:", fileName);
+} else if (argv._[0] === "fresh") {
+	const migrations = await migrator.getMigrations();
+	for (let i = 0; i < migrations.length; i++) {
+		const d = await migrator.migrateDown();
+		showResults(d);
+	}
+
+	const results = await migrator.migrateToLatest();
+	showResults(results);
+
+	const t = await $`bun kanel --config=.kanelrc.cjs`.quiet();
+	const [, , , ...outputs] = t.stdout.toString().split("\n");
+	for (const o of outputs) {
+		console.log(chalk.yellow(`${o.replace(" - ", "✅ Types   ")}`));
+	}
 } else {
 	console.error("Invalid command");
 	process.exit(1);
 }
+
+await db.destroy();

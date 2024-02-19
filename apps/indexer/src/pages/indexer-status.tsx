@@ -10,7 +10,7 @@ export const IndexerStatus: FC = () => {
 
       <section>
         <h2 class="text-3xl text-center">Indexer Statuses</h2>
-        <ul x-data class="w-full max-w-md mx-auto flex flex-col gap-4">
+        <ul x-data class="w-full max-w-2xl mx-auto flex flex-col gap-4">
           <template x-for="plugin in $store.plugins.forDisplay">
             <li class="p-4 w-full shadow bg-zinc-100">
               <div x-text="plugin.name" class="font-bold uppercase" />
@@ -28,10 +28,19 @@ export const IndexerStatus: FC = () => {
                 <div>Now</div>
               </div>
 
-              <div class="flex justify-between">
-                <div x-html="plugin.startDate" />
-                <div x-html="plugin.currentDate" class="text-center" />
-                <div x-html="plugin.endDate" class="text-end" />
+              <div class="flex justify-between flex-col">
+                <div class="flex">
+                  <div class="w-32">Start Time: </div>
+                  <div x-html="plugin.startDate" />
+                </div>
+                <div class="flex">
+                  <div class="w-32">Indexed To:</div>
+                  <div x-html="plugin.currentDate" />
+                </div>
+                <div class="flex">
+                  <div class="w-32">Current Time:</div>
+                  <div x-html="plugin.endDate" />
+                </div>
               </div>
             </li>
           </template>

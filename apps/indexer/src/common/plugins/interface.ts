@@ -1,5 +1,5 @@
 import type { Transaction } from "kysely";
-import type { Block } from "../../services/common/types/blocks";
+import type { Block } from "../../services/sdk/types/block";
 import type Database from "../../database/schemas/Database";
 
 export interface PluginInterface<T> {
