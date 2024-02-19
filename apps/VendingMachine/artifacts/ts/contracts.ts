@@ -3,12 +3,12 @@
 /* eslint-disable */
 
 import { Contract, ContractFactory } from "@alephium/web3";
-import { Foods, RandomNumberGenerator, VendingMachine } from ".";
+import { Foods, VendingMachine } from ".";
 
 let contracts: ContractFactory<any>[] | undefined = undefined;
 export function getContractByCodeHash(codeHash: string): Contract {
   if (contracts === undefined) {
-    contracts = [Foods, RandomNumberGenerator, VendingMachine];
+    contracts = [Foods, VendingMachine];
   }
   const c = contracts.find(
     (c) =>

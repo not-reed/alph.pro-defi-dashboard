@@ -3,6 +3,5 @@
 /* eslint-disable */
 
 export * from "./Foods";
-export * from "./RandomNumberGenerator";
 export * from "./VendingMachine";
 export * from "./scripts";

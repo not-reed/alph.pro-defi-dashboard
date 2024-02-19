@@ -1,0 +1,34 @@
+{
+  "version": "v2.8.4",
+  "name": "WithdrawAlph",
+  "bytecodeTemplate": "01010300000006{1}{2}0e0c{0}0111",
+  "fieldsSig": {
+    "names": [
+      "vendingMachine",
+      "to",
+      "amount"
+    ],
+    "types": [
+      "ByteVec",
+      "Address",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

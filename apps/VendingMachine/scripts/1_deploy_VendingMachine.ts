@@ -1,17 +1,20 @@
-import { hexToString, stringToHex } from '@alephium/web3'
+import { stringToHex } from '@alephium/web3'
 import { Deployer, DeployFunction } from '@alephium/cli'
 import { VendingMachine } from '../artifacts/ts'
 
+const mintedFoods = new Array(20).fill(0)
+
 const deployVendingMachine: DeployFunction = async (deployer: Deployer): Promise<void> => {
-  const vendingMachineResults = deployer.getDeployContractResult('VendingMachine')
+  const foodResults = deployer.getDeployContractResult('Foods')
 
   const initialFields = {
-    foodsContractId: vendingMachineResults.contractInstance.contractId,
+    foodsContractId: foodResults.contractInstance.contractId,
     collectionOwner: deployer.account.address,
     collectionUri: Buffer.from('Vending Machine', 'utf8').toString('hex'),
     nftBaseUri: stringToHex(''),
     totalSupply: 0n,
-    mintIsPaused: true // true
+    mintIsPaused: true, // true
+    mintedFoods: mintedFoods
   }
 
   const result = await deployer.deployContract(VendingMachine, {

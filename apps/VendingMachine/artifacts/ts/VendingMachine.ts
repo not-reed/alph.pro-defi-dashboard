@@ -32,18 +32,40 @@ export namespace VendingMachineTypes {
   export type Fields = {
     foodsContractId: HexString;
     collectionOwner: Address;
-    collectionUri: HexString;
     nftBaseUri: HexString;
     totalSupply: bigint;
     mintIsPaused: boolean;
+    mintedFoods: [
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      bigint
+    ];
   };
 
   export type State = ContractState<Fields>;
 
   export type NftMintedEvent = ContractEvent<{
     minter: Address;
-    id: HexString;
-    index: bigint;
+    contractIds: HexString;
+    mintAmount: bigint;
+    startingIndex: bigint;
   }>;
 
   export interface CallMethodTable {
@@ -61,10 +83,6 @@ export namespace VendingMachineTypes {
     };
     royaltyAmount: {
       params: CallContractParams<{ tokenId: HexString; salePrice: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    getRandom: {
-      params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
     getOwner: {
@@ -96,7 +114,7 @@ export namespace VendingMachineTypes {
       result: CallContractResult<HexString>;
     };
     mint: {
-      params: CallContractParams<{ foodType: bigint }>;
+      params: CallContractParams<{ foodTypeId_: bigint; mintAmount: bigint }>;
       result: CallContractResult<HexString>;
     };
   }
@@ -124,15 +142,21 @@ class Factory extends ContractFactory<
 
   eventIndex = { NftMinted: 0 };
   consts = {
+    CollectionUri: "56656e64696e67204d616368696e65",
     MaxSupply: BigInt(1000),
     MintPrice: BigInt(1000000000000000000),
+    MaxMintPerTx: BigInt(10),
     RoyaltyRate: BigInt(500),
     ErrorCodes: {
       MaxSupplyReached: BigInt(0),
-      OnlyCollectionOwner: BigInt(3),
-      MintIsPaused: BigInt(5),
-      NFTNotPartOfCollection: BigInt(7),
-      NotMintedYet: BigInt(8),
+      OnlyCollectionOwner: BigInt(1),
+      MintIsPaused: BigInt(2),
+      NFTNotPartOfCollection: BigInt(3),
+      NotMintedYet: BigInt(4),
+      WrongFoodType: BigInt(5),
+      FoodMaxSupplyReached: BigInt(6),
+      MaxPerTx: BigInt(7),
+      ZeroNotAllowed: BigInt(8),
     },
   };
 
@@ -194,14 +218,6 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "withdrawRoyalty", params);
     },
-    getRandom: async (
-      params: Omit<
-        TestContractParams<VendingMachineTypes.Fields, never>,
-        "testArgs"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getRandom", params);
-    },
     getOwner: async (
       params: Omit<
         TestContractParams<VendingMachineTypes.Fields, never>,
@@ -258,7 +274,7 @@ class Factory extends ContractFactory<
     mint: async (
       params: TestContractParams<
         VendingMachineTypes.Fields,
-        { foodType: bigint }
+        { foodTypeId_: bigint; mintAmount: bigint }
       >
     ): Promise<TestContractResult<HexString>> => {
       return testMethod(this, "mint", params);
@@ -295,6 +311,14 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<HexString>> => {
       return testMethod(this, "mint_", params);
     },
+    pickIdForFood: async (
+      params: TestContractParams<
+        VendingMachineTypes.Fields,
+        { foodTypeId_: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "pickIdForFood", params);
+    },
   };
 }
 
@@ -303,7 +327,7 @@ export const VendingMachine = new Factory(
   Contract.fromJson(
     VendingMachineContractJson,
     "",
-    "d5ccc1c0d53ea3b17c889117dbe571d409b96e37bc3f3d8942cc173c081b9d44"
+    "afe75d5906bd809adeb1cef6e728a27f10ad10c6fbedcf22201b3c022da7d6b3"
   )
 );
 
@@ -376,17 +400,6 @@ export class VendingMachineInstance extends ContractInstance {
         this,
         "royaltyAmount",
         params,
-        getContractByCodeHash
-      );
-    },
-    getRandom: async (
-      params?: VendingMachineTypes.CallMethodParams<"getRandom">
-    ): Promise<VendingMachineTypes.CallMethodResult<"getRandom">> => {
-      return callMethod(
-        VendingMachine,
-        this,
-        "getRandom",
-        params === undefined ? {} : params,
         getContractByCodeHash
       );
     },

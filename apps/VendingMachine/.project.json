@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v2.8.3",
+  "fullNodeVersion": "v2.8.4",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": false,
     "ignoreUnusedVariablesWarnings": false,
@@ -37,25 +37,46 @@
       "codeHashDebug": "",
       "warnings": []
     },
-    "IRandomNumberGenerator": {
-      "sourceFile": "VendingMachine.ral",
-      "sourceCodeHash": "36bc789bc421f252b3fd99248846166a03746b64ea24dd8d4890e9e490dff978",
+    "MintNft": {
+      "sourceFile": "scripts/MintNft.ral",
+      "sourceCodeHash": "fec0291c21d0f14b812536de878401a36339d137fd060b55795793a3d64002b4",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
-    "RandomNumberGenerator": {
-      "sourceFile": "randomNumberGenerator/RandomNumberGenerator.ral",
-      "sourceCodeHash": "8585afe96594265f265b01a67deaee52dfb90c8dfa690bb6d4cf83b40a4590f8",
+    "ToggleMintState": {
+      "sourceFile": "scripts/ToggleMintState.ral",
+      "sourceCodeHash": "031de6a608002de7fe9fa58e54f29545a596201fe15bffaadebf66429ffa5b54",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "18634f0c26e9de3cc81d5d3a7654ab990a2a2b2ac187e02df1fe551828fef5e3",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateBaseUri": {
+      "sourceFile": "scripts/UpdateBaseUri.ral",
+      "sourceCodeHash": "8a43aaf2bffb69ef72ee4787e6c5943b817b3a2da5ca0d4bac043ee1f6fd9bf0",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "VendingMachine": {
       "sourceFile": "VendingMachine.ral",
-      "sourceCodeHash": "36bc789bc421f252b3fd99248846166a03746b64ea24dd8d4890e9e490dff978",
+      "sourceCodeHash": "932462b727944fd75e44b9b22dab74d7d228ff21bf1d2d3791755ddba45e7d39",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "d5ccc1c0d53ea3b17c889117dbe571d409b96e37bc3f3d8942cc173c081b9d44",
+      "codeHashDebug": "afe75d5906bd809adeb1cef6e728a27f10ad10c6fbedcf22201b3c022da7d6b3",
+      "warnings": []
+    },
+    "WithdrawAlph": {
+      "sourceFile": "scripts/WithdrawAlph.ral",
+      "sourceCodeHash": "3a333bdd60bc2e7f5c889b25cbfd262321934b3aae0286532d0d19abb27ffd30",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "WithdrawRoyalty": {
+      "sourceFile": "scripts/WithdrawRoyalty.ral",
+      "sourceCodeHash": "c8451760ab48f06c397d50ba12e21aaea9fd844157b9e0348b101735a7e3964c",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     }
   }
