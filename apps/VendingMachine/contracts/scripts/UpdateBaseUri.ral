@@ -1,0 +1,6 @@
+TxScript UpdateBaseUri (
+    vendingMachine: VendingMachine,
+        newBaseUri: ByteVec
+) {
+    vendingMachine.updateBaseUri(newBaseUri)
+}

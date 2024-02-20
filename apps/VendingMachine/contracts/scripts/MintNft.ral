@@ -1,0 +1,10 @@
+TxScript MintNft (
+    vendingMachine: VendingMachine,
+    foodTypeId: U256,
+    mintAmount: U256
+) {
+    let alphNeededForMint = vendingMachine.getMintPrice() * mintAmount
+    let alphNeededForSubcontract = mintAmount * 1 alph // 
+    let amount = alphNeededForSubcontract + alphNeededForMint
+    vendingMachine.mint{callerAddress!() -> ALPH: amount}(foodTypeId,mintAmount)
+}

@@ -21,5 +21,5 @@
     "types": ["bun-types"]
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "alephium.config.ts", "artifacts/**/*.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "alephium.config.ts", "artifacts/**/*.ts", "scripts/0_deploy_Foods.ts", "scripts/1_deploy_VendingMachine.ts", "DevFiles/0_deploy_RandomNumberGenerator.ts"]
 }
