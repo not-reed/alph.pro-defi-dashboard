@@ -4,6 +4,7 @@ import "std/nft_collection_with_royalty_interface"
 Contract VendingMachine(
     foodsContractId: ByteVec,
     collectionOwner: Address,
+    mut collectionUri :ByteVec,
     mut nftBaseUri: ByteVec,
     mut totalSupply: U256, 
     mut mintIsPaused: Bool, // true
@@ -12,14 +13,11 @@ Contract VendingMachine(
 
     event NftMinted(minter: Address, contractIds: ByteVec, mintAmount: U256,startingIndex: U256)
 
-    const CollectionUri = b`Vending Machine`
     const MaxSupply = 1000
-    const MintPrice = 1 alph // 
+    const MintPrice = 1 alph
     const MaxMintPerTx = 10
     const RoyaltyRate = 500 // 5 %  == 500 basis point // 
    
-
-
     enum ErrorCodes {
         MaxSupplyReached = 0
         OnlyCollectionOwner = 1
@@ -35,7 +33,7 @@ Contract VendingMachine(
     // *  *  * Read Functions *  *  * // 
 
     pub fn getCollectionUri() -> ByteVec {
-        return CollectionUri
+        return collectionUri
     }
 
     pub fn getOwner() -> Address {
@@ -111,9 +109,15 @@ Contract VendingMachine(
     // *  *  * Only Owner *  *  * // 
     
     @using(updateFields = true)
-    pub fn updateBaseUri(newNftBaseUri: ByteVec) -> (){
+    pub fn updateBaseUri(newBaseUri: ByteVec) -> (){
         checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
-        nftBaseUri = newNftBaseUri
+        nftBaseUri = newBaseUri
+    }
+
+    @using(updateFields = true)
+    pub fn updateCollectionUri(newCollectionUri: ByteVec) -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        collectionUri = newCollectionUri
     }
 
     @using(updateFields = true)
