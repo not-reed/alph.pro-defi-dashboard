@@ -1,13 +1,13 @@
 {
-  "name": "vendingmachine",
+  "name": "@repo/vending-machine",
   "type": "module",
   "scripts": {
     "cli": "bun ../../node_modules/@alephium/cli/cli_internal.ts",
-    "compile": "bun cli compile",
+    "compile": "bun run cli compile",
     "compile:testnet": "bun run cli compile -n testnet",
     "compile:devnet": "bun run cli compile -n devnet",
     "compile:mainnet": "bun run cli compile -n mainnet",
-    "deploy ": "bun cli deploy",
+    "deploy": "bun run cli deploy",
     "deploy:testnet": "bun run cli deploy --network testnet",
     "deploy:devnet": "bun run cli deploy --network devnet",
     "deploy:mainnet": "bun run cli deploy --network mainnet",
@@ -22,7 +22,8 @@
   "dependencies": {
     "@alephium/cli": "^0.30.1",
     "@alephium/web3": "^0.30.1",
-    "@alephium/web3-test": "^0.30.1"
+    "@alephium/web3-test": "^0.30.1",
+    "@alephium/web3-wallet": "^0.30.1"
   },
   "prettier": {
     "printWidth": 120,

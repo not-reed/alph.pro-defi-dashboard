@@ -10,30 +10,37 @@ import {
   VendingMachine,
   VendingMachineInstance,
 } from ".";
+import { default as testnetDeployments } from "../.deployments.testnet.json";
 import { default as devnetDeployments } from "../.deployments.devnet.json";
 
 export type Deployments = {
   deployerAddress: string;
   contracts: {
-    Foods: DeployContractExecutionResult<FoodsInstance>;
-    VendingMachine: DeployContractExecutionResult<VendingMachineInstance>;
+    Foods?: DeployContractExecutionResult<FoodsInstance>;
+    VendingMachine?: DeployContractExecutionResult<VendingMachineInstance>;
   };
 };
 
 function toDeployments(json: any): Deployments {
   const contracts = {
-    Foods: {
-      ...json.contracts["Foods"],
-      contractInstance: Foods.at(
-        json.contracts["Foods"].contractInstance.address
-      ),
-    },
-    VendingMachine: {
-      ...json.contracts["VendingMachine"],
-      contractInstance: VendingMachine.at(
-        json.contracts["VendingMachine"].contractInstance.address
-      ),
-    },
+    Foods:
+      json.contracts["Foods"] === undefined
+        ? undefined
+        : {
+            ...json.contracts["Foods"],
+            contractInstance: Foods.at(
+              json.contracts["Foods"].contractInstance.address
+            ),
+          },
+    VendingMachine:
+      json.contracts["VendingMachine"] === undefined
+        ? undefined
+        : {
+            ...json.contracts["VendingMachine"],
+            contractInstance: VendingMachine.at(
+              json.contracts["VendingMachine"].contractInstance.address
+            ),
+          },
   };
   return {
     ...json,
@@ -45,7 +52,12 @@ export function loadDeployments(
   networkId: NetworkId,
   deployerAddress?: string
 ): Deployments {
-  const deployments = networkId === "devnet" ? devnetDeployments : undefined;
+  const deployments =
+    networkId === "testnet"
+      ? testnetDeployments
+      : networkId === "devnet"
+      ? devnetDeployments
+      : undefined;
   if (deployments === undefined) {
     throw Error("The contract has not been deployed to the " + networkId);
   }

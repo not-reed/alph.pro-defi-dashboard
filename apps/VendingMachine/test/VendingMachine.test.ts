@@ -1,5 +1,5 @@
 import { expect, describe, it, beforeAll } from 'bun:test'
-import { web3, DUST_AMOUNT, ONE_ALPH, hexToString, stringToHex, sign } from '@alephium/web3'
+import { web3 } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { testNodeWallet, getSigners, testAddress } from '@alephium/web3-test'
 import { deployToDevnet } from '@alephium/cli'
@@ -19,17 +19,20 @@ import { convertToObject } from 'typescript'
 
 describe('Vending Machine', async () => {
   let signer: any
+  let signer1: any
   let foodsContractAddress: string | undefined
   let foodsContractId: string | undefined
   let vendingMachineContractAddress: string | undefined
   let vendingMachineContractId: string | undefined
   const NO_DECIMALS = 1000000000000000000
 
-  const [signer1] = await getSigners(1, ONE_ALPH * 1000n, 0) //Group 0
+  
 
   beforeAll(async () => {
     web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
     signer = await testNodeWallet()
+    // const [signer1_] = await getSigners(1, ONE_ALPH * 1000n, 0) //Group 0
+    // signer1 = signer1_
     const deployments = await deployToDevnet()
     const foodsDeployed = deployments.getDeployedContractResult(0, 'Foods')
     if (foodsDeployed === undefined) {
