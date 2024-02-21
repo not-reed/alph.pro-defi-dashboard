@@ -1,10 +1,10 @@
 require('dotenv').config({ path: '../.env' })
 
-import { web3, DUST_AMOUNT, stringToHex, ONE_ALPH } from '@alephium/web3'
+import { web3, DUST_AMOUNT, stringToHex, ONE_ALPH, binToHex, contractIdFromAddress } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VendingMachine, ToggleMintState, UpdateCollectionUri, UpdateBaseUri, WithdrawAlph } from '../artifacts/ts'
 
-let vendingMachineContractAddress = 'zniszMzfLguVeqE3vh3cenFQFJV4JAVY6Jq6Jfzm4GPH' //TestNet
+let vendingMachineContractAddress = 'vk7KvZxejW7Qmbd2pPqQe4AerqAD129awXNiMWmUEsiw' //TestNet
 web3.setCurrentNodeProvider('https://wallet-v20.testnet.alephium.org', undefined, fetch) //MainNet
 const signer = new PrivateKeyWallet({ privateKey: process.env.TEST_NET_PRIVATE_KEYS as string })
 
@@ -59,6 +59,10 @@ export async function toggleMintState() {
 export async function checkContractBalance() {
   let contractAlphBalance = await getAlphBalance(vendingMachineStates.address, signer)
   console.log('Vending Machine Contract balance', Number(contractAlphBalance) / NO_DECIMALS)
+}
+
+export async function convertContractAddressToId(contractAddress: string) {
+  console.log(binToHex(contractIdFromAddress(contractAddress)))
 }
 
 //No need to call withRoyalty after calling this function

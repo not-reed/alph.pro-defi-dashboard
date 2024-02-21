@@ -2,7 +2,28 @@ import { stringToHex } from '@alephium/web3'
 import { Deployer, DeployFunction } from '@alephium/cli'
 import { VendingMachine } from '../artifacts/ts'
 
-const mintedFoods = new Array<bigint>(20).fill(0n) as [bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint]
+const mintedFoods = new Array<bigint>(20).fill(0n) as [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+]
 
 const deployVendingMachine: DeployFunction = async (deployer: Deployer): Promise<void> => {
   const foodResults = deployer.getDeployContractResult('Foods')
