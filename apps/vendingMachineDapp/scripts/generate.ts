@@ -5,7 +5,7 @@ import { join } from 'path'
 async function writeFiles() {
     await Bun.write(join(__dirname, '../public/collection/collection.json'), JSON.stringify({
         name: 'Alephium Vending Machine',
-        image: '', // TODO:
+        image: 'https://arweave.net/nv8fvKlzM5iEnbbtZl5KSRods-hnUf52CyNw_SkPHnQ/banner.png',
         description: 'Alephium Vending Machine Collection - NFT snacks for your next Open Office call',
     }));
 
@@ -14,11 +14,11 @@ async function writeFiles() {
     for (const imageIdx in images) {
 
         try {
-
+            const arweaveHash = 'wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8'
             const file = Bun.file(join(__dirname, "../src/assets/foods/svgs/", `${images[imageIdx]}.svg`));
             await Bun.write(join(__dirname, "../public/images/", `${images[imageIdx]}.svg`), file);
-            await Bun.write(join(__dirname, '../public/collection/metadata/', `${imageIdx}.json`), JSON.stringify({
-                image: '', // TODO:
+            await Bun.write(join(__dirname, '../public/collection/metadata/', `${Number(imageIdx) + 1}`), JSON.stringify({
+                image: `https://arweave.net/${arweaveHash}/${imageIdx}.svg`,
                 name: labels[imageIdx],
                 attributes: [
                     ...attributes[images[imageIdx]],

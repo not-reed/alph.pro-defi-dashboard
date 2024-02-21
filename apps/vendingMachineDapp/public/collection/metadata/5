@@ -1,38 +1,34 @@
 {
-  "image": "",
-  "name": "Banana",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/4.svg",
+  "name": "Hot Dog",
   "attributes": [
     {
       "trait_type": "type",
-      "value": "snack"
+      "value": "meal"
     },
     {
       "trait_type": "Calories",
-      "value": "110"
+      "value": "186"
     },
     {
       "trait_type": "Carbohydrate",
-      "value": "28 g"
+      "value": "2 g"
     },
     {
       "trait_type": "Fat",
-      "value": "0 g"
+      "value": "17 g"
     },
     {
       "trait_type": "Fiber",
-      "value": "3 g"
-    },
-    {
-      "trait_type": "Potassium",
-      "value": "450 mg"
+      "value": "0 g"
     },
     {
       "trait_type": "Protein",
-      "value": "1 g"
+      "value": "7 g"
     },
     {
-      "trait_type": "Sugar",
-      "value": "15 g"
+      "trait_type": "Sugars",
+      "value": "1 g"
     }
   ]
 }

@@ -1,26 +1,22 @@
 {
-  "image": "",
-  "name": "Candy",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/6.svg",
+  "name": "Milk",
   "attributes": [
     {
       "trait_type": "type",
-      "value": "candy"
+      "value": "beverage"
     },
     {
       "trait_type": "Calories",
-      "value": "70"
+      "value": "149"
     },
     {
       "trait_type": "Carbohydrates",
-      "value": "18 g"
-    },
-    {
-      "trait_type": "Cholesterol",
-      "value": "0 mg"
+      "value": "12 g"
     },
     {
       "trait_type": "Fat",
-      "value": "0 g"
+      "value": "8 g"
     },
     {
       "trait_type": "Fiber",
@@ -28,7 +24,7 @@
     },
     {
       "trait_type": "Protein",
-      "value": "0 g"
+      "value": "8 g"
     },
     {
       "trait_type": "Sugar",

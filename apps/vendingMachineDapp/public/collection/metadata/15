@@ -1,18 +1,18 @@
 {
-  "image": "",
-  "name": "Lollipop",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/14.svg",
+  "name": "Pie",
   "attributes": [
     {
       "trait_type": "type",
-      "value": "candy"
+      "value": "snack"
     },
     {
       "trait_type": "Calories",
-      "value": "50"
+      "value": "240"
     },
     {
       "trait_type": "Carbohydrate",
-      "value": "12 g"
+      "value": "31 g"
     },
     {
       "trait_type": "Cholesterol",
@@ -20,19 +20,19 @@
     },
     {
       "trait_type": "Fat",
-      "value": "0 g"
+      "value": "12 g"
     },
     {
       "trait_type": "Fiber",
-      "value": "0 g"
+      "value": "4 g"
     },
     {
       "trait_type": "Protein",
-      "value": "0 g"
+      "value": "2 g"
     },
     {
       "trait_type": "Sugar",
-      "value": "11 g"
+      "value": "7 g"
     }
   ]
 }

@@ -12,7 +12,7 @@ import { NodeProvider, web3 } from "@alephium/web3";
 import { useToast } from "vue-toastification";
 import { labels } from "../data";
 
-const {  amounts } = useTotalSupply()
+const { amounts } = useTotalSupply()
 export const connectorIds = [
 	"injected",
 	"walletConnect",
@@ -27,7 +27,7 @@ const connectorId = ref<ConnectorId | undefined>(
 const cachedConnectionOptions = reactive<
 	Pick<ConnectionOptions, "networkId" | "addressGroup" | "keyType">
 >(
-	Storage.get(StorageKeys.LastUsedConnectionOptions) ?? {
+	{
 		networkId: import.meta.env.VITE_NETWORK_ID,
 		addressGroup: 0,
 		keyType: "default",

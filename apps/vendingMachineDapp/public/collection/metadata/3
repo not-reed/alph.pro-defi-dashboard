@@ -1,30 +1,26 @@
 {
-  "image": "",
-  "name": "Pie",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/2.svg",
+  "name": "Beer",
   "attributes": [
     {
       "trait_type": "type",
-      "value": "snack"
+      "value": "beverage"
     },
     {
       "trait_type": "Calories",
-      "value": "240"
+      "value": "153"
     },
     {
-      "trait_type": "Carbohydrate",
-      "value": "31 g"
-    },
-    {
-      "trait_type": "Cholesterol",
-      "value": "0 mg"
+      "trait_type": "Carbohydrates",
+      "value": "13 g"
     },
     {
       "trait_type": "Fat",
-      "value": "12 g"
+      "value": "Less than 1 g"
     },
     {
       "trait_type": "Fiber",
-      "value": "4 g"
+      "value": "Less than 1 g"
     },
     {
       "trait_type": "Protein",
@@ -32,7 +28,7 @@
     },
     {
       "trait_type": "Sugar",
-      "value": "7 g"
+      "value": "Less than 1 g"
     }
   ]
 }

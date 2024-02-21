@@ -1,6 +1,6 @@
 {
-  "image": "",
-  "name": "Eggs",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/17.svg",
+  "name": "Fries",
   "attributes": [
     {
       "trait_type": "type",
@@ -8,23 +8,19 @@
     },
     {
       "trait_type": "Calories",
-      "value": "77"
-    },
-    {
-      "trait_type": "Carbs",
-      "value": "0.6 g"
+      "value": "480"
     },
     {
       "trait_type": "Cholesterol",
-      "value": "212 mg"
+      "value": "0 mg"
     },
     {
       "trait_type": "Fat",
-      "value": "5.3 g"
+      "value": "23 g"
     },
     {
-      "trait_type": "Protein",
-      "value": "6.3 g"
+      "trait_type": "Sodium",
+      "value": "323 mg"
     }
   ]
 }

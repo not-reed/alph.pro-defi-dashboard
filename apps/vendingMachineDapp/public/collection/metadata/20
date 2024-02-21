@@ -1,6 +1,6 @@
 {
-  "image": "",
-  "name": "Fries",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/19.svg",
+  "name": "Pizza",
   "attributes": [
     {
       "trait_type": "type",
@@ -8,19 +8,19 @@
     },
     {
       "trait_type": "Calories",
-      "value": "480"
+      "value": "285"
     },
     {
       "trait_type": "Cholesterol",
-      "value": "0 mg"
+      "value": "18 mg"
     },
     {
       "trait_type": "Fat",
-      "value": "23 g"
+      "value": "10 g"
     },
     {
       "trait_type": "Sodium",
-      "value": "323 mg"
+      "value": "640 mg"
     }
   ]
 }

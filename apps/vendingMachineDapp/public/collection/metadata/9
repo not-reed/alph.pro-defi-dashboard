@@ -1,6 +1,6 @@
 {
-  "image": "",
-  "name": "Fries",
+  "image": "https://arweave.net/wSJFV6Uph-Y07rY94yfKchrypMcWtCLXhdUVr399sJ8/8.svg",
+  "name": "Taco",
   "attributes": [
     {
       "trait_type": "type",
@@ -8,19 +8,19 @@
     },
     {
       "trait_type": "Calories",
-      "value": "480"
+      "value": "210"
     },
     {
       "trait_type": "Cholesterol",
-      "value": "0 mg"
+      "value": "26 mg"
     },
     {
       "trait_type": "Fat",
-      "value": "23 g"
+      "value": "9.9 g"
     },
     {
       "trait_type": "Sodium",
-      "value": "323 mg"
+      "value": "571 mg"
     }
   ]
 }
