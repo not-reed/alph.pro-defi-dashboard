@@ -45,16 +45,20 @@ async function mint(item: number) {
             attoAlphAmount: BigInt(amount.value) * (ONE_ALPH + ONE_ALPH + DUST_AMOUNT),
         })
 
-        toast("Mint Successful");
+        pending.value.add(tx.txId)
+
+        toast("Order Submitted, Please Wait");
         selection.value = item
         state.value = 'minted'
-        NProgress.done()
+        // NProgress.done()
     } catch (err) {
         NProgress.done()
+
+        toast.error("Something Went Wrong Minting");
         console.error(err)
 
     }
 }
 export function useMint() {
-    return { state, mint, selection, amount }
+    return { state, mint, selection, amount, pending }
 }

@@ -11,8 +11,11 @@ import { loadDeployments } from "@repo/vending-machine/artifacts/ts/deployments"
 import { NodeProvider, web3 } from "@alephium/web3";
 import { useToast } from "vue-toastification";
 import { labels } from "../data";
+import { useMint } from "./useMint";
+import nProgress from "nprogress";
 
 const { amounts } = useTotalSupply()
+const { pending } = useMint()
 export const connectorIds = [
 	"injected",
 	"walletConnect",
@@ -52,6 +55,10 @@ async function getAmounts(nodeProvider: NodeProvider) {
 
 			if (showToasts) {
 				if (event.fields.minter === account.address) {
+					pending.value.delete(event.txId)
+					if (pending.value.size === 0) {
+						nProgress.done()
+					}
 					toast.success(`You Minted ${mintAmount + 1} ${labels[foodType]}`)
 				} else {
 					toast.warning(`Someone grabbed ${mintAmount + 1} ${labels[foodType]}`)

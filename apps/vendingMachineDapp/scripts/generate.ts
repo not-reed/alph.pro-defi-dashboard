@@ -14,7 +14,7 @@ async function writeFiles() {
     for (const imageIdx in images) {
 
         try {
-            const arweaveHash = '' // TODO:
+            const arweaveHash = 'OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI' // TODO:
             // get picture
             const file = Bun.file(join(__dirname, "../src/assets/foods/svgs/", `${images[imageIdx]}.svg`));
             // save for public usage
@@ -27,8 +27,8 @@ async function writeFiles() {
                 await Bun.write(join(__dirname, "../public/collection/images/", `${fileNumber}.svg`), file);
 
                 await Bun.write(join(__dirname, '../public/collection/metadata/', `${fileNumber}`), JSON.stringify({
-                    image: `https://snacks.alph.pro/collection/images/${fileNumber}.svg`,
-                    // image: `https://arweave.net/${arweaveHash}/${fileNumber}.svg`,
+                    // image: `https://snacks.alph.pro/collection/images/${fileNumber}.svg`,
+                    image: `https://arweave.net/${arweaveHash}/${fileNumber}.svg`,
                     name: labels[imageIdx],
                     attributes: [
                         ...attributes[images[imageIdx]],
