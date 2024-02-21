@@ -1,5 +1,5 @@
 {
-  "version": "v2.8.4",
+  "version": "v2.8.3",
   "name": "ToggleMintState",
   "bytecodeTemplate": "010103000000040c0c{0}0111",
   "fieldsSig": {
