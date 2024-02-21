@@ -1,6 +1,6 @@
 require('dotenv').config({ path: '../.env' })
 
-import { web3, DUST_AMOUNT, stringToHex, ONE_ALPH, binToHex, contractIdFromAddress } from '@alephium/web3'
+import { web3, DUST_AMOUNT, stringToHex, ONE_ALPH, binToHex, contractIdFromAddress, hexToString } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VendingMachine, ToggleMintState, UpdateCollectionUri, UpdateBaseUri, WithdrawAlph } from '../artifacts/ts'
 
@@ -14,6 +14,16 @@ const signer = new PrivateKeyWallet({ privateKey: process.env.TEST_NET_PRIVATE_K
 
 const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
 const NO_DECIMALS = 10 ** 18
+
+export async function checkInfo(collectionUri: string) {
+  console.log('Collection URI: ', hexToString((await vendingMachineStates.methods.getCollectionUri()).returns))
+  console.log('Base URI: ', hexToString((await vendingMachineStates.methods.getBaseUri()).returns))
+  console.log('Is Mint Paused: ', (await vendingMachineStates.methods.isMintPaused()).returns)
+  console.log(
+    'Vending Machine Contract balance',
+    Number(await getAlphBalance(vendingMachineStates.address, signer)) / NO_DECIMALS
+  )
+}
 
 export async function updateCollectionUri(collectionUri: string) {
   console.log('Collection URI before update: ', (await vendingMachineStates.methods.getCollectionUri()).returns)
@@ -54,11 +64,6 @@ export async function toggleMintState() {
   })
 
   console.log('Is Mint Paused after: ', (await vendingMachineStates.methods.isMintPaused()).returns)
-}
-
-export async function checkContractBalance() {
-  let contractAlphBalance = await getAlphBalance(vendingMachineStates.address, signer)
-  console.log('Vending Machine Contract balance', Number(contractAlphBalance) / NO_DECIMALS)
 }
 
 export async function convertContractAddressToId(contractAddress: string) {
