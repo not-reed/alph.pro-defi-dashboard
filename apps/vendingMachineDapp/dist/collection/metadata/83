@@ -1,0 +1,38 @@
+{
+  "image": "https://arweave.net//83.svg",
+  "name": "Banana",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "snack"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "110"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "28 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "3 g"
+    },
+    {
+      "trait_type": "Potassium",
+      "value": "450 mg"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "1 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "15 g"
+    }
+  ]
+}

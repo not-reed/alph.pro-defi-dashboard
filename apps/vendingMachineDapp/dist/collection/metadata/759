@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net//759.svg",
+  "name": "Donut",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "snack"
+    },
+    {
+      "trait_type": "calories",
+      "value": "253"
+    },
+    {
+      "trait_type": "fat",
+      "value": "14 g"
+    },
+    {
+      "trait_type": "protein",
+      "value": "4 g"
+    },
+    {
+      "trait_type": "sugar",
+      "value": "14 g"
+    }
+  ]
+}

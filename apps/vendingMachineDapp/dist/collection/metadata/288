@@ -1,0 +1,38 @@
+{
+  "image": "https://arweave.net//288.svg",
+  "name": "Lollipop",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "candy"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "50"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "12 g"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "0 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "11 g"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "image": "https://arweave.net//568.svg",
+  "name": "Soda",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "beverage"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "​​ 39 g"
+    },
+    {
+      "trait_type": "​Caffeine",
+      "value": "​ 34 mg"
+    },
+    {
+      "trait_type": "​Calories",
+      "value": "​​ 140"
+    },
+    {
+      "trait_type": "​Dietary fiber",
+      "value": "​​ 0 g"
+    },
+    {
+      "trait_type": "​Protein",
+      "value": "​​ 0 g"
+    },
+    {
+      "trait_type": "​Sugar",
+      "value": "​ 39 g"
+    },
+    {
+      "trait_type": "​​Cholesterol",
+      "value": "​​ 0 mg"
+    },
+    {
+      "trait_type": "​​Sodium",
+      "value": "​​ 45 mg"
+    },
+    {
+      "trait_type": "​​Total fat",
+      "value": "​​ 0 g"
+    }
+  ]
+}

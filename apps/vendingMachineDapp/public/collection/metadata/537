@@ -1,0 +1,22 @@
+{
+  "image": "https://arweave.net//537.svg",
+  "name": "Chicken",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "205"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "9.73 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "27.37 g"
+    }
+  ]
+}

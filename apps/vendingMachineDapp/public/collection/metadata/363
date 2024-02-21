@@ -1,0 +1,38 @@
+{
+  "image": "https://arweave.net//363.svg",
+  "name": "Candy",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "candy"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "70"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "18 g"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "0 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "12 g"
+    }
+  ]
+}

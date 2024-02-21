@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net//416.svg",
+  "name": "Taco",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "210"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "26 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "9.9 g"
+    },
+    {
+      "trait_type": "Sodium",
+      "value": "571 mg"
+    }
+  ]
+}

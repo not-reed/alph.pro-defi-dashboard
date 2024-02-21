@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net//880.svg",
+  "name": "Fries",
+  "attributes": [
+    {
+      "trait_type": "type",
+      "value": "meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "480"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "0 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "23 g"
+    },
+    {
+      "trait_type": "Sodium",
+      "value": "323 mg"
+    }
+  ]
+}
