@@ -31,13 +31,13 @@ const signer = new PrivateKeyWallet({ privateKey: keys[network] })
 
 const NO_DECIMALS = 10 ** 18
 
-export async function checkInfo(collectionUri: string) {
+export async function checkInfo() {
   console.log('Collection URI: ', hexToString((await vendingMachineStates.methods.getCollectionUri()).returns))
   console.log('Base URI: ', hexToString((await vendingMachineStates.methods.getBaseUri()).returns))
   console.log('Is Mint Paused: ', (await vendingMachineStates.methods.isMintPaused()).returns)
   console.log(
     'Vending Machine Contract balance',
-    Number(await getAlphBalance(vendingMachineStates.address, signer)) / NO_DECIMALS
+    (await getAlphBalance(vendingMachineStates.address, signer)).balanceHint
   )
 }
 
