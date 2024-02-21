@@ -3,8 +3,8 @@
   "name": "Soda",
   "attributes": [
     {
-      "trait_type": "type",
-      "value": "beverage"
+      "trait_type": "Type",
+      "value": "Beverage"
     },
     {
       "trait_type": "Carbohydrates",

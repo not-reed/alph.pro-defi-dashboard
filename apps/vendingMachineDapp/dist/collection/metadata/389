@@ -3,8 +3,8 @@
   "name": "Candy",
   "attributes": [
     {
-      "trait_type": "type",
-      "value": "candy"
+      "trait_type": "Type",
+      "value": "Candy"
     },
     {
       "trait_type": "Calories",

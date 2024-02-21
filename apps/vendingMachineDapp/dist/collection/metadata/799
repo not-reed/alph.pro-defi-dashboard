@@ -3,8 +3,8 @@
   "name": "Donut",
   "attributes": [
     {
-      "trait_type": "type",
-      "value": "snack"
+      "trait_type": "Type",
+      "value": "Snack"
     },
     {
       "trait_type": "calories",

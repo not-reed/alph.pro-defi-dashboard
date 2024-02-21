@@ -3,8 +3,8 @@
   "name": "Chicken",
   "attributes": [
     {
-      "trait_type": "type",
-      "value": "meal"
+      "trait_type": "Type",
+      "value": "Meal"
     },
     {
       "trait_type": "Calories",
