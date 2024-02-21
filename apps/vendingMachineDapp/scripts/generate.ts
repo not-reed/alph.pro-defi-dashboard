@@ -25,8 +25,10 @@ async function writeFiles() {
                 const fileNumber = (50 * Number(imageIdx)) + (i + 1)
                 
                 await Bun.write(join(__dirname, "../public/collection/images/", `${fileNumber}.svg`), file);
+
                 await Bun.write(join(__dirname, '../public/collection/metadata/', `${fileNumber}`), JSON.stringify({
-                    image: `https://arweave.net/${arweaveHash}/${fileNumber}.svg`,
+                    image: `https://snacks.alph.pro/collection/images/${fileNumber}.svg`,
+                    // image: `https://arweave.net/${arweaveHash}/${fileNumber}.svg`,
                     name: labels[imageIdx],
                     attributes: [
                         ...attributes[images[imageIdx]],
