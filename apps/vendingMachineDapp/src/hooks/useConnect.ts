@@ -12,7 +12,7 @@ import { NodeProvider, web3 } from "@alephium/web3";
 import { useToast } from "vue-toastification";
 import { labels } from "../data";
 
-const { setAmounts, amounts } = useTotalSupply()
+const {  amounts } = useTotalSupply()
 export const connectorIds = [
 	"injected",
 	"walletConnect",
@@ -82,9 +82,11 @@ function getConnector(connector: ConnectorId) {
 
 export function useConnect(rememberMe = true) {
 	const defaultConnectionCallbacks = {
+		// @ts-ignore
 		onDisconnected: (...args: unknown[]) => {
 			console.log("disconnected");
 		},
+		// @ts-ignore
 		onConnected: (...args: unknown[]) => {
 			console.log("connected");
 		},

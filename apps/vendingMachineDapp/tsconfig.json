@@ -13,10 +13,11 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
+    "esModuleInterop": true,
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false, // generated artifacts have many unused variables
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
