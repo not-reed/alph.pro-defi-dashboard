@@ -1,10 +1,11 @@
+//Shows available commands
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const messageDisplay = require("../core/messageDisplay.js");
 
 // Discord data to set command
 const discordData = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("This is Help");
+  .setDescription("Shows all the available commands");
 
 // Callback for discord
 const execute = async (interaction) => {
@@ -15,5 +16,7 @@ module.exports = { discordData, execute };
 
 //Command function
 async function help(interaction) {
-  await messageDisplay.success(interaction, "Help", "I am here to help you.");
+  const messageHelp = `/token : Shows token Info/Price>
+  /lp : Shows LP of two tokens, and $ value`;
+  await messageDisplay.success(interaction, "Available Commands", messageHelp);
 }
