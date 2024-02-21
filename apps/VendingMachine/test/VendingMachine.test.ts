@@ -7,6 +7,7 @@ import {
   Foods,
   ToggleMintState,
   UpdateBaseUri,
+  UpdateCollectionUri,
   VendingMachine,
   WithdrawAlph,
   MintNft,
@@ -14,11 +15,14 @@ import {
 } from '../artifacts/ts'
 
 import axios from 'axios'
+import { convertToObject } from 'typescript'
 
 describe('Vending Machine', async () => {
-  let signer
-  let foodsContractAddress
-  let vendingMachineContractAddress
+  let signer: any
+  let foodsContractAddress: string | undefined
+  let foodsContractId: string | undefined
+  let vendingMachineContractAddress: string | undefined
+  let vendingMachineContractId: string | undefined
   const NO_DECIMALS = 1000000000000000000
 
   const [signer1] = await getSigners(1, ONE_ALPH * 1000n, 0) //Group 0
@@ -38,7 +42,10 @@ describe('Vending Machine', async () => {
     }
 
     foodsContractAddress = foodsDeployed?.contractInstance.address
+    foodsContractId = foodsDeployed?.contractInstance.contractId
     vendingMachineContractAddress = vendingMachineDeployed?.contractInstance.address
+    vendingMachineContractId = vendingMachineDeployed?.contractInstance.contractId
+
     console.log('...........................................................................')
     const account = await signer.getAccounts()
     const testAddress = account[0].address
@@ -47,7 +54,7 @@ describe('Vending Machine', async () => {
   })
 
   it('should display Foods Info', async () => {
-    const foodsStates = Foods.at(foodsContractAddress)
+    const foodsStates = Foods.at(foodsContractAddress as string)
     const fetchStates = await foodsStates.fetchState()
 
     console.log('Token URI: ', hexToString(fetchStates.fields.tokenUri))
@@ -58,7 +65,7 @@ describe('Vending Machine', async () => {
   })
 
   it('should display Vending Machine Info', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
     console.log('Collection Contract both ', vendingMachineStates.address, vendingMachineContractAddress)
     console.log('Collection URI: ', hexToString((await vendingMachineStates.methods.getCollectionUri()).returns))
     console.log('Collection Owner: ', (await vendingMachineStates.methods.getOwner()).returns)
@@ -78,7 +85,7 @@ describe('Vending Machine', async () => {
     expect(
       WithdrawAlph.execute(signer1, {
         initialFields: {
-          vendingMachine: vendingMachineContractAddress,
+          vendingMachine: vendingMachineContractAddress as string,
           to: testAddress,
           amount: 10n
         },
@@ -88,18 +95,32 @@ describe('Vending Machine', async () => {
   })
 
   it('should not display non minted NFT info', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
     expect(vendingMachineStates.methods.getNFTUri({ args: { index: 7777n } })).rejects.toThrow(
       'AssertionFailedWithErrorCode'
     )
   })
 
+  it('should update Collection URI ', async () => {
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
+
+    await UpdateCollectionUri.execute(signer, {
+      initialFields: {
+        vendingMachine: vendingMachineContractAddress as string,
+        newCollectionUri: stringToHex('https://newCollection/')
+      },
+      attoAlphAmount: DUST_AMOUNT
+    })
+
+    console.log('New Collection URI: ', hexToString((await vendingMachineStates.methods.getCollectionUri()).returns))
+  })
+
   it('should update Base URI ', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
 
     await UpdateBaseUri.execute(signer, {
       initialFields: {
-        vendingMachine: vendingMachineContractAddress,
+        vendingMachine: vendingMachineContractAddress as string,
         newBaseUri: stringToHex('https://newBase/')
       },
       attoAlphAmount: DUST_AMOUNT
@@ -109,11 +130,11 @@ describe('Vending Machine', async () => {
   })
 
   it('should Toggle Mint state ', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
 
     await ToggleMintState.execute(signer, {
       initialFields: {
-        vendingMachine: vendingMachineContractAddress
+        vendingMachine: vendingMachineContractAddress as string
       },
       attoAlphAmount: DUST_AMOUNT
     })
@@ -122,10 +143,10 @@ describe('Vending Machine', async () => {
   })
 
   it('should Mint an NFT', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
     let mintPrice = (await vendingMachineStates.methods.getMintPrice()).returns
     console.log(`Mint Price: ${mintPrice / BigInt(NO_DECIMALS)} ALPH`)
-    let mintAmount = 10n
+    let mintAmount = 5n
     console.log('Total Mint: ', mintAmount)
     let alphNeededForMint = mintPrice * mintAmount
     let alphNeededForSubcontract = mintAmount * ONE_ALPH + mintAmount * DUST_AMOUNT
@@ -138,7 +159,7 @@ describe('Vending Machine', async () => {
     )
     let newNftCreated = await MintNft.execute(signer1, {
       initialFields: {
-        vendingMachine: vendingMachineContractAddress,
+        vendingMachine: vendingMachineContractId as string,
         foodTypeId: 2n,
         mintAmount: mintAmount
       },
@@ -161,19 +182,27 @@ describe('Vending Machine', async () => {
     contractAddresses = contractAddresses.data.generatedOutputs
     for (let i = 0; i < Number(mintAmount); i++) {
       let newNftContractAddress = contractAddresses[i].address
+      console.log(newNftContractAddress)
       const newNftContractState = Foods.at(newNftContractAddress)
       console.log('NFT Index: ', (await newNftContractState.methods.getNFTIndex()).returns)
+      let nftIndex = (await newNftContractState.methods.getNFTIndex()).returns
+      console.log(
+        `NFT by Index `,
+        (await vendingMachineStates.methods.nftByIndex({ args: { index: nftIndex } })).returns
+      )
+      nftIndex++
     }
   })
 
   it('should  check user NFT balance ', async () => {
     console.log('Signer 1 Address ', signer1.address)
     console.log('Signer 1 ALPH balance: ', Number(await getAlphBalance(signer1.address, signer)) / NO_DECIMALS)
-    console.log('User NFT balance', await getTokenBalance(signer1.address, foodsContractAddress, signer))
+    //Use swagger, it's easier to check NFT balances
+    console.log('User NFT balance', await getTokenBalance(signer1.address, foodsContractId as string, signer))
   })
 
   it('should  withdraw alph ', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
     console.log('test address ', testAddress)
     console.log('test ALPH balance before withdraw', Number(await getAlphBalance(testAddress, signer)) / NO_DECIMALS)
     console.log(
@@ -183,11 +212,11 @@ describe('Vending Machine', async () => {
 
     await WithdrawAlph.execute(signer, {
       initialFields: {
-        vendingMachine: vendingMachineContractAddress,
+        vendingMachine: vendingMachineContractAddress as string,
         to: testAddress,
-        amount: 10n
+        amount: 5n * ONE_ALPH
       },
-      attoAlphAmount: DUST_AMOUNT * 2n
+      attoAlphAmount: DUST_AMOUNT
     })
 
     console.log('Test ALPH balance after withdraw', Number(await getAlphBalance(testAddress, signer)) / NO_DECIMALS)
@@ -198,7 +227,7 @@ describe('Vending Machine', async () => {
   })
 
   it('should display Vending Machine Info', async () => {
-    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress)
+    const vendingMachineStates = VendingMachine.at(vendingMachineContractAddress as string)
     console.log('Collection Contract both ', vendingMachineStates.address, vendingMachineContractAddress)
     console.log('Collection URI: ', hexToString((await vendingMachineStates.methods.getCollectionUri()).returns))
     console.log('Collection Owner: ', (await vendingMachineStates.methods.getOwner()).returns)

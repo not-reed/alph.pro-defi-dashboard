@@ -53,16 +53,23 @@
     },
     "UpdateBaseUri": {
       "sourceFile": "scripts/UpdateBaseUri.ral",
-      "sourceCodeHash": "8a43aaf2bffb69ef72ee4787e6c5943b817b3a2da5ca0d4bac043ee1f6fd9bf0",
+      "sourceCodeHash": "70ad90dbeeecd980731f0d03f9c84781e5534be3f4592db0210e48001b21b8d3",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateCollectionUri": {
+      "sourceFile": "scripts/UpdateCollectionUri.ral",
+      "sourceCodeHash": "a21444518e31cdbc4fd539a3611077e18f51a6a21f7fb75179d3205cecca27f7",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "VendingMachine": {
       "sourceFile": "VendingMachine.ral",
-      "sourceCodeHash": "932462b727944fd75e44b9b22dab74d7d228ff21bf1d2d3791755ddba45e7d39",
+      "sourceCodeHash": "09cf48027b3085f95fcef29e5b529fefbd1bdac81e4eebbb7c83993848e09297",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "afe75d5906bd809adeb1cef6e728a27f10ad10c6fbedcf22201b3c022da7d6b3",
+      "codeHashDebug": "0a260205f0429db04046858740df08e17e718a93f7c39ae81395fe96f4345f07",
       "warnings": []
     },
     "WithdrawAlph": {

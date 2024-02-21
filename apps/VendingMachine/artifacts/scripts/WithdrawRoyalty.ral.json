@@ -1,7 +1,7 @@
 {
   "version": "v2.8.4",
   "name": "WithdrawRoyalty",
-  "bytecodeTemplate": "01010300000006{1}{2}0e0c{0}0111",
+  "bytecodeTemplate": "01010300000006{1}{2}0e0c{0}0112",
   "fieldsSig": {
     "names": [
       "vendingMachine",

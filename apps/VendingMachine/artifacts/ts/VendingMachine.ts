@@ -32,6 +32,7 @@ export namespace VendingMachineTypes {
   export type Fields = {
     foodsContractId: HexString;
     collectionOwner: Address;
+    collectionUri: HexString;
     nftBaseUri: HexString;
     totalSupply: bigint;
     mintIsPaused: boolean;
@@ -142,7 +143,6 @@ class Factory extends ContractFactory<
 
   eventIndex = { NftMinted: 0 };
   consts = {
-    CollectionUri: "56656e64696e67204d616368696e65",
     MaxSupply: BigInt(1000),
     MintPrice: BigInt(1000000000000000000),
     MaxMintPerTx: BigInt(10),
@@ -282,10 +282,18 @@ class Factory extends ContractFactory<
     updateBaseUri: async (
       params: TestContractParams<
         VendingMachineTypes.Fields,
-        { newNftBaseUri: HexString }
+        { newBaseUri: HexString }
       >
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "updateBaseUri", params);
+    },
+    updateCollectionUri: async (
+      params: TestContractParams<
+        VendingMachineTypes.Fields,
+        { newCollectionUri: HexString }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "updateCollectionUri", params);
     },
     toggleMintState: async (
       params: Omit<
@@ -327,7 +335,7 @@ export const VendingMachine = new Factory(
   Contract.fromJson(
     VendingMachineContractJson,
     "",
-    "afe75d5906bd809adeb1cef6e728a27f10ad10c6fbedcf22201b3c022da7d6b3"
+    "0a260205f0429db04046858740df08e17e718a93f7c39ae81395fe96f4345f07"
   )
 );
 
