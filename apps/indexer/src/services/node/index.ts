@@ -12,6 +12,18 @@ import type { NodeTransaction } from "../node/types/transactions";
 
 import { mapRawInputToTokenBalance } from "../common/utils/token";
 import type { Field } from "../common/types/fields";
+import { logger } from "../logger";
+
+const headers: Record<string, string> =
+	config.NODE_BASIC_AUTH && config.NODE_API_KEY
+		? {
+				Accept: "application/json",
+				Authorization: `Basic ${config.NODE_BASIC_AUTH}`,
+				"X-API-KEY": config.NODE_API_KEY,
+		  }
+		: {
+				Accept: "application/json",
+		  };
 
 export default {
 	blockFlow: {
@@ -22,7 +34,8 @@ export default {
 			const url = `${config.NODE_URL}/blockflow/blocks-with-events?fromTs=${fromTs}&toTs=${toTs}`;
 
 			// fetch all blocks with events
-			const result = await fetch(url).then((a) => a.json());
+			logger.debug(`Fetching blocks with events from ${fromTs} to ${toTs}`);
+			const result = await fetch(url, { headers }).then((a) => a.json());
 
 			if (!result || typeof result !== "object") {
 				throw new Error("Invalid BlockFlow.blocksAndEvents");
@@ -163,84 +176,84 @@ export default {
 				});
 			});
 		},
-		blocks: async (fromTs: number, toTs: number): Promise<Block[][]> => {
-			const url = `${config.NODE_URL}/blockflow/blocks?fromTs=${fromTs}&toTs=${toTs}`;
-			const result = await fetch(url).then((a) => a.json());
-			if (!result || typeof result !== "object") {
-				throw new Error("Invalid BlockFlow.blocks");
-			}
-			const { blocks, detail } = result as {
-				blocks: unknown[][];
-				detail?: string;
-			};
-			if (detail) {
-				throw new Error(`BlockFlow.blocks: ${detail}`);
-			}
-			// 16 groups, 1 per shard/chain
-			if (!blocks || !Array.isArray(blocks) || blocks.length !== 16) {
-				throw new Error("Invalid BlockFlow.blocks.blocks");
-			}
+		// blocks: async (fromTs: number, toTs: number): Promise<Block[][]> => {
+		// 	const url = `${config.NODE_URL}/blockflow/blocks?fromTs=${fromTs}&toTs=${toTs}`;
+		// 	const result = await fetch(url, { headers }).then((a) => a.json());
+		// 	if (!result || typeof result !== "object") {
+		// 		throw new Error("Invalid BlockFlow.blocks");
+		// 	}
+		// 	const { blocks, detail } = result as {
+		// 		blocks: unknown[][];
+		// 		detail?: string;
+		// 	};
+		// 	if (detail) {
+		// 		throw new Error(`BlockFlow.blocks: ${detail}`);
+		// 	}
+		// 	// 16 groups, 1 per shard/chain
+		// 	if (!blocks || !Array.isArray(blocks) || blocks.length !== 16) {
+		// 		throw new Error("Invalid BlockFlow.blocks.blocks");
+		// 	}
 
-			// TODO: fix types (check explorer)
-			return blocks.map((blockGroup) => {
-				if (!blockGroup || !Array.isArray(blockGroup)) {
-					throw new Error("Invalid BlockFlow.blocks.blockGroup");
-				}
+		// 	// TODO: fix types (check explorer)
+		// 	return blocks.map((blockGroup) => {
+		// 		if (!blockGroup || !Array.isArray(blockGroup)) {
+		// 			throw new Error("Invalid BlockFlow.blocks.blockGroup");
+		// 		}
 
-				return blockGroup.map((block) => {
-					if (!block || typeof block !== "object") {
-						throw new Error("Invalid BlockFlow.blocks.block");
-					}
+		// 		return blockGroup.map((block) => {
+		// 			if (!block || typeof block !== "object") {
+		// 				throw new Error("Invalid BlockFlow.blocks.block");
+		// 			}
 
-					const { hash, timestamp, chainFrom, chainTo, height, transactions } =
-						block as Record<string, unknown>;
+		// 			const { hash, timestamp, chainFrom, chainTo, height, transactions } =
+		// 				block as Record<string, unknown>;
 
-					if (!transactions || !Array.isArray(transactions)) {
-						throw new Error("Invalid BlockFlow.blocks.block.transactions");
-					}
+		// 			if (!transactions || !Array.isArray(transactions)) {
+		// 				throw new Error("Invalid BlockFlow.blocks.block.transactions");
+		// 			}
 
-					return {
-						blockHash: hash as BlockHash,
-						timestamp: timestamp as number,
-						chainFrom: chainFrom as ChainId,
-						chainTo: chainTo as ChainId,
-						height: height as number,
-						transactions: transactions.map((transaction) => {
-							if (!transaction || typeof transaction !== "object") {
-								throw new Error(
-									"Invalid BlockFlow.blocks.block.transactions.transaction",
-								);
-							}
+		// 			return {
+		// 				blockHash: hash as BlockHash,
+		// 				timestamp: timestamp as number,
+		// 				chainFrom: chainFrom as ChainId,
+		// 				chainTo: chainTo as ChainId,
+		// 				height: height as number,
+		// 				transactions: transactions.map((transaction) => {
+		// 					if (!transaction || typeof transaction !== "object") {
+		// 						throw new Error(
+		// 							"Invalid BlockFlow.blocks.block.transactions.transaction",
+		// 						);
+		// 					}
 
-							const { unsigned, generatedOutputs } = transaction as Record<
-								string,
-								unknown
-							>;
-							if (!unsigned || typeof unsigned !== "object") {
-								throw new Error(
-									"Invalid BlockFlow.blocks.block.transactions.transaction.unsigned",
-								);
-							}
+		// 					const { unsigned, generatedOutputs } = transaction as Record<
+		// 						string,
+		// 						unknown
+		// 					>;
+		// 					if (!unsigned || typeof unsigned !== "object") {
+		// 						throw new Error(
+		// 							"Invalid BlockFlow.blocks.block.transactions.transaction.unsigned",
+		// 						);
+		// 					}
 
-							if (!generatedOutputs || !Array.isArray(generatedOutputs)) {
-								throw new Error(
-									"Invalid BlockFlow.blocks.block.transactions.transaction.generatedOutputs",
-								);
-							}
+		// 					if (!generatedOutputs || !Array.isArray(generatedOutputs)) {
+		// 						throw new Error(
+		// 							"Invalid BlockFlow.blocks.block.transactions.transaction.generatedOutputs",
+		// 						);
+		// 					}
 
-							const { txId } = unsigned as Record<string, unknown>;
+		// 					const { txId } = unsigned as Record<string, unknown>;
 
-							return {
-								transactionHash: txId as TransactionHash,
-								gasAmount: BigInt(transaction.unsigned.gasAmount),
-								gasPrice: BigInt(transaction.unsigned.gasPrice),
-								outputs: [], // TODO: ?? maybe remove this whole function
-								events: [],
-							} satisfies NodeTransaction;
-						}),
-					} satisfies Block;
-				});
-			});
-		},
+		// 					return {
+		// 						transactionHash: txId as TransactionHash,
+		// 						gasAmount: BigInt(transaction.unsigned.gasAmount),
+		// 						gasPrice: BigInt(transaction.unsigned.gasPrice),
+		// 						outputs: [], // TODO: ?? maybe remove this whole function
+		// 						events: [],
+		// 					} satisfies NodeTransaction;
+		// 				}),
+		// 			} satisfies Block;
+		// 		});
+		// });
+		// },
 	},
 };

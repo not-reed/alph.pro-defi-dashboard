@@ -8,6 +8,8 @@ import { db } from "../database/db";
 import { binToHex, contractIdFromAddress } from "@alephium/web3";
 import { config } from "../config";
 import type { ContractAddress } from "../services/common/types/brands";
+import { logger } from "../services/logger";
+import explorerService from "../services/explorer";
 
 const ALPH_ADDRESS =
 	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
@@ -37,6 +39,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 	// return data to be saved.
 	// whatever is returned here will be passed to the insert function
 	async process(blocks: Block[]): Promise<NewToken[]> {
+		logger.info("GOT TO PROCESS TOKEN")
 		const tokenAddresses = new Set<ContractAddress>();
 		for (const block of blocks) {
 			for (const transaction of block.transactions) {
@@ -51,6 +54,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 				}
 			}
 		}
+		logger.info(`FOUND TOKENS: ${tokenAddresses.size}`)
 		if (tokenAddresses.size === 0 && hasAlph) {
 			return [];
 		}
@@ -124,51 +128,52 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 	}
 
 	private async loadMetadata(tokens: Set<ContractAddress>) {
-		const chunks = Array.from(tokens).reduce((all, one, i) => {
-			const ch = Math.floor(i / 80);
-			if (all[ch]) {
-				all[ch].push(one);
-				return all;
-			}
+		return await explorerService.tokens.fungibleMetadata(Array.from(tokens))
+		// const chunks = Array.from(tokens).reduce((all, one, i) => {
+		// 	const ch = Math.floor(i / 80);
+		// 	if (all[ch]) {
+		// 		all[ch].push(one);
+		// 		return all;
+		// 	}
 
-			all[ch] = [one];
-			return all;
-		}, [] as string[][]);
+		// 	all[ch] = [one];
+		// 	return all;
+		// }, [] as string[][]);
 
-		const results = await Promise.all(
-			chunks.map(async (chunk) => {
-				// TODO: would be much better to get onchain
-				return await fetch(`${config.EXPLORER_URL}/tokens/fungible-metadata`, {
-					method: "POST",
-					headers: {
-						accept: "application/json",
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(
-						chunk.map((a) => binToHex(contractIdFromAddress(a))),
-					),
-				}).then((a) => a.json());
-			}),
-		);
+		// const results = await Promise.all(
+		// 	chunks.map(async (chunk) => {
+		// 		// TODO: would be much better to get onchain
+		// 		return await fetch(`${config.EXPLORER_URL}/tokens/fungible-metadata`, {
+		// 			method: "POST",
+		// 			headers: {
+		// 				accept: "application/json",
+		// 				"Content-Type": "application/json",
+		// 			},
+		// 			body: JSON.stringify(
+		// 				chunk.map((a) => binToHex(contractIdFromAddress(a))),
+		// 			),
+		// 		}).then((a) => a.json());
+		// 	}),
+		// );
 
-		interface RawMetadata {
-			id: string;
-			symbol: string;
-			name: string;
-			decimals: string;
-		}
+		// interface RawMetadata {
+		// 	id: string;
+		// 	symbol: string;
+		// 	name: string;
+		// 	decimals: string;
+		// }
 
-		return results
-			.flat()
-			.filter((a): a is RawMetadata =>
-				Boolean(
-					a &&
-						typeof a === "object" &&
-						"id" in a &&
-						"symbol" in a &&
-						"name" in a &&
-						"decimals" in a,
-				),
-			) satisfies RawMetadata[];
+		// return results
+		// 	.flat()
+		// 	.filter((a): a is RawMetadata =>
+		// 		Boolean(
+		// 			a &&
+		// 				typeof a === "object" &&
+		// 				"id" in a &&
+		// 				"symbol" in a &&
+		// 				"name" in a &&
+		// 				"decimals" in a,
+		// 		),
+		// 	) satisfies RawMetadata[];
 	}
 }
