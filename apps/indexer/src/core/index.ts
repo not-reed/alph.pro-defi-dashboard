@@ -14,6 +14,17 @@ import {
 import { addressFromContractId } from "@alephium/web3";
 import { config } from "../config";
 
+const locks = new Map<string, boolean>();
+
+function getLock(name: string) {
+	return locks.get(name) ?? false;
+}
+
+function setLock(name: string, value: boolean) {
+	logger.info(`Setting Lock for ${name} to ${value}`);
+	locks.set(name, value);
+}
+
 export async function core() {
 	if (config.INDEXING_DISABLED) {
 		logger.warn("Indexing is disabled");
@@ -93,124 +104,71 @@ export async function core() {
 	// or speed up to improve realtime processing
 	// could also be modified so that cron schedule is configured per plugin
 	// if there are some that should be slow, and some that should be fast
-	cron.schedule("* * * * *", async () => {
+	cron.schedule("*/30 * * * * *", async () => {
 		logger.info("Running Cron");
-		const start = Date.now();
 
-		plugins.map(async (plugin) => {
+		plugins.map(async (plugin): Promise<void> => {
 			if (pluginActive.get(plugin.PLUGIN_NAME) === false) {
 				// abort if manually turned off
 				return;
 			}
-			let from = 0;
-			let to = 0;
+			let lastFrom = 0;
+			let lastTo = 0;
+			if (getLock(plugin.PLUGIN_NAME)) {
+				// logger.info(`Skipping ${plugin.PLUGIN_NAME} - already running`);
+				return;
+			}
 			try {
-				await lock.using([plugin.PLUGIN_NAME], 30_000, async (signal) => {
-					const latest = latestMap.get(plugin.PLUGIN_NAME);
-					if (!latest) {
-						throw new Error(
-							`No latest timestamp found - ${plugin.PLUGIN_NAME}`,
-						);
-					}
+				setLock(plugin.PLUGIN_NAME, true);
 
-					from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
-					to = from + MAX_DURATION;
-					const startFrom = from;
+				logger.info(`Got Lock for ${plugin.PLUGIN_NAME}`);
+				const latest = latestMap.get(plugin.PLUGIN_NAME);
+				if (!latest) {
+					throw new Error(`No latest timestamp found - ${plugin.PLUGIN_NAME}`);
+				}
+				lastFrom = latest - OVERLAP_WINDOW; // only for logging
+				let from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
+				lastTo = from + MAX_DURATION; // only for logging
+				let to = from + MAX_DURATION;
+				const startFrom = from;
 
-					logger.debug(
-						`'${plugin.PLUGIN_NAME}' running from ${new Date(
-							from,
-						).toLocaleString()}`,
+				logger.debug(
+					`'${plugin.PLUGIN_NAME}' running from ${new Date(
+						from,
+					).toLocaleString()}`,
+				);
+				const now = Date.now();
+
+				while (from < now) {
+					// if (Date.now() - start > 20_000) {
+					// 	// Do at most 4.5 seconds of work so that we can release the lock
+					// 	// and not tie up CPU usage so much
+					// 	logger.debug(
+					// 		`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
+					// 			from,
+					// 		).toLocaleString()}(${
+					// 			Math.round(((from - startFrom) / 1000 / 60 / 60) * 10) / 10
+					// 		} Hours)`,
+					// 	);
+					// 	return;
+					// }
+
+					// TODO: use dataloader so that multiple requests in the same time frame
+					// don't result in multiple requests to the node
+					logger.info(
+						`${plugin.PLUGIN_NAME} - Fetching Blocks from ${from} to ${to}`,
 					);
-					const now = Date.now();
+					const blocks = await sdk.getBlocksFromTimestamp(from, to);
+					logger.info(
+						`${plugin.PLUGIN_NAME} - Fetched Blocks from ${from} to ${to} (COMPLETE - ${blocks.length} Blocks)`,
+					);
 
-					while (from < now) {
-						if (Date.now() - start > 55_000) {
-							// Do at most 4.5 seconds of work so that we can release the lock
-							// and not tie up CPU usage so much
-							logger.debug(
-								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
-									from,
-								).toLocaleString()}(${
-									Math.round(((from - startFrom) / 1000 / 60 / 60) * 10) / 10
-								} Hours)`,
-							);
-							return;
-						}
-
-						if (signal.aborted) {
-							logger.warn(" Signal Aborted ");
-							throw signal.error;
-						}
-
-						// TODO: use dataloader so that multiple requests in the same time frame
-						// don't result in multiple requests to the node
-						const blocks = await sdk.getBlocksFromTimestamp(from, to);
-
-						if (!blocks.length) {
-							logger.warn(
-								`No blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
-							);
-
-							await db.transaction().execute(async (trx) => {
-								// only update if above continues successfully, otherwise will retry
-
-								const lastTo = new Date(Math.min(to, now));
-
-								await trx
-									.updateTable("Plugin")
-									.set({ timestamp: lastTo })
-									.where("name", "=", plugin.PLUGIN_NAME)
-									.execute();
-
-								latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
-
-								// use actual 'to' value, not lastTo
-								// since actual 'to' will be far enough in the future
-								// that if no work needs to be done, we will just abort
-								from = to - OVERLAP_WINDOW;
-								to = from + MAX_DURATION;
-							});
-							continue;
-						}
-
-						const blocksToProcess = await filterUnprocessedBlocks(
-							plugin.PLUGIN_NAME,
-							blocks,
+					if (!blocks.length) {
+						logger.warn(
+							`No blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
 						);
-
-						if (!blocksToProcess.length) {
-							logger.warn(
-								`No processable blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
-							);
-
-							await db.transaction().execute(async (trx) => {
-								// only update if above continues successfully, otherwise will retry
-
-								const lastTo = new Date(Math.min(to, now));
-
-								await trx
-									.updateTable("Plugin")
-									.set({ timestamp: lastTo })
-									.where("name", "=", plugin.PLUGIN_NAME)
-									.execute();
-
-								latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
-
-								// use actual 'to' value, not lastTo
-								// since actual 'to' will be far enough in the future
-								// that if no work needs to be done, we will just abort
-								from = to - OVERLAP_WINDOW;
-								to = from + MAX_DURATION;
-							});
-							continue;
-						}
-
-						const data = await plugin.process(blocksToProcess);
 
 						await db.transaction().execute(async (trx) => {
-							await plugin.insert(trx, data);
-
 							// only update if above continues successfully, otherwise will retry
 
 							const lastTo = new Date(Math.min(to, now));
@@ -229,14 +187,77 @@ export async function core() {
 							from = to - OVERLAP_WINDOW;
 							to = from + MAX_DURATION;
 						});
+						continue;
 					}
-					logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
-				});
+
+					const blocksToProcess = await filterUnprocessedBlocks(
+						plugin.PLUGIN_NAME,
+						blocks,
+					);
+
+					if (!blocksToProcess.length) {
+						logger.warn(
+							`No processable blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
+						);
+
+						await db.transaction().execute(async (trx) => {
+							// only update if above continues successfully, otherwise will retry
+
+							const lastTo = new Date(Math.min(to, now));
+
+							await trx
+								.updateTable("Plugin")
+								.set({ timestamp: lastTo })
+								.where("name", "=", plugin.PLUGIN_NAME)
+								.execute();
+
+							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
+
+							// use actual 'to' value, not lastTo
+							// since actual 'to' will be far enough in the future
+							// that if no work needs to be done, we will just abort
+							from = to - OVERLAP_WINDOW;
+							to = from + MAX_DURATION;
+						});
+						continue;
+					}
+
+					const data = await plugin.process(blocksToProcess);
+
+					await db.transaction().execute(async (trx) => {
+						await plugin.insert(trx, data);
+
+						// only update if above continues successfully, otherwise will retry
+
+						const lastTo = new Date(Math.min(to, now));
+
+						await trx
+							.updateTable("Plugin")
+							.set({ timestamp: lastTo })
+							.where("name", "=", plugin.PLUGIN_NAME)
+							.execute();
+
+						latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
+
+						// use actual 'to' value, not lastTo
+						// since actual 'to' will be far enough in the future
+						// that if no work needs to be done, we will just abort
+						from = to - OVERLAP_WINDOW;
+						to = from + MAX_DURATION;
+					});
+				}
+				logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
 			} catch (err) {
-				logger.error({
-					msg: `Error with ${plugin.PLUGIN_NAME} and time range ${from}:${to}`,
-					err,
-				});
+				if (lastFrom || lastTo) {
+					logger.error({
+						msg: `Error with in time range  ${plugin.PLUGIN_NAME}:${lastFrom}:${lastTo}`,
+						err,
+					});
+				} else {
+					logger.error({ err });
+				}
+			} finally {
+				setLock(plugin.PLUGIN_NAME, false);
 			}
 		});
 	});

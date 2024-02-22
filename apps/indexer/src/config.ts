@@ -14,5 +14,8 @@ export const config = {
 	DB_PASS: process.env.DB_PASS,
 
 	NODE_URL: process.env.NODE_URL,
+	NODE_BASIC_AUTH: process.env.NODE_BASIC_AUTH,
+	NODE_API_KEY: process.env.NODE_API_KEY,
 	EXPLORER_URL: process.env.EXPLORER_URL,
+	EXPLORER_BASIC_AUTH: process.env.EXPLORER_BASIC_AUTH,
 };

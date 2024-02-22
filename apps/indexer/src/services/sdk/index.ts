@@ -7,31 +7,32 @@ import DataLoader from "dataloader";
 import type { BlockHash } from "../common/types/brands";
 import type { ExplorerTransaction } from "../explorer/types/transactions";
 import { logger } from "../logger";
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutMap = new Map<BlockHash, number>();
 const transactionMap = new Map<BlockHash, ExplorerTransaction[]>();
 const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 	async (hashes) => {
-		for (const hash of hashes) {
-			// refresh to clear cache every 30 seconds if unused
-			timeoutMap.set(hash, Date.now() + 5_000);
-		}
+		// for (const hash of hashes) {
+		// 	// refresh to clear cache every 30 seconds if unused
+		// 	timeoutMap.set(hash, Date.now() + 5_000);
+		// }
 
-		setTimeout(() => {
-			// TODO: temp fix, clears all cache
-			transactionLoader.clearAll();
-			const now = Date.now();
-			for (const [hash, time] of timeoutMap) {
-				if (time <= now) {
-					// logger.info(`Clearing Cache ${hash}`);
-					transactionLoader.clear(hash);
-					timeoutMap.delete(hash);
-					transactionMap.delete(hash);
-				}
-			}
-		}, 10_000);
+		// setTimeout(() => {
+		// 	// TODO: temp fix, clears all cache
+		// 	transactionLoader.clearAll();
+		// 	const now = Date.now();
+		// 	for (const [hash, time] of timeoutMap) {
+		// 		if (time <= now) {
+		// 			// logger.info(`Clearing Cache ${hash}`);
+		// 			transactionLoader.clear(hash);
+		// 			timeoutMap.delete(hash);
+		// 			transactionMap.delete(hash);
+		// 		}
+		// 	}
+		// }, 10_000);
 
-		const t = Date.now();
+		// const t = Date.now();
 		// const transactions: ExplorerTransaction[][] = [];
 		// for (const hash of hashes) {
 		// 	const cached = transactionMap.get(hash);
@@ -47,27 +48,51 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 		// }
 
 		let cachedCounter = 0;
-		const transactions = await Promise.all(
-			hashes.map(async (hash) => {
-				const cached = transactionMap.get(hash);
-				if (cached) {
-					cachedCounter++;
-					return cached;
+		const transactions = [];
+		for (const hash of hashes) {
+			// refresh timeout
+			timeoutMap.set(hash, Date.now() + 5_000);
+
+			const cached = transactionMap.get(hash);
+			if (cached) {
+				cachedCounter++;
+				transactions.push(cached);
+				setTimeout(() => {
+					const time = timeoutMap.get(hash);
+					if (time && time <= Date.now()) {
+						// remove timeout
+						timeoutMap.delete(hash);
+						// clear cached results
+						transactionMap.delete(hash);
+						// reset dataloader
+						transactionLoader.clear(hash);
+					}
+				}, 10_000);
+				continue;
+			}
+
+			const transaction = await explorerService.block.transactions(hash);
+			// local copy for request
+			transactions.push(transaction);
+			// cached copy for next time
+			transactionMap.set(hash, transaction);
+
+			// clearout after a brief intermission
+			setTimeout(() => {
+				const time = timeoutMap.get(hash);
+				if (time && time <= Date.now()) {
+					// remove timeout
+					timeoutMap.delete(hash);
+					// clear cached results
+					transactionMap.delete(hash);
+					// reset dataloader
+					transactionLoader.clear(hash);
 				}
+			}, 10_000);
 
-				const transaction = await explorerService.block.transactions(hash);
-				transactionMap.set(hash, transaction);
-				return transaction;
-			}),
-		);
-
-		// logger.info(
-		// 	`Transaction Batch took ${Date.now() - t}ms for ${
-		// 		hashes.length
-		// 	} transactions (${cachedCounter} cached) - (${
-		// 		timeoutMap.size
-		// 	} to be cleared)`,
-		// );
+			// await wait(50)
+		}
+		logger.info("transaction fetching complete");
 
 		return transactions;
 	},
@@ -141,12 +166,12 @@ const basicBlockDataLoader = new DataLoader<
 				cachedCounter++;
 				return cached;
 			}
-			const blocks = await nodeService.blockFlow.blocks(from, to);
+			const blocks = await nodeService.blockFlow.blocksWithEvents(from, to);
 			blockMap.set(`${from}-${to}`, blocks);
 			return blocks;
 		}),
 	);
-
+	logger.info("block fetching complete");
 	// logger.info(
 	// 	`Block Batch took ${Date.now() - t}ms for ${
 	// 		timestamps.length
@@ -171,15 +196,22 @@ export default {
 
 		// TODO: improve loader, most plugins are out of time by ~1ms which breaks this cache
 		// should group together
+
+		logger.info("block fetching starting");
 		const blocks = await basicBlockDataLoader.load(`${from}-${to}`);
 
 		const hashes = blocks.flat().map((b) => b.blockHash);
+		logger.info(`block fetching complete - ${hashes.length} blocks found`);
 
+		logger.info("transaction fetching starting");
 		const transactions = await Promise.all(
 			hashes.map(async (hash) => {
 				return await transactionLoader.load(hash);
 				// return await explorerService.block.transactions(hash);
 			}),
+		);
+		logger.info(
+			`transaction fetching complete - ${transactions.length} transactions found`,
 		);
 
 		const transactionMap = new Map(

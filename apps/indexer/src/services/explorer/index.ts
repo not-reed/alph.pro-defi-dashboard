@@ -1,40 +1,114 @@
-import { addressFromContractId } from "@alephium/web3";
+import { binToHex, contractIdFromAddress } from "@alephium/web3";
 import { config } from "../../config";
 import type {
 	BlockHash,
 	ContractAddress,
 	TransactionHash,
-	UserAddress,
 } from "../common/types/brands";
 import type { ContractEvent } from "../node/types/events";
 
 import type { ExplorerTransaction } from "./types/transactions";
-import type { TokenBalance } from "../common/types/token";
+
 import { mapRawInputToTokenBalance } from "../common/utils/token";
 import { transformField } from "../common/types/fields";
 import { logger } from "../logger";
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const headers: Record<string, string> = config.EXPLORER_BASIC_AUTH
+	? {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+			Authorization: `Basic ${config.EXPLORER_BASIC_AUTH}`,
+	  }
+	: {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+	  };
 
 async function getPaginatedResults(
 	url: string,
 	page = 1,
 	limit = 100,
+	retries = 0,
 ): Promise<unknown[]> {
-	const results: unknown = await fetch(
-		`${url}?limit=${limit}&page=${page}`,
-	).then((a) => a.json());
+	try {
+		logger.debug(`Fetching transactions for ${url} => page ${page}`);
+		const response = await fetch(`${url}?limit=${limit}&page=${page}`, {
+			headers,
+		});
+		const results: unknown = await response.json();
 
-	if (!results || !Array.isArray(results)) {
-		throw new Error("Invalid results");
+		if (!results || !Array.isArray(results)) {
+			throw new Error("Invalid results");
+		}
+
+		if (results.length === limit) {
+			const y: unknown = await getPaginatedResults(url, page + 1, limit, 0);
+			return results.concat(y);
+		}
+
+		return results;
+	} catch (err) {
+		if (retries < 3) {
+			await wait(250);
+			logger.warn(`Retrying ${url} page ${page} after error`, err);
+			return await getPaginatedResults(url, page, limit, retries + 1);
+		}
+		throw err;
 	}
-
-	if (results.length === limit) {
-		const y: unknown = await getPaginatedResults(url, page + 1, limit);
-		return results.concat(y);
-	}
-
-	return results;
 }
 export default {
+	tokens: {
+		fungibleMetadata: async (contractAddresses: ContractAddress[]) => {
+			const chunks = contractAddresses.reduce((all, one, i) => {
+				const ch = Math.floor(i / 80);
+				if (all[ch]) {
+					all[ch].push(one);
+					return all;
+				}
+
+				all[ch] = [one];
+				return all;
+			}, [] as ContractAddress[][]);
+
+			const results = await Promise.all(
+				chunks.map(async (chunk) => {
+					// TODO: would be much better to get onchain
+					return await fetch(
+						`${config.EXPLORER_URL}/tokens/fungible-metadata`,
+						{
+							method: "POST",
+							headers: headers,
+							body: JSON.stringify(
+								chunk.map((a) => binToHex(contractIdFromAddress(a))),
+							),
+						},
+					).then((a) => a.json());
+				}),
+			);
+
+			interface RawTokenMetadata {
+				id: string;
+				symbol: string;
+				name: string;
+				decimals: string;
+			}
+
+			return results
+				.flat()
+				.filter((a): a is RawTokenMetadata =>
+					Boolean(
+						a &&
+							typeof a === "object" &&
+							"id" in a &&
+							"symbol" in a &&
+							"name" in a &&
+							"decimals" in a,
+					),
+				) satisfies RawTokenMetadata[];
+		},
+	},
 	block: {
 		transactions: async (
 			blockHash: BlockHash,
@@ -75,7 +149,9 @@ export default {
 		): Promise<ContractEvent[]> => {
 			// TODO: pagination
 			const url = `${config.EXPLORER_URL}/contract-events/contract-address/${contractAddress}?page=1&limit=100`;
-			const contractEvents: unknown = await fetch(url).then((a) => a.json());
+			const contractEvents: unknown = await fetch(url, { headers }).then((a) =>
+				a.json(),
+			);
 
 			if (!contractEvents || !Array.isArray(contractEvents)) {
 				throw new Error("Invalid contractEvents");
