@@ -1,5 +1,5 @@
 import { expect, describe, it, beforeAll } from 'bun:test'
-import { web3 } from '@alephium/web3'
+import { web3, hexToString, DUST_AMOUNT, stringToHex, ONE_ALPH } from '@alephium/web3'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { testNodeWallet, getSigners, testAddress } from '@alephium/web3-test'
 import { deployToDevnet } from '@alephium/cli'
@@ -25,8 +25,6 @@ describe('Vending Machine', async () => {
   let vendingMachineContractAddress: string | undefined
   let vendingMachineContractId: string | undefined
   const NO_DECIMALS = 1000000000000000000
-
-  
 
   beforeAll(async () => {
     web3.setCurrentNodeProvider('http://127.0.0.1:22973', undefined, fetch)
