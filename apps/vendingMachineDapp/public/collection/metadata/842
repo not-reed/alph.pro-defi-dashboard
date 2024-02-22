@@ -1,0 +1,30 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/842.svg",
+  "name": "Eggs",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "77"
+    },
+    {
+      "trait_type": "Carbs",
+      "value": "0.6 g"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "212 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "5.3 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "6.3 g"
+    }
+  ]
+}

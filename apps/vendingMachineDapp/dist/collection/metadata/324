@@ -1,0 +1,34 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/324.svg",
+  "name": "Milk",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Beverage"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "149"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "12 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "8 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "8 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "12 g"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/723.svg",
+  "name": "Pie",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Snack"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "240"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "31 g"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "0 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "12 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "4 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "2 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "7 g"
+    }
+  ]
+}

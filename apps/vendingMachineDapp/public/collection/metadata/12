@@ -1,0 +1,42 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/12.svg",
+  "name": "Popcorn",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Snack"
+    },
+    {
+      "trait_type": "Calcium",
+      "value": "0.56 mg"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "6.2 g"
+    },
+    {
+      "trait_type": "Energy",
+      "value": "30.8 kcal"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "0.362 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "1.15 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "1.03 g"
+    },
+    {
+      "trait_type": "Sugars",
+      "value": "0.07 g"
+    },
+    {
+      "trait_type": "Water",
+      "value": "0.265 g"
+    }
+  ]
+}

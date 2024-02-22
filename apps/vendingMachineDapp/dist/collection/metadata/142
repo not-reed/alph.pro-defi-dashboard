@@ -1,0 +1,34 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/142.svg",
+  "name": "Beer",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Beverage"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "153"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "13 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "Less than 1 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "Less than 1 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "2 g"
+    },
+    {
+      "trait_type": "Sugar",
+      "value": "Less than 1 g"
+    }
+  ]
+}

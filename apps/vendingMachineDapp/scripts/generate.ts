@@ -5,7 +5,7 @@ import { join } from 'path'
 async function writeFiles() {
     await Bun.write(join(__dirname, '../public/collection/collection.json'), JSON.stringify({
         name: 'Alephium Vending Machine',
-        image: '', // TODO:
+        image: 'https://arweave.net/nv8fvKlzM5iEnbbtZl5KSRods-hnUf52CyNw_SkPHnQ/banner.png',
         description: 'Alephium Vending Machine Collection - NFT snacks for your next Open Office call',
     }));
 
@@ -14,17 +14,28 @@ async function writeFiles() {
     for (const imageIdx in images) {
 
         try {
-
+            const arweaveHash = 'OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI' // TODO:
+            // get picture
             const file = Bun.file(join(__dirname, "../src/assets/foods/svgs/", `${images[imageIdx]}.svg`));
+            // save for public usage
             await Bun.write(join(__dirname, "../public/images/", `${images[imageIdx]}.svg`), file);
-            await Bun.write(join(__dirname, '../public/collection/metadata/', `${imageIdx}.json`), JSON.stringify({
-                image: '', // TODO:
-                name: labels[imageIdx],
-                attributes: [
-                    ...attributes[images[imageIdx]],
-                    ...traits[images[imageIdx]]
-                ]
-            }, null, 2));
+
+            await Bun.write(join(__dirname, "../public/images/", `${images[imageIdx]}.svg`), file);
+            for (const i of new Array(50).fill(0).map((_,a) => a)) {
+                const fileNumber = (50 * Number(imageIdx)) + (i + 1)
+                
+                await Bun.write(join(__dirname, "../public/collection/images/", `${fileNumber}.svg`), file);
+
+                await Bun.write(join(__dirname, '../public/collection/metadata/', `${fileNumber}`), JSON.stringify({
+                    // image: `https://snacks.alph.pro/collection/images/${fileNumber}.svg`,
+                    image: `https://arweave.net/${arweaveHash}/${fileNumber}.svg`,
+                    name: labels[imageIdx],
+                    attributes: [
+                        ...attributes[images[imageIdx]],
+                        ...traits[images[imageIdx]]
+                    ]
+                }, null, 2));
+            }
         } catch {
             console.log({ error: 'missing traits', imageIdx, image: images[imageIdx] })
         }
