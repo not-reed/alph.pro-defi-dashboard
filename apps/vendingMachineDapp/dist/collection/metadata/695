@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/695.svg",
+  "name": "Coffee",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Beverage"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "2.4"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "0.3 g"
+    }
+  ]
+}

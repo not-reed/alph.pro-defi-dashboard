@@ -1,0 +1,7 @@
+TxScript WithdrawRoyalty(
+    vendingMachine: VendingMachine,
+    to: Address,
+    amount: U256
+) {
+    vendingMachine.withdrawAlph(to,amount)
+}

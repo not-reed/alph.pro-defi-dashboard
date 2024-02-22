@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/624.svg",
+  "name": "Chips",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Snack"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "160"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "15 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "10 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "2 g"
+    }
+  ]
+}

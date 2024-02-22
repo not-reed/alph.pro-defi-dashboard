@@ -1,0 +1,90 @@
+{
+  "fullNodeVersion": "v2.8.3",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": false,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "Foods": {
+      "sourceFile": "Foods.ral",
+      "sourceCodeHash": "b71f0daa143f8e4c552ec876e298a189a6a77b09da11efc54ac9c1128e3ed756",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "7386b370672aff98393754e2785b59018eed34a07e7a7eab3d18b4289f627b72",
+      "warnings": []
+    },
+    "INFT": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_interface.ral",
+      "sourceCodeHash": "7f7514adf9fee057049d1c162701725b3377c01a0a102e6f0f5cf747039926b6",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "INFTCollection": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_collection_interface.ral",
+      "sourceCodeHash": "738a3440b686d94c9f7db58f23e22b7512d229540392b426ecb190b82db3fb4f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "INFTCollectionWithRoyalty": {
+      "sourceFile": "../../../node_modules/@alephium/web3/std/nft_collection_with_royalty_interface.ral",
+      "sourceCodeHash": "6407fb10136b21e191c5cf1f695be89f9e427ce2b01c039dd525dac587f3fc05",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "MintNft": {
+      "sourceFile": "scripts/MintNft.ral",
+      "sourceCodeHash": "fec0291c21d0f14b812536de878401a36339d137fd060b55795793a3d64002b4",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "ToggleMintState": {
+      "sourceFile": "scripts/ToggleMintState.ral",
+      "sourceCodeHash": "031de6a608002de7fe9fa58e54f29545a596201fe15bffaadebf66429ffa5b54",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateBaseUri": {
+      "sourceFile": "scripts/UpdateBaseUri.ral",
+      "sourceCodeHash": "70ad90dbeeecd980731f0d03f9c84781e5534be3f4592db0210e48001b21b8d3",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "UpdateCollectionUri": {
+      "sourceFile": "scripts/UpdateCollectionUri.ral",
+      "sourceCodeHash": "a21444518e31cdbc4fd539a3611077e18f51a6a21f7fb75179d3205cecca27f7",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "VendingMachine": {
+      "sourceFile": "VendingMachine.ral",
+      "sourceCodeHash": "09cf48027b3085f95fcef29e5b529fefbd1bdac81e4eebbb7c83993848e09297",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "0a260205f0429db04046858740df08e17e718a93f7c39ae81395fe96f4345f07",
+      "warnings": []
+    },
+    "WithdrawAlph": {
+      "sourceFile": "scripts/WithdrawAlph.ral",
+      "sourceCodeHash": "3a333bdd60bc2e7f5c889b25cbfd262321934b3aae0286532d0d19abb27ffd30",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "WithdrawRoyalty": {
+      "sourceFile": "scripts/WithdrawRoyalty.ral",
+      "sourceCodeHash": "c8451760ab48f06c397d50ba12e21aaea9fd844157b9e0348b101735a7e3964c",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    }
+  }
+}

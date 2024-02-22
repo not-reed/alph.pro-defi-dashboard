@@ -1,0 +1,489 @@
+{
+  "version": "v2.8.3",
+  "name": "VendingMachine",
+  "bytecode": "1b15091240264039404a40554061406a40744085408e409840a140b34141415141614172418a41c64223010000000102a00002010000000102a0020201000102010a160040cb17011601c5107b16010201000203000816010002170216001602410f7b01000202010616011341f42c1367102d0201010202000316001601a9010002020003160016010012010000000102ce01020100000001021343e80201000000010213c40de0b6b3a764000002010000000102a00302010000000103ce007702010000000102a001020100010101081600000218a00116008944020101020b01404aa003190e7ba00216012a1343e8320c7b1601130a3213077bb41702140017030c17040c17050c170616061601314c1b1600001417051603160213c40de0b6b3a7640000a2160216050d2a001344170316060c2f4c0416050d2a170416060d2a17064a21160213c40de0b6b3a764000016012ca9a00216012aa10205160216031601160461160302010001010007b4ce01450d7b1600a101010001010007b4ce01450d7b1600a100010000000008b4ce01450d7ba00319a10301020202000d16010c3313087bb4ce01450d7b16001601a8000302040119a00116018944b116011406414c5048000313046413006417031702160013c40de0b6b3a7640000a2160140ce00160216030d1600c902000001020140411600131431117b16007a1314314d102ac30c2f4c0b160013322c16007a1314314d102ac416007a1314314d102ac3133216000d2a2c3113067b16007a1314314d102ac3170116010d2a16007a1314314d102ac4160102",
+  "codeHash": "0a260205f0429db04046858740df08e17e718a93f7c39ae81395fe96f4345f07",
+  "fieldsSig": {
+    "names": [
+      "foodsContractId",
+      "collectionOwner",
+      "collectionUri",
+      "nftBaseUri",
+      "totalSupply",
+      "mintIsPaused",
+      "mintedFoods",
+      "__stdInterfaceId"
+    ],
+    "types": [
+      "ByteVec",
+      "Address",
+      "ByteVec",
+      "ByteVec",
+      "U256",
+      "Bool",
+      "[U256;20]",
+      "ByteVec"
+    ],
+    "isMutable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "eventsSig": [
+    {
+      "name": "NftMinted",
+      "fieldNames": [
+        "minter",
+        "contractIds",
+        "mintAmount",
+        "startingIndex"
+      ],
+      "fieldTypes": [
+        "Address",
+        "ByteVec",
+        "U256",
+        "U256"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "getCollectionUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "totalSupply",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "nftByIndex",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "index"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "validateNFT",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "nftId",
+        "nftIndex"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "royaltyAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "tokenId",
+        "salePrice"
+      ],
+      "paramTypes": [
+        "ByteVec",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "payRoyalty",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "payer_",
+        "amount_"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "withdrawRoyalty",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "to_",
+        "amount_"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "getOwner",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "Address"
+      ]
+    },
+    {
+      "name": "getMaxSupply",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "getMintPrice",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "isMintPaused",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "Bool"
+      ]
+    },
+    {
+      "name": "getFoodsContract",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "Address"
+      ]
+    },
+    {
+      "name": "getBaseUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "getNFTUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "index"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "mint",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "foodTypeId_",
+        "mintAmount"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "updateBaseUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "newBaseUri"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "updateCollectionUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "newCollectionUri"
+      ],
+      "paramTypes": [
+        "ByteVec"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "toggleMintState",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    },
+    {
+      "name": "withdrawAlph",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [
+        "to_",
+        "amount_"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "mint_",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "minter",
+        "index"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "ByteVec"
+      ]
+    },
+    {
+      "name": "pickIdForFood",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": false,
+      "paramNames": [
+        "foodTypeId_"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
+      "returnTypes": [
+        "U256"
+      ]
+    }
+  ],
+  "constants": [
+    {
+      "name": "MaxSupply",
+      "value": {
+        "type": "U256",
+        "value": "1000"
+      }
+    },
+    {
+      "name": "MintPrice",
+      "value": {
+        "type": "U256",
+        "value": "1000000000000000000"
+      }
+    },
+    {
+      "name": "MaxMintPerTx",
+      "value": {
+        "type": "U256",
+        "value": "10"
+      }
+    },
+    {
+      "name": "RoyaltyRate",
+      "value": {
+        "type": "U256",
+        "value": "500"
+      }
+    }
+  ],
+  "enums": [
+    {
+      "name": "ErrorCodes",
+      "fields": [
+        {
+          "name": "MaxSupplyReached",
+          "value": {
+            "type": "U256",
+            "value": "0"
+          }
+        },
+        {
+          "name": "OnlyCollectionOwner",
+          "value": {
+            "type": "U256",
+            "value": "1"
+          }
+        },
+        {
+          "name": "MintIsPaused",
+          "value": {
+            "type": "U256",
+            "value": "2"
+          }
+        },
+        {
+          "name": "NFTNotPartOfCollection",
+          "value": {
+            "type": "U256",
+            "value": "3"
+          }
+        },
+        {
+          "name": "NotMintedYet",
+          "value": {
+            "type": "U256",
+            "value": "4"
+          }
+        },
+        {
+          "name": "WrongFoodType",
+          "value": {
+            "type": "U256",
+            "value": "5"
+          }
+        },
+        {
+          "name": "FoodMaxSupplyReached",
+          "value": {
+            "type": "U256",
+            "value": "6"
+          }
+        },
+        {
+          "name": "MaxPerTx",
+          "value": {
+            "type": "U256",
+            "value": "7"
+          }
+        },
+        {
+          "name": "ZeroNotAllowed",
+          "value": {
+            "type": "U256",
+            "value": "8"
+          }
+        }
+      ]
+    }
+  ],
+  "stdInterfaceId": "000201"
+}

@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/482.svg",
+  "name": "Cheese",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Snack"
+    },
+    {
+      "trait_type": "Calcium",
+      "value": "180 mg"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "20"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "6 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "8 g"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/943.svg",
+  "name": "Hamburger",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "418"
+    },
+    {
+      "trait_type": "Carbohydrates",
+      "value": "30 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "20.9 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "1 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "25.4 g"
+    },
+    {
+      "trait_type": "Sodium",
+      "value": "515 mg"
+    },
+    {
+      "trait_type": "Sugars",
+      "value": "4.4 g"
+    }
+  ]
+}

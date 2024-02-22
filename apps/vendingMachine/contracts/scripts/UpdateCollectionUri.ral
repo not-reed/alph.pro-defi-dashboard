@@ -1,0 +1,6 @@
+TxScript UpdateCollectionUri (
+    vendingMachine: VendingMachine,
+    newCollectionUri: ByteVec
+) {
+    vendingMachine.updateCollectionUri(newCollectionUri)
+}

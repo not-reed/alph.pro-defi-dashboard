@@ -1,0 +1,26 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/989.svg",
+  "name": "Pizza",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "285"
+    },
+    {
+      "trait_type": "Cholesterol",
+      "value": "18 mg"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "10 g"
+    },
+    {
+      "trait_type": "Sodium",
+      "value": "640 mg"
+    }
+  ]
+}

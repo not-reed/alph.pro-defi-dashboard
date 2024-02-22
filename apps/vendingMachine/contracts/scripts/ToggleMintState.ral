@@ -1,0 +1,5 @@
+TxScript ToggleMintState (
+    vendingMachine: VendingMachine
+) {
+    vendingMachine.toggleMintState()
+}

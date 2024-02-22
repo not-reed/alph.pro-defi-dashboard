@@ -1,0 +1,34 @@
+{
+  "image": "https://arweave.net/OQKzeOEv2OP17Iqm9coJ7TjcrXGWJ035YCKNbwO0uZI/206.svg",
+  "name": "Hot Dog",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Meal"
+    },
+    {
+      "trait_type": "Calories",
+      "value": "186"
+    },
+    {
+      "trait_type": "Carbohydrate",
+      "value": "2 g"
+    },
+    {
+      "trait_type": "Fat",
+      "value": "17 g"
+    },
+    {
+      "trait_type": "Fiber",
+      "value": "0 g"
+    },
+    {
+      "trait_type": "Protein",
+      "value": "7 g"
+    },
+    {
+      "trait_type": "Sugars",
+      "value": "1 g"
+    }
+  ]
+}

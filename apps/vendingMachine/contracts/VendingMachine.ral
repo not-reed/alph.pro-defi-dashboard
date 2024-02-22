@@ -1,0 +1,182 @@
+import "std/nft_collection_interface"
+import "std/nft_collection_with_royalty_interface"
+
+Contract VendingMachine(
+    foodsContractId: ByteVec,
+    collectionOwner: Address,
+    mut collectionUri :ByteVec,
+    mut nftBaseUri: ByteVec,
+    mut totalSupply: U256, 
+    mut mintIsPaused: Bool, // true
+    mut mintedFoods: [U256;20]
+) implements INFTCollectionWithRoyalty {
+
+    event NftMinted(minter: Address, contractIds: ByteVec, mintAmount: U256,startingIndex: U256)
+
+    const MaxSupply = 1000
+    const MintPrice = 1 alph
+    const MaxMintPerTx = 10
+    const RoyaltyRate = 500 // 5 %  == 500 basis point // 
+   
+    enum ErrorCodes {
+        MaxSupplyReached = 0
+        OnlyCollectionOwner = 1
+        MintIsPaused = 2
+        NFTNotPartOfCollection = 3
+        NotMintedYet = 4
+        WrongFoodType = 5
+        FoodMaxSupplyReached = 6
+        MaxPerTx = 7
+        ZeroNotAllowed = 8
+    }
+
+    // *  *  * Read Functions *  *  * // 
+
+    pub fn getCollectionUri() -> ByteVec {
+        return collectionUri
+    }
+
+    pub fn getOwner() -> Address {
+        return collectionOwner
+    }
+
+    pub fn getMaxSupply() -> U256 {
+        return MaxSupply
+    }
+
+    pub fn totalSupply() -> U256 {
+        return totalSupply
+    }
+
+    pub fn getMintPrice() -> U256 {
+        return MintPrice
+    }
+    
+    pub fn isMintPaused() -> Bool{
+        return mintIsPaused
+    }
+
+    pub fn getFoodsContract() -> Address{
+       return contractIdToAddress!(foodsContractId)
+    }
+
+    pub fn getBaseUri() -> ByteVec{
+        return nftBaseUri
+    }
+
+    pub fn getNFTUri(index: U256) -> ByteVec {
+        nftByIndex(index)
+        return nftBaseUri ++ u256ToString!(index)
+    }
+
+    pub fn validateNFT(nftId: ByteVec, nftIndex: U256) -> () {
+      let expectedTokenContract = nftByIndex(nftIndex)
+      assert!(nftId == contractId!(expectedTokenContract), ErrorCodes.NFTNotPartOfCollection)
+    }
+
+    pub fn nftByIndex(index: U256) -> INFT {
+        let nftTokenId = subContractId!(toByteVec!(index))
+        assert!(contractExists!(nftTokenId), ErrorCodes.NotMintedYet)
+        return INFT(nftTokenId)
+    }
+    
+    // *  *  * Write Functions *  *  * // 
+
+    @using(preapprovedAssets = true, updateFields = true, assetsInContract = true, checkExternalCaller = false)
+    pub fn mint(foodTypeId_: U256,mintAmount: U256) -> ByteVec {
+        assert!(!mintIsPaused, ErrorCodes.MintIsPaused)
+        assert!(totalSupply + mintAmount <= MaxSupply, ErrorCodes.MaxSupplyReached)
+        assert!(mintAmount <= MaxMintPerTx, ErrorCodes.MaxPerTx)
+
+        let minter = callerAddress!()
+        let mut contractIds = #
+        let mut startingIndex = 0
+        let mut nftIdToMint = 0
+
+        for (let mut i = 0; i < mintAmount; i = i + 1) {
+            nftIdToMint = pickIdForFood(foodTypeId_)
+            contractIds = contractIds ++ mint_{minter -> ALPH: 1 alph}(minter,  nftIdToMint + 1)
+            if (i == 0){
+                startingIndex = nftIdToMint + 1
+            }
+        }
+        transferTokenToSelf!(minter, ALPH, MintPrice * mintAmount)
+        totalSupply = totalSupply + mintAmount
+        emit NftMinted(minter, contractIds, mintAmount, startingIndex)
+        return contractIds
+    }
+
+    // *  *  * Only Owner *  *  * // 
+    
+    @using(updateFields = true)
+    pub fn updateBaseUri(newBaseUri: ByteVec) -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        nftBaseUri = newBaseUri
+    }
+
+    @using(updateFields = true)
+    pub fn updateCollectionUri(newCollectionUri: ByteVec) -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        collectionUri = newCollectionUri
+    }
+
+    @using(updateFields = true)
+    pub fn toggleMintState() -> (){
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        mintIsPaused = !mintIsPaused
+    }
+    
+    @using(assetsInContract = true)
+    pub fn withdrawAlph(to_: Address,amount_: U256) -> (){
+        assert!(amount_ > 0, ErrorCodes.ZeroNotAllowed)
+        checkCaller!(callerAddress!() == collectionOwner, ErrorCodes.OnlyCollectionOwner)
+        transferTokenFromSelf!(to_, ALPH, amount_)
+    }
+
+    // *  *  * Royalty *  *  * // 
+
+    pub fn royaltyAmount(@unused tokenId: ByteVec, salePrice: U256) -> (U256) {
+        return salePrice * RoyaltyRate / 10000
+    }
+
+    @using(assetsInContract = true, preapprovedAssets = true, checkExternalCaller = false)
+    pub fn payRoyalty(payer_: Address, amount_: U256) -> () {
+        transferTokenToSelf!(payer_, ALPH, amount_)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn withdrawRoyalty(to_: Address, amount_: U256) -> () {
+        withdrawAlph(to_,amount_)
+    }
+    
+    // *  *  * Supporting Functions *  *  * // 
+    
+    @using(preapprovedAssets = true)
+    fn mint_(minter: Address, index: U256) -> ByteVec {
+        let (encodeImmutableFields, encodeMutableFields) = Foods.encodeFields!(nftBaseUri ++ u256ToString!(index), selfContractId!(), index)
+            return copyCreateSubContractWithToken!{minter -> ALPH: 1 alph}(
+                toByteVec!(index),
+                foodsContractId,
+                encodeImmutableFields,
+                encodeMutableFields,
+                1,
+                minter
+            )
+    }
+    
+    @using(updateFields = true)
+    fn pickIdForFood(foodTypeId_: U256) -> U256 {
+        assert!(foodTypeId_ < 20, ErrorCodes.WrongFoodType)
+        if (mintedFoods[foodTypeId_] == 0){
+            mintedFoods[foodTypeId_] = foodTypeId_ * 50
+        }
+        assert!( mintedFoods[foodTypeId_] < (50 * (foodTypeId_ + 1)), ErrorCodes.FoodMaxSupplyReached)
+        let nftId = mintedFoods[foodTypeId_]
+        mintedFoods[foodTypeId_] = nftId + 1
+        return nftId
+    }
+}
+
+
+
+

@@ -1,0 +1,26 @@
+import { describe, it, beforeAll } from 'bun:test'
+import { web3, stringToHex } from '@alephium/web3'
+import { deployToDevnet } from '@alephium/cli'
+import { RandomNumberGenerator } from '../artifacts/ts'
+
+describe('RandomNumberGenerator', async () => {
+  // let rngContractAddress = '27AH7zGV8BrVuXqMR7MPGwiT5NPMfYsDna2w94Xaomauu' //TestNet
+
+  let rngContractAddress = '25KtADDFxVcMC4bnVjN6dShB8Q4DgiGczJ9uiEHZpBwQs' //MainNet
+
+  beforeAll(async () => {
+    // web3.setCurrentNodeProvider('https://wallet-v20.testnet.alephium.org', undefined, fetch) //TestNet
+
+    web3.setCurrentNodeProvider('https://wallet-v20.mainnet.alephium.org', undefined, fetch) //MainNet
+  })
+
+  it('should get random number', async () => {
+    const rngState = RandomNumberGenerator.at(rngContractAddress)
+    let randomNumber
+    for (let i = 0; i < 20; i++) {
+      randomNumber = await rngState.methods.getRandomNumber({ args: { userHash_: stringToHex(`Test`) } })
+
+      console.log('random number ', randomNumber.returns % 20n)
+    }
+  })
+})
