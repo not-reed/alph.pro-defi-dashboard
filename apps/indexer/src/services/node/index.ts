@@ -14,16 +14,15 @@ import { mapRawInputToTokenBalance } from "../common/utils/token";
 import type { Field } from "../common/types/fields";
 import { logger } from "../logger";
 
-const headers: Record<string, string> =
-	config.NODE_BASIC_AUTH && config.NODE_API_KEY
-		? {
-				Accept: "application/json",
-				Authorization: `Basic ${config.NODE_BASIC_AUTH}`,
-				"X-API-KEY": config.NODE_API_KEY,
-		  }
-		: {
-				Accept: "application/json",
-		  };
+const headers: Record<string, string> = { Accept: "application/json" };
+
+if (config.NODE_BASIC_AUTH) {
+	headers.Authorization = `Basic ${config.NODE_BASIC_AUTH}`;
+}
+
+if (config.NODE_API_KEY) {
+	headers["X-API-KEY"] = config.NODE_API_KEY;
+}
 
 export default {
 	blockFlow: {

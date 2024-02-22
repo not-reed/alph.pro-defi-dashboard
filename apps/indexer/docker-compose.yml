@@ -12,14 +12,14 @@ services:
   redis:
     image: "redis:latest"
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/bitnami/redis/data
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
 
   postgres:
-    image: "postgres:latest"
+    image: "127.0.0.1:postgres:latest"
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
@@ -28,14 +28,13 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS:-postgres}
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_DB=${DB_NAME:-postgres}
-
   # sign up and connect to docker at local ip 192.168.x.x
-  pgadmin:
-    image: dpage/pgadmin4
-    ports:
-      - "8888:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: postgres@postgres.com
-      PGADMIN_DEFAULT_PASSWORD: password
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   ports:
+  #     - "8888:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: postgres@postgres.com
+  #     PGADMIN_DEFAULT_PASSWORD: password
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin

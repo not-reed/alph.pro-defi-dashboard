@@ -15,16 +15,14 @@ import { logger } from "../logger";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const headers: Record<string, string> = config.EXPLORER_BASIC_AUTH
-	? {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-			Authorization: `Basic ${config.EXPLORER_BASIC_AUTH}`,
-	  }
-	: {
-			Accept: "application/json",
-			"Content-Type": "application/json",
-	  };
+const headers: Record<string, string> = {
+	Accept: "application/json",
+	"Content-Type": "application/json",
+};
+
+if (config.EXPLORER_BASIC_AUTH) {
+	headers.Authorization = `Basic ${config.EXPLORER_BASIC_AUTH}`;
+}
 
 async function getPaginatedResults(
 	url: string,
