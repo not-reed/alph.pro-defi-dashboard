@@ -1,4 +1,10 @@
-import type { Address, ByteVec, FieldType, FieldValue, U256 } from "./brands";
+import type {
+	Address,
+	ByteVec,
+	FieldType,
+	FieldValue,
+	U256,
+} from "../../common/types/brands";
 
 interface FieldGeneric {
 	type: FieldType;

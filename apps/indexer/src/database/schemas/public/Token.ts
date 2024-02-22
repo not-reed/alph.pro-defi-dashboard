@@ -19,6 +19,12 @@ export default interface TokenTable {
   decimals: ColumnType<number, number, number>;
 
   totalSupply: ColumnType<bigint, bigint, bigint>;
+
+  verified: ColumnType<boolean, boolean | undefined, boolean>;
+
+  description: ColumnType<string | null, string | null, string | null>;
+
+  logo: ColumnType<string | null, string | null, string | null>;
 }
 
 export type Token = Selectable<TokenTable>;

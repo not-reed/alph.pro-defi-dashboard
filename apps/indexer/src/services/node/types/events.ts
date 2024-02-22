@@ -1,10 +1,8 @@
 import type {
-	BlockHash,
 	ContractAddress,
 	TransactionHash,
-	UserAddress,
-} from "./brands";
-import type { Field } from "./fields";
+} from "../../common/types/brands";
+import type { Field } from "../../common/types/fields";
 
 export interface ContractEvent {
 	// blockHash: BlockHash;

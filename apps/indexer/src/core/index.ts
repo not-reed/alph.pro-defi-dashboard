@@ -1,54 +1,24 @@
 import cron from "node-cron";
 import { lock } from "../cache";
-import nodeService from "../services/node";
-import { readdir } from "node:fs/promises";
-import { join } from "node:path";
 
-import { Plugin } from "../common/plugins/abstract";
 import { db } from "../database/db";
 import { logger } from "../services/logger";
-import type { Block } from "../services/common/types/blocks";
-
-const TRIBUTE_TS = 1231006505000;
-const GENESIS_TS = 1636383299070;
-const MAX_DURATION = 1_800_000; // 30 minutes
-const OVERLAP_WINDOW = 300_000; // 5 minutes
-declare global {
-	// biome-ignore lint/style/noVar: <explanation>
-	var interval: Timer;
-}
-
-async function getBlocks(from: number, to: number, withEvents: boolean) {
-	if (to - from > MAX_DURATION) {
-		throw new Error("Cannot fetch more than 30 minutes of blocks");
-	}
-
-	// const blocks = await nodeService.blockFlow.blocks(from, to);
-	const blocks = await nodeService.blockFlow.blocksWithEvents(from, to);
-
-	// TODO: sort flattened blocks by timestamp to ensure insert consistency
-	return blocks.flat();
-}
-
-async function fetchUnprocessedBlocks(pluginName: string, blocks: Block[]) {
-	const processedBlocks = new Set(
-		await db
-			.selectFrom("PluginBlock")
-			.select("blockHash")
-			.where("pluginName", "=", pluginName)
-			.where(
-				"blockHash",
-				"in",
-				blocks.map((b) => b.blockHash),
-			)
-			.execute()
-			.then((res) => res.map((r) => r.blockHash)),
-	);
-
-	return blocks.filter((b) => !processedBlocks.has(b.blockHash));
-}
+import { filterUnprocessedBlocks, loadPlugins } from "./utils";
+import sdk from "../services/sdk";
+import {
+	GENESIS_TS,
+	MAX_DURATION,
+	OVERLAP_WINDOW,
+	TRIBUTE_TS,
+} from "./constants";
+import { addressFromContractId } from "@alephium/web3";
+import { config } from "../config";
 
 export async function core() {
+	if (config.INDEXING_DISABLED) {
+		logger.warn("Indexing is disabled");
+		return;
+	}
 	// clear existing jobs when `bun --hot` is being used
 	for (const [, task] of cron.getTasks()) {
 		task.stop();
@@ -68,22 +38,31 @@ export async function core() {
 	}
 
 	const pluginState = await db.selectFrom("Plugin").selectAll().execute();
+	const pluginActive = new Map(
+		pluginState.map((state) => [state.name, state.status]),
+	);
 	const latestMap = new Map<string, number>();
 	for (const state of pluginState) {
 		latestMap.set(state.name, state.timestamp.getTime());
 	}
 
 	for (const plugin of plugins) {
-		logger.info(`Loaded Plugin: ${plugin.PLUGIN_NAME}`);
+		logger.info(
+			`Loaded Plugin: ${plugin.PLUGIN_NAME} (active: ${
+				pluginActive.get(plugin.PLUGIN_NAME) ?? true
+			})`,
+		);
 		// one at a time, initialize and load plugin state.
 		// if brand new, initialize with TRIBUTE_TS block
 
+		// if no timestamp, will assume its absent from the database entirely
+		// note: may not be true if you are messing around manually in the db
 		const latestTimestamp = latestMap.get(plugin.PLUGIN_NAME);
 		if (!latestTimestamp) {
 			logger.info(`Initializing Plugin for first run: ${plugin.PLUGIN_NAME}`);
-			const blocks = await getBlocks(TRIBUTE_TS, TRIBUTE_TS + 1, true);
+			const blocks = await sdk.getBlocksFromTimestamp(TRIBUTE_TS);
 
-			const blocksToProcess = await fetchUnprocessedBlocks(
+			const blocksToProcess = await filterUnprocessedBlocks(
 				plugin.PLUGIN_NAME,
 				blocks,
 			);
@@ -94,18 +73,17 @@ export async function core() {
 			const data = await plugin.process(blocksToProcess);
 
 			await db.transaction().execute(async (trx) => {
-				await plugin.insert(trx, data);
+				// insert first as it doesn't yet exist
 				await trx
 					.insertInto("Plugin")
 					.values({
 						name: plugin.PLUGIN_NAME,
 						timestamp: new Date(GENESIS_TS),
 					})
-					.onConflict((col) =>
-						col.column("name").doUpdateSet({ timestamp: new Date(GENESIS_TS) }),
-					)
 					.execute();
+				await plugin.insert(trx, data);
 				// update local cache
+				pluginActive.set(plugin.PLUGIN_NAME, true);
 				latestMap.set(plugin.PLUGIN_NAME, GENESIS_TS);
 			});
 		}
@@ -115,12 +93,19 @@ export async function core() {
 	// or speed up to improve realtime processing
 	// could also be modified so that cron schedule is configured per plugin
 	// if there are some that should be slow, and some that should be fast
-	cron.schedule("*/5 * * * * *", async () => {
+	cron.schedule("* * * * *", async () => {
+		logger.info("Running Cron");
 		const start = Date.now();
 
-		await plugins.map(async (plugin) => {
+		plugins.map(async (plugin) => {
+			if (pluginActive.get(plugin.PLUGIN_NAME) === false) {
+				// abort if manually turned off
+				return;
+			}
+			let from = 0;
+			let to = 0;
 			try {
-				await lock.using([plugin.PLUGIN_NAME], 5_000, async (signal) => {
+				await lock.using([plugin.PLUGIN_NAME], 30_000, async (signal) => {
 					const latest = latestMap.get(plugin.PLUGIN_NAME);
 					if (!latest) {
 						throw new Error(
@@ -128,22 +113,22 @@ export async function core() {
 						);
 					}
 
-					let from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
-					let to = from + MAX_DURATION;
+					from = latest - OVERLAP_WINDOW; // subtract 5 minutes for overlap offset
+					to = from + MAX_DURATION;
 					const startFrom = from;
 
-					logger.info(
-						`Beginning Processing '${plugin.PLUGIN_NAME}' from ${new Date(
+					logger.debug(
+						`'${plugin.PLUGIN_NAME}' running from ${new Date(
 							from,
 						).toLocaleString()}`,
 					);
 					const now = Date.now();
-					logger.info(`now: ${now} from: ${from} => ${from < now}`);
+
 					while (from < now) {
-						if (Date.now() - start > 4_800) {
+						if (Date.now() - start > 55_000) {
 							// Do at most 4.5 seconds of work so that we can release the lock
 							// and not tie up CPU usage so much
-							logger.info(
+							logger.debug(
 								`Finished Processing '${plugin.PLUGIN_NAME}' to ${new Date(
 									from,
 								).toLocaleString()}(${
@@ -160,13 +145,65 @@ export async function core() {
 
 						// TODO: use dataloader so that multiple requests in the same time frame
 						// don't result in multiple requests to the node
-						const blocks = await getBlocks(from, to, true);
-						const blocksToProcess = await fetchUnprocessedBlocks(
+						const blocks = await sdk.getBlocksFromTimestamp(from, to);
+
+						if (!blocks.length) {
+							logger.warn(
+								`No blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
+							);
+
+							await db.transaction().execute(async (trx) => {
+								// only update if above continues successfully, otherwise will retry
+
+								const lastTo = new Date(Math.min(to, now));
+
+								await trx
+									.updateTable("Plugin")
+									.set({ timestamp: lastTo })
+									.where("name", "=", plugin.PLUGIN_NAME)
+									.execute();
+
+								latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
+
+								// use actual 'to' value, not lastTo
+								// since actual 'to' will be far enough in the future
+								// that if no work needs to be done, we will just abort
+								from = to - OVERLAP_WINDOW;
+								to = from + MAX_DURATION;
+							});
+							continue;
+						}
+
+						const blocksToProcess = await filterUnprocessedBlocks(
 							plugin.PLUGIN_NAME,
 							blocks,
 						);
+
 						if (!blocksToProcess.length) {
-							return;
+							logger.warn(
+								`No processable blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
+							);
+
+							await db.transaction().execute(async (trx) => {
+								// only update if above continues successfully, otherwise will retry
+
+								const lastTo = new Date(Math.min(to, now));
+
+								await trx
+									.updateTable("Plugin")
+									.set({ timestamp: lastTo })
+									.where("name", "=", plugin.PLUGIN_NAME)
+									.execute();
+
+								latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
+
+								// use actual 'to' value, not lastTo
+								// since actual 'to' will be far enough in the future
+								// that if no work needs to be done, we will just abort
+								from = to - OVERLAP_WINDOW;
+								to = from + MAX_DURATION;
+							});
+							continue;
 						}
 
 						const data = await plugin.process(blocksToProcess);
@@ -174,66 +211,94 @@ export async function core() {
 						await db.transaction().execute(async (trx) => {
 							await plugin.insert(trx, data);
 
+							// only update if above continues successfully, otherwise will retry
+
+							const lastTo = new Date(Math.min(to, now));
+
 							await trx
 								.updateTable("Plugin")
-								.set({ timestamp: new Date(Math.min(to, now)) })
+								.set({ timestamp: lastTo })
 								.where("name", "=", plugin.PLUGIN_NAME)
 								.execute();
 
-							// update local cache
-							latestMap.set(plugin.PLUGIN_NAME, to);
+							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
 
-							// update local state
+							// use actual 'to' value, not lastTo
+							// since actual 'to' will be far enough in the future
+							// that if no work needs to be done, we will just abort
 							from = to - OVERLAP_WINDOW;
 							to = from + MAX_DURATION;
-
-							// renew lock on success
 						});
 					}
-
 					logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
 				});
-			} catch (e) {
-				logger.error({ e });
-				logger.error(`Error with ${plugin.PLUGIN_NAME}`);
+			} catch (err) {
+				logger.error({
+					msg: `Error with ${plugin.PLUGIN_NAME} and time range ${from}:${to}`,
+					err,
+				});
 			}
 		});
 	});
-}
 
-async function loadPlugins(): Promise<Plugin<unknown>[]> {
-	const files = await getFiles(join(__dirname, "../plugins"));
-	if (!files?.length) {
-		return [];
-	}
-	const plugins = await Promise.all(
-		files?.map(async (file) => await import(file)),
-	);
+	cron.schedule(
+		"*/30 * * * *", // every 15 minutes
+		async () => {
+			const results = await fetch(
+				"https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json",
+			).then((a) => a.json());
 
-	return plugins.reduce((acc, cur) => {
-		try {
-			const instances: Plugin<unknown>[] = [];
-			for (const key of Object.keys(cur)) {
-				try {
-					const tmp = new cur[key]();
-					if (tmp instanceof Plugin) {
-						instances.push(tmp);
-					}
-				} catch {}
+			if (
+				!results ||
+				typeof results !== "object" ||
+				!("tokens" in results) ||
+				!Array.isArray(results.tokens)
+			) {
+				logger.error("Invalid token list from github");
+				return;
 			}
-			return acc.concat(instances);
-		} catch {
-			return acc;
-		}
-	}, []);
-}
 
-async function getFiles(directoryPath: string) {
-	try {
-		const fileNames = await readdir(directoryPath); // returns a JS array of just short/local file-names, not paths.
-		const filePaths = fileNames.map((fn) => join(directoryPath, fn));
-		return filePaths;
-	} catch (err) {
-		console.error(err); // depending on your application, this `catch` block (as-is) may be inappropriate; consider instead, either not-catching and/or re-throwing a new Error with the previous err attached.
-	}
+			const tokenListIds = Array.from(
+				new Set<string>(results.tokens.map((token) => token.id)),
+			);
+			const tokenListAddresses = tokenListIds.map(addressFromContractId);
+			const tokens = await db
+				.selectFrom("Token")
+				.selectAll()
+				.where("address", "in", tokenListAddresses)
+				.execute();
+
+			if (tokens.length !== tokenListIds.length) {
+				logger.warn(
+					`Github Token List Count Mismatch. Github: ${tokenListIds.length}, Local: ${tokens.length}`,
+				);
+			}
+
+			for (const token of tokens) {
+				const meta = results.tokens.find(
+					(t) => addressFromContractId(t.id) === token.address,
+				);
+
+				if (!meta) {
+					continue;
+				}
+				token.verified = true;
+				token.description = meta.description;
+				token.logo = meta.logoURI;
+			}
+
+			await db.transaction().execute(async (trx) => {
+				for (const token of tokens) {
+					await trx
+						.updateTable("Token")
+						.set(token)
+						.where("id", "=", token.id)
+						.execute();
+				}
+			});
+
+			logger.info("Github Token List Updated");
+		},
+		{ runOnInit: false }, // handy flag once to initialize
+	);
 }

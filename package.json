@@ -8,6 +8,7 @@
   "packageManager": "bun@1.0.25",
   "private": true,
   "scripts": {
+    "cli": "turbo cli --log-prefix=none --",
     "services:start": "turbo run services:start",
     "services:stop": "turbo run services:stop",
     "dev:dapp": "turbo run dev --filter=@repo/dapp",

@@ -1,3 +1,6 @@
+<script setup lang="ts">
+import ComingSoon from '../../components/ComingSoon.vue';
+</script>
 <template>
-    Liquidity Pools
+    <ComingSoon />
 </template>

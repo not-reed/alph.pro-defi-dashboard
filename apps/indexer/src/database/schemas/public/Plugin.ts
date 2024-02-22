@@ -13,6 +13,8 @@ export default interface PluginTable {
   name: ColumnType<string, string, string>;
 
   timestamp: ColumnType<Date, Date | string, Date | string>;
+
+  status: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Plugin = Selectable<PluginTable>;
