@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onBeforeMount, onMounted, ref } from 'vue';
 import { useMint } from '../hooks/useMint'
 import { ConnectorId, useConnect } from '../hooks/useConnect';
 import { useAccount } from '../hooks/useAccount';
 import { images } from '../data';
 
 const { state, selection, amount } = useMint()
-const { connect, disconnect, autoConnect } = useConnect()
+const { connect, disconnect, autoConnect, setInitialTotals } = useConnect()
+
+onBeforeMount(async () => {
+    await setInitialTotals();
+});
 const { account } = useAccount()
 
 function validate() {

@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { onBeforeMount, onMounted, reactive, ref } from "vue";
 import { connector as desktop } from "../connectors/desktopWalletConnect";
 import { connector as injected } from "../connectors/injected";
 import { connector as qrcode } from "../connectors/qrCodeWalletConnect";
@@ -51,7 +51,7 @@ async function setInitialTotals() {
 	}
 	setAmounts(totals);
 }
-await setInitialTotals();
+
 async function getAmounts(nodeProvider: NodeProvider) {
 	const toast = useToast();
 	const { account } = useAccount();
@@ -190,10 +190,13 @@ export function useConnect(rememberMe = true) {
 			connect,
 			disconnect,
 			autoConnect: () => {},
+			setInitialTotals,
 		};
 	}
 
 	return {
+		//hack for page load
+		setInitialTotals,
 		connect,
 		disconnect,
 		autoConnect,
