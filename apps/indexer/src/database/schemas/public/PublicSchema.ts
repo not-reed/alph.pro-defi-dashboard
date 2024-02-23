@@ -12,6 +12,7 @@ import { type default as AyinLiquidityEventTable } from './AyinLiquidityEvent';
 import { type default as AyinReserveTable } from './AyinReserve';
 import { type default as AyinSwapTable } from './AyinSwap';
 import { type default as BalanceTable } from './Balance';
+import { type default as CurrentPriceTable } from './CurrentPrice';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -35,4 +36,6 @@ export default interface PublicSchema {
   AyinSwap: AyinSwapTable;
 
   Balance: BalanceTable;
+
+  CurrentPrice: CurrentPriceTable;
 }

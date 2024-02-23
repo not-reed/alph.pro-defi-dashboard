@@ -13,8 +13,6 @@ app.use("/*", async (c, next) => {
 
 let id = 0;
 app.get("/plugins", (c) => {
-	// TODO: https://alpinejs.dev/magics/store
-	// https://yanael.io/articles/hono-sse/
 	// basic Indexer status page, start & pause buttons
 	return streamSSE(c, async (stream) => {
 		while (true) {
@@ -28,7 +26,7 @@ app.get("/plugins", (c) => {
 				event: "plugin-status",
 				id: String(id++),
 			});
-			await stream.sleep(1000);
+			await stream.sleep(5000);
 		}
 	});
 });
