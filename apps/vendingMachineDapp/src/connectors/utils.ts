@@ -34,10 +34,12 @@ export const makeCommonAccount = (
 export const makeCommonProvider = (
 	provider: AlephiumWindowObject | WalletConnectProvider,
 ): CommonProvider => {
-	console.log({ provider });
+	if (!provider.nodeProvider) {
+		throw new Error("Failed to find node provider");
+	}
 	return {
 		signer: provider,
-		nodeProvider: provider.nodeProvider!,
+		nodeProvider: provider.nodeProvider,
 		disconnect: () => provider.disconnect(),
 		signMessage: (params) => provider.signMessage(params),
 	};
