@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { onBeforeMount, onMounted, reactive, ref } from "vue";
 import { connector as desktop } from "../connectors/desktopWalletConnect";
 import { connector as injected } from "../connectors/injected";
 import { connector as qrcode } from "../connectors/qrCodeWalletConnect";
@@ -14,8 +14,16 @@ import { labels } from "../data";
 import { useMint } from "./useMint";
 import nProgress from "nprogress";
 
+<<<<<<< HEAD
 const { amounts } = useTotalSupply();
 const { pending } = useMint();
+||||||| d834aff
+const { amounts } = useTotalSupply()
+const { pending } = useMint()
+=======
+const { amounts, setAmounts } = useTotalSupply();
+const { pending } = useMint();
+>>>>>>> main
 export const connectorIds = [
 	"injected",
 	"walletConnect",
@@ -29,19 +37,61 @@ const connectorId = ref<ConnectorId | undefined>(
 
 const cachedConnectionOptions = reactive<
 	Pick<ConnectionOptions, "networkId" | "addressGroup" | "keyType">
+<<<<<<< HEAD
+>({
+	networkId: import.meta.env.VITE_NETWORK_ID,
+	addressGroup: 0,
+	keyType: "default",
+});
+||||||| d834aff
+>(
+	{
+		networkId: import.meta.env.VITE_NETWORK_ID,
+		addressGroup: 0,
+		keyType: "default",
+	},
+);
+=======
 >({
 	networkId: import.meta.env.VITE_NETWORK_ID,
 	addressGroup: 0,
 	keyType: "default",
 });
 
+async function setInitialTotals() {
+	web3.setCurrentNodeProvider("https://wallet-v20.mainnet.alephium.org");
+	const instance = loadDeployments(import.meta.env.VITE_NETWORK_ID).contracts
+		.VendingMachine?.contractInstance;
+	if (!instance) {
+		return;
+	}
+
+	const state = await instance.fetchState();
+
+	const totals = [];
+	for (const i in state.fields.mintedFoods) {
+		totals.push(Number(state.fields.mintedFoods[i]) - 50 * Number(i));
+	}
+	setAmounts(totals);
+}
+>>>>>>> main
+
 async function getAmounts(nodeProvider: NodeProvider) {
 	const toast = useToast();
+<<<<<<< HEAD
 	const { account } = useAccount();
 	web3.setCurrentNodeProvider(nodeProvider);
 	const instance = loadDeployments(import.meta.env.VITE_NETWORK_ID).contracts
 		.VendingMachine?.contractInstance;
+||||||| d834aff
+	const { account } = useAccount()
+	web3.setCurrentNodeProvider(nodeProvider)
+	const instance = loadDeployments(import.meta.env.VITE_NETWORK_ID).contracts.VendingMachine?.contractInstance
+=======
+	const { account } = useAccount();
+>>>>>>> main
 
+<<<<<<< HEAD
 	let showToasts = false;
 	instance?.subscribeNftMintedEvent({
 		pollingInterval: 5,
@@ -51,30 +101,115 @@ async function getAmounts(nodeProvider: NodeProvider) {
 			const startAmount = Number(event.fields.startingIndex) % 50;
 			const mintAmount = Number(event.fields.mintAmount) - 1;
 			amounts.value[foodType] = startAmount + mintAmount;
+||||||| d834aff
+	let showToasts = false
+	instance?.subscribeNftMintedEvent({
+		pollingInterval: 5,
+		messageCallback: async (event) => {		
+			console.log(event)
+			const foodType = Math.floor(Number(event.fields.startingIndex) / 50)
+			const startAmount = Number(event.fields.startingIndex) % 50
+			const mintAmount = Number(event.fields.mintAmount) - 1
+			amounts.value[foodType] = startAmount + mintAmount
+=======
+	const instance = loadDeployments(import.meta.env.VITE_NETWORK_ID).contracts
+		.VendingMachine?.contractInstance;
+	if (!instance) {
+		return;
+	}
+	let showToasts = false;
+	instance?.subscribeNftMintedEvent(
+		{
+			pollingInterval: 1,
+			messageCallback: async (event) => {
+				console.log({ event });
+				const foodType = Math.floor(Number(event.fields.startingIndex) / 50);
+				const startAmount = Number(event.fields.startingIndex) % 50;
+				const mintAmount = Number(event.fields.mintAmount) - 1;
+				amounts.value[foodType] = startAmount + mintAmount;
+>>>>>>> main
 
+<<<<<<< HEAD
 			if (showToasts) {
 				if (event.fields.minter === account.address) {
 					pending.value.delete(event.txId);
 					if (pending.value.size === 0) {
 						nProgress.done();
+||||||| d834aff
+			if (showToasts) {
+				if (event.fields.minter === account.address) {
+					pending.value.delete(event.txId)
+					if (pending.value.size === 0) {
+						nProgress.done()
+=======
+				if (showToasts) {
+					if (event.fields.minter === account.address) {
+						pending.value.delete(event.txId);
+						if (pending.value.size === 0) {
+							nProgress.done();
+						}
+						toast.success(`You Minted ${mintAmount + 1} ${labels[foodType]}`);
+					} else {
+						toast.warning(
+							`Someone grabbed ${mintAmount + 1} ${labels[foodType]}`,
+						);
+>>>>>>> main
 					}
+<<<<<<< HEAD
 					toast.success(`You Minted ${mintAmount + 1} ${labels[foodType]}`);
+||||||| d834aff
+					toast.success(`You Minted ${mintAmount + 1} ${labels[foodType]}`)
+=======
+>>>>>>> main
 				} else {
+<<<<<<< HEAD
 					toast.warning(
 						`Someone grabbed ${mintAmount + 1} ${labels[foodType]}`,
 					);
+||||||| d834aff
+					toast.warning(`Someone grabbed ${mintAmount + 1} ${labels[foodType]}`)
+=======
+					setTimeout(() => {
+						showToasts = true;
+					}, 750);
+>>>>>>> main
 				}
+<<<<<<< HEAD
 			} else {
 				setTimeout(() => {
 					showToasts = true;
 				}, 500);
 			}
+||||||| d834aff
+			} else {
+				setTimeout(() => {
+					showToasts = true
+				}, 500)
+			}
+=======
+			},
+			errorCallback: async (error) => {
+				console.log("something happened");
+				console.log({ error });
+			},
+>>>>>>> main
 		},
+<<<<<<< HEAD
 		errorCallback: async (error) => {
 			console.log("something happened");
 			console.log({ error });
 		},
 	});
+||||||| d834aff
+		errorCallback: async (error) => {
+			console.log("something happened")
+			console.log({ error })
+		}
+	})
+=======
+		265,
+	);
+>>>>>>> main
 }
 
 function getConnector(connector: ConnectorId) {
@@ -113,7 +248,6 @@ export function useConnect(rememberMe = true) {
 			...opts,
 		});
 
-		console.log({ results });
 		connectorId.value = id;
 
 		if (results?.success) {
@@ -122,8 +256,14 @@ export function useConnect(rememberMe = true) {
 				Storage.set(StorageKeys.LastUsedConnectorId, id);
 				Storage.set(StorageKeys.LastUsedConnectionOptions, opts);
 			}
+<<<<<<< HEAD
 			getAmounts(results.provider.nodeProvider);
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+||||||| d834aff
+			getAmounts(results.provider.nodeProvider)
+=======
+			getAmounts(results.provider.nodeProvider);
+>>>>>>> main
 			setAccount(results.account as any);
 			setProvider(results.provider);
 			return results;
@@ -158,8 +298,14 @@ export function useConnect(rememberMe = true) {
 		});
 
 		if (results?.success) {
+<<<<<<< HEAD
 			getAmounts(results.provider.nodeProvider);
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+||||||| d834aff
+			getAmounts(results.provider.nodeProvider)
+=======
+			getAmounts(results.provider.nodeProvider);
+>>>>>>> main
 			setAccount(results.account as any);
 			setProvider(results.provider);
 			return results;
@@ -171,10 +317,13 @@ export function useConnect(rememberMe = true) {
 			connect,
 			disconnect,
 			autoConnect: () => {},
+			setInitialTotals,
 		};
 	}
 
 	return {
+		//hack for page load
+		setInitialTotals,
 		connect,
 		disconnect,
 		autoConnect,

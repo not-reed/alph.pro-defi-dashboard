@@ -7,7 +7,7 @@ import { useToast } from "../toasts";
 defineProps<{ labelIndex: number[] }>();
 
 const toast = useToast()
-console.log({ toast })
+
 const { mint } = useMint()
 const { amounts } = useTotalSupply()
 
