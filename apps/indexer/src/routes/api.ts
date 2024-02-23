@@ -1,6 +1,9 @@
 import { type Env, Hono, type Schema } from "hono";
 import { cors } from "hono/cors";
 import { type Swagger } from "atlassian-openapi";
+import { swaggerUI } from "@hono/swagger-ui";
+import { isErrorResult, merge } from "openapi-merge";
+import { logger } from "../services/logger";
 // indexer routes
 import status from "./api/status";
 import sse from "./api/sse";
@@ -9,13 +12,7 @@ import sse from "./api/sse";
 import tokens from "./api/tokens";
 import pools from "./api/pools";
 import balances from "./api/balances";
-import { swaggerUI } from "@hono/swagger-ui";
-import { isErrorResult, merge } from "openapi-merge";
-import type {
-	SingleMergeInput,
-	SingleMergeInputV2,
-} from "openapi-merge/dist/data";
-import { logger } from "../services/logger";
+import prices from "./api/prices";
 
 const app = new Hono<Env, Schema, "/api">();
 
@@ -25,10 +22,11 @@ app.route("/sse", sse);
 app.get("/docs.json", async (c) => {
 	const base = new URL(c.req.url).origin;
 
-	const [balances, tokens] = (await Promise.all([
+	const [balances, tokens, prices] = (await Promise.all([
 		// TODO: include public routes here
 		fetch(`${base}/api/balances/docs.json`).then((a) => a.json()),
 		fetch(`${base}/api/tokens/docs.json`).then((a) => a.json()),
+		fetch(`${base}/api/prices/docs.json`).then((a) => a.json()),
 	])) as unknown as Swagger.SwaggerV3[];
 
 	const mergeResult = merge([
@@ -41,6 +39,11 @@ app.get("/docs.json", async (c) => {
 			oas: tokens,
 			description: { append: true, title: { value: "Tokens" } },
 			pathModification: { prepend: "/api/tokens" },
+		},
+		{
+			oas: prices,
+			description: { append: true, title: { value: "Prices" } },
+			pathModification: { prepend: "/api/prices" },
 		},
 	]);
 
@@ -65,7 +68,7 @@ app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
 const corsOptions = cors({
 	origin: [
 		"http://localhost:5173", // TODO: change to env, this is front end vite
-		"https://alph-pro.on.fleek.co/",
+		"https://alph-pro.on.fleek.co",
 		"https://alph.pro",
 	],
 	allowHeaders: ["X-Custom-Header", "Upgrade-Insecure-Requests"],
@@ -80,5 +83,6 @@ app.use("/balances/*", corsOptions);
 app.route("/tokens", tokens);
 app.route("/pools", pools);
 app.route("/balances", balances);
+app.route("/prices", prices);
 
 export default app;

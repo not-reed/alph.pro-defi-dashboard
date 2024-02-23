@@ -22,5 +22,8 @@ module.exports = {
     "pg_catalog.numeric": {
       name: "bigint",
     },
+    "pg_catalog.decimal(18, 8)": {
+      name: "number",
+    },
   },
 };
