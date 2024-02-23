@@ -63,7 +63,11 @@ app.get("/docs.json", async (c) => {
 app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
 
 const corsOptions = cors({
-	origin: "http://localhost:5173", // TODO: change to env, this is front end vite
+	origin: [
+		"http://localhost:5173", // TODO: change to env, this is front end vite
+		"https://alph-pro.on.fleek.co/",
+		"https://alph.pro",
+	],
 	allowHeaders: ["X-Custom-Header", "Upgrade-Insecure-Requests"],
 	allowMethods: ["POST", "GET", "OPTIONS"],
 	exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
