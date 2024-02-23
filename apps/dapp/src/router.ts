@@ -46,7 +46,7 @@ export const routes = [
 				name: "PortfolioOverview",
 				component: PortfolioOverviewVue,
 				meta: { title: "Overview", icon: "home", needsWallet: true },
-				beforeEnter: async (to, from, next) => {
+				beforeEnter: async (_to, _from, next) => {
 					await loadWalletData();
 					next();
 				},
@@ -161,7 +161,7 @@ export const router = createRouter({
 	routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
 	NProgress.start();
 	if (to.meta.needsWallet && !user.wallet) {
 		return next("/");

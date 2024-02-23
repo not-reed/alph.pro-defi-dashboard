@@ -63,6 +63,10 @@ const xAyinPrice = ayinPrice * 1.6212
 const nguPrice = 0.21
 const vladPrice = 0.19
 const jkylPrice = 0.005
+interface PartialToken {
+    balance: number
+    price: number
+}
 const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
     if (!balance.token?.verified) {
         return acc;
@@ -91,9 +95,9 @@ const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
         //     / 10000000000),
         price,
     })
-}, []).sort((a, b) => (b.balance * b.price) - (a.balance * a.price)))
+}, [] as PartialToken[]).sort((a: PartialToken, b: PartialToken) => (b.balance * b.price) - (a.balance * a.price)))
 const tokenWorth = computed(() => {
-    return pricedTokens.value.reduce((acc, balance) => {
+    return pricedTokens.value.reduce((acc: number, balance: PartialToken) => {
         return acc + balance.price * balance.balance
     }, 0)
 })
