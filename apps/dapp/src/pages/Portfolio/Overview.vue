@@ -2,100 +2,39 @@
 import { computed } from 'vue';
 import Icon from '../../components/Icon.vue';
 import { useUser } from '../../hooks/useUser';
+import { usePrices } from '../../hooks/usePrices';
+import { useCurrency } from '../../hooks/useCurrency';
+// import { formatCurrency } from '../../utils/currency';
 
 const { user } = useUser()
+const { currency, format } = useCurrency()
 
-const cryptoSymbols = {
-    "ALPH": "ℵ",
-    "ETH": "Ξ",
-    "BTC": "₿"
-}
+const { prices } = usePrices()
 
-function formatCrypto(currency_: keyof typeof cryptoSymbols) {
-    const currency = currency_ === 'ALPH' ? 'ETH' : currency_
-    return {
-        format: (amount: number) => {
-            const options = { style: 'currency', currency, minimumFractionDigits: 8 };
-            const numberFormat = new Intl.NumberFormat('en-US', options);
-            const parts = numberFormat.formatToParts(amount)
 
-            return parts.reduce((acc, part) => {
-                switch (part.type) {
-                    case 'currency': {
-
-                        console.log({ acc, cur: cryptoSymbols[currency] })
-                        // do whatever you need with the symbol. 
-                        // here I just replace it with the value from the map
-                        return `${acc}${cryptoSymbols[currency_]}`
-                    }
-                    default:
-                        return `${acc}${part.value}`
-                }
-            }, '')
-        }
-    }
-}
-const format = {
-    currency: new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }),
-    btc: formatCrypto('BTC'),
-    eth: formatCrypto('ETH'),
-    alph: formatCrypto('ALPH'),
-    // eth: new Intl.NumberFormat('en-US', {
-    //     style: 'currency',
-    //     currency: 'Ξ',
-    // }),
-    // alph: new Intl.NumberFormat('en-US', {
-    //     style: 'currency',
-    //     currency: 'ℵ',
-    // }),
-    number: new Intl.NumberFormat('en-US', {
-        style: 'decimal',
-    }),
-}
-
-// TODO: fetch prices
-const alphPrice = 2.88
-const ayinPrice = 11.40
-const xAyinPrice = ayinPrice * 1.6212
-const nguPrice = 0.21
-const vladPrice = 0.19
-const jkylPrice = 0.005
 interface PartialToken {
+    token: {
+        address: string
+        symbol: string
+        logo: string
+        verified: boolean
+    }
     balance: number
     price: number
 }
+
 const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
     if (!balance.token?.verified) {
         return acc;
     }
-    const b = balance.balance / 10 ** 18 / 100
 
-    const price = {
-        // alph
-        'tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq': alphPrice,
-        // ayin
-        'vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy': ayinPrice,
-        // xayin
-        'zst5zMzizEeFYFis6DNSknY5GCYTpM85D3yXeRLe2ug3': xAyinPrice,
-        // ngu
-        '29iBWdXaC94V2oe4pqV5AEM8H3JBDCXgZBStuig1QSvXh': nguPrice,
-        '239NpfNCR6mVyJKrm171YaNkDfwAe6kQnBr6Kg8gXV5CK': vladPrice,
-        'wdod8Kda3YtrykkHJVZ85LWs2caUSUgUnuqgYiv5hh5R': jkylPrice
-    }[balance.token.address as string] ?? Math.random()
     return acc.concat({
         ...balance,
-        // TODO: IN TESTING ALL TOKENS HAVE 18 DECIMALS. THIS IS NOT THE CASE
-        balance: b,
-        // balance: balance.balance / 10 ** balance.token.decimals / 100,
-        // balance: Math.floor(
-        //     Math.round(balance.balance / 10 ** balance.token.decimals * 100)
-        //     / 10000000000),
-        price,
+        balance: balance.balance / 10 ** balance.token.decimals / 100,
+        price: prices[balance.token.address],
     })
 }, [] as PartialToken[]).sort((a: PartialToken, b: PartialToken) => (b.balance * b.price) - (a.balance * a.price)))
+
 const tokenWorth = computed(() => {
     return pricedTokens.value.reduce((acc: number, balance: PartialToken) => {
         return acc + balance.price * balance.balance
@@ -107,6 +46,11 @@ const claimableWorth = 0
 
 const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + claimableWorth)
 
+const secondaryCurrencies = computed(() => {
+    const options = ['USD', 'ALPH', 'BTC', 'ETH'] as const
+    return options.filter(a => a !== currency.value)
+})
+
 </script>
 <template>
     <div class="flex flex-col w-full max-w-2xl">
@@ -114,28 +58,29 @@ const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + clai
             <div
                 class="bg-zinc-200 dark:bg-calypso-900 shadow-xl col-span-2 row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
                 <span class="text-calypso-800 dark:text-calypso-300 text-sm opacity-75">Net Worth</span>
-                <span class="text-2xl font-bold  text-calypso-700 dark:text-calypso-500">{{ format.currency.format(netWorth)
-                }}</span>
-                <span class="text-base leading-4">{{ format.btc.format(netWorth / 52000) }}</span>
-                <span class="text-base leading-4">{{ format.eth.format(netWorth / 2800) }}</span>
-                <span class="text-base leading-4">{{ format.alph.format(netWorth / 2.80) }}</span>
+                <span class="text-2xl font-bold  text-calypso-700 dark:text-calypso-500">
+                    {{ format(netWorth, currency) }}
+                </span>
+                <span class="text-base leading-4" v-for="secondary in secondaryCurrencies">
+                    {{ format(netWorth, secondary) }}
+                </span>
             </div>
 
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Wallet</span>
-                <span class="text-lg font-bold">{{ format.currency.format(tokenWorth) }}</span>
+                <span class="text-lg font-bold">{{ format(tokenWorth) }}</span>
             </div>
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Staked</span>
-                <span class="text-lg font-bold">{{ format.currency.format(stakedWorth) }}</span>
+                <span class="text-lg font-bold">{{ format(stakedWorth) }}</span>
             </div>
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">NFTs</span>
-                <span class="text-lg font-bold">{{ format.currency.format(nftWorth) }}</span>
+                <span class="text-lg font-bold">{{ format(nftWorth) }}</span>
             </div>
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Claimable</span>
-                <span class="text-lg font-bold">{{ format.currency.format(claimableWorth) }}</span>
+                <span class="text-lg font-bold">{{ format(claimableWorth) }}</span>
             </div>
         </div>
 
@@ -153,12 +98,11 @@ const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + clai
                     </div>
                 </div>
 
-                <div v-if="balance.price" class="opacity-50">{{ format.currency.format(balance.price) }}</div>
+                <div v-if="balance.price" class="opacity-50">{{ format(balance.price) }}</div>
 
 
-                <div v-if="balance.price" class="font-bold text-calypso-700 dark:text-calypso-500">{{
-                    format.currency.format(balance.price *
-                        balance.balance) }}
+                <div v-if="balance.price" class="font-bold text-calypso-700 dark:text-calypso-500">
+                    {{ format(balance.price * balance.balance) }}
                 </div>
 
             </li>
@@ -236,29 +180,29 @@ const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + clai
                     <div class="w-1/3">
                         <div class="font-bold">ALPH-AYIN</div>
                         <div class="leading-3 text-xs opacity-50">{{
-                            format.number.format(stakedWorth / 2 / alphPrice) }} ALPH</div>
-                        <div class="leading-3 text-xs opacity-50">{{ format.number.format(stakedWorth / 2 / ayinPrice) }}
+                            format(stakedWorth / 2, 'ALPH') }} ALPH</div>
+                        <div class="leading-3 text-xs opacity-50">{{ format(stakedWorth / 2, 'ALPH') }}
                             AYIN</div>
                     </div>
                     <div class="flex flex-1 gap-2 items-center justify-between">
                         <div>
                             <div class="text-xs">Currently Staked</div>
                             <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                                format.currency.format(stakedWorth) }}</div>
+                                format(stakedWorth) }}</div>
                         </div>
                         <div>
                             <div class="text-xs">Rewards</div>
                             <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                                format.currency.format(claimableWorth) }}</div>
+                                format(claimableWorth) }}</div>
                         </div>
                         <div>
                             <div class="text-xs">Total Yield</div>
-                            <div>{{ format.currency.format(stakedWorth - stakedWorth * 0.72) }}</div>
+                            <div>{{ format(stakedWorth - stakedWorth * 0.72) }}</div>
                         </div>
 
                         <div>
                             <div class="text-xs">Total Deposited</div>
-                            <div>{{ format.currency.format(stakedWorth * 0.72) }}</div>
+                            <div>{{ format(stakedWorth * 0.72) }}</div>
                         </div>
                     </div>
                 </div>

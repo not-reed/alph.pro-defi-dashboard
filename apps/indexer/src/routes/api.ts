@@ -77,12 +77,18 @@ const corsOptions = cors({
 	maxAge: 600,
 	credentials: true,
 });
-app.use("/balances/*", corsOptions);
 
 // User Api
+app.use("/tokens/*", corsOptions);
 app.route("/tokens", tokens);
+
+app.use("/pools/*", corsOptions);
 app.route("/pools", pools);
+
+app.use("/balances/*", corsOptions);
 app.route("/balances", balances);
+
+app.use("/prices/*", corsOptions);
 app.route("/prices", prices);
 
 export default app;
