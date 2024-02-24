@@ -16,7 +16,7 @@ interface TokenBalance {
 const user = reactive({
 	// TODO: empty wallet by default, this was random picked from richlist
 	// and just here for testing
-	wallet: "18Mp5eHjtLCzjc4gggSPBYETdD37czoFDtndGj2u2j4wv",
+	wallet: "",
 	history: [] as string[],
 	balances: [] as TokenBalance[],
 });
