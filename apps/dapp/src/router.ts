@@ -17,24 +17,31 @@ import NewTokensVue from "./pages/Tokens/NewTokens.vue";
 import LiquidityPoolsVue from "./pages/DeFi/LiquidityPools.vue";
 import SwapsVue from "./pages/DeFi/Swaps.vue";
 import OpportunitiesVue from "./pages/DeFi/Opportunities.vue";
+import UserSettingsVue from "./pages/UserSettings.vue";
 
 import { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
 import { loadWalletData } from "./api/wallet";
+import { useDiscord } from "./hooks/useDiscord";
 
 declare module "vue-router" {
 	interface RouteMeta {
 		title: string;
 		icon?: keyof typeof icons;
 		defaultOpen?: boolean;
+		needsWallet?: boolean;
+		needsDiscord?: boolean;
 	}
 }
 
-// used for guards & prefetching data
-const { user } = useUser();
-
 export const routes = [
 	{ path: "/", name: "Home", component: Home },
+	{
+		path: "/settings",
+		name: "Settings",
+		component: UserSettingsVue,
+		meta: { title: "Settings", needsDiscord: true },
+	},
 	{
 		path: "/portfolio",
 		name: "Portfolio",
@@ -161,9 +168,16 @@ export const router = createRouter({
 	routes,
 });
 
+// used for guards & prefetching data
+const { user } = useUser();
+const { session } = useDiscord();
+
 router.beforeEach((to, _from, next) => {
 	NProgress.start();
 	if (to.meta.needsWallet && !user.wallet) {
+		return next("/");
+	}
+	if (to.meta.needsDiscord && !session?.user?.name) {
 		return next("/");
 	}
 	return next();

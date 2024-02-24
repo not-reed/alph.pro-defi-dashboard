@@ -1,5 +1,5 @@
 import type { FC } from "hono/jsx";
-import { Layout } from "./layout";
+import { Layout, theme } from "./layout";
 
 export const IndexerStatus: FC = () => {
   return (
@@ -12,7 +12,10 @@ export const IndexerStatus: FC = () => {
         <h2 class="text-3xl text-center">Indexer Statuses</h2>
         <ul x-data class="w-full max-w-2xl mx-auto flex flex-col gap-4">
           <template x-for="plugin in $store.plugins.forDisplay">
-            <li class="p-4 w-full shadow bg-zinc-100">
+            <li
+              class="p-4 w-full shadow"
+              style={`background: ${theme.calypso["800"]}`}
+            >
               <div x-text="plugin.name" class="font-bold uppercase" />
               <div class="flex gap-4">
                 <div>Genesis</div>

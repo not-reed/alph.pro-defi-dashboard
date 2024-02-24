@@ -8,16 +8,21 @@ import { useConnect } from '../hooks/useConnect';
 import { useRouter } from 'vue-router';
 import { useUser } from '../hooks/useUser';
 
+import { useDiscord } from '../hooks/useDiscord';
+
 const { account } = useAccount()
 const { disconnect } = useConnect()
 const { resetUser } = useUser()
+const { signOut, signIn, session } = useDiscord()
 const router = useRouter()
 
 async function disconnectWallet() {
-    await disconnect()
+    try {
+        await disconnect()
+    } catch { }
 
     resetUser()
-    // setWallet('')
+    signOut()
     router.push('/')
 }
 </script>
@@ -27,7 +32,7 @@ async function disconnectWallet() {
         <div>
             <MenuButton class="h-6 w-6 overflow-hidden flex items-center justify-center rounded-full">
 
-                <UserAvatar class="h-12 w-8 rounded-full object-cover" />
+                <UserAvatar class="h-12 w-8 rounded-full" />
 
             </MenuButton>
         </div>
@@ -39,19 +44,27 @@ async function disconnectWallet() {
                 class="absolute right-0 w-64 z-10 mt-2 origin-top-right rounded-md bg-calypso-800 focus:outline-none">
                 <div class="py-1">
                     <MenuItem v-slot="{ active }">
-                    <button type="button"
+                    <button type="button" v-if="session?.user?.name"
+                        :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
+                        {{ session.user.name }}
+                    </button>
+                    <button type="button" v-else-if="account.address"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
                         {{ account.address.slice(0, 8) }}...{{ account.address.slice(-8) }}
                     </button>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                    <button type="button" @click="disconnectWallet"
+                    <button type="button" v-else
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
-                        Disconnect Wallet
+                        No Connected Accounts
                     </button>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }">
-                    <button type="button"
+                    <MenuItem v-slot="{ active }" v-if="session?.user?.name">
+                    <button type="button" @click="disconnectWallet"
+                        :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
+                        Sign Out
+                    </button>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }" v-else>
+                    <button type="button" @click="signIn"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
                         Connect Discord
                     </button>

@@ -13,6 +13,11 @@ import { type default as AyinReserveTable } from './AyinReserve';
 import { type default as AyinSwapTable } from './AyinSwap';
 import { type default as BalanceTable } from './Balance';
 import { type default as CurrentPriceTable } from './CurrentPrice';
+import { type default as UserTable } from './User';
+import { type default as AccountTable } from './Account';
+import { type default as SessionTable } from './Session';
+import { type default as VerificationTokenTable } from './VerificationToken';
+import { type default as UserWalletTable } from './UserWallet';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -38,4 +43,14 @@ export default interface PublicSchema {
   Balance: BalanceTable;
 
   CurrentPrice: CurrentPriceTable;
+
+  User: UserTable;
+
+  Account: AccountTable;
+
+  Session: SessionTable;
+
+  VerificationToken: VerificationTokenTable;
+
+  UserWallet: UserWalletTable;
 }

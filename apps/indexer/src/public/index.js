@@ -33,18 +33,32 @@ document.addEventListener("alpine:init", () => {
     },
   });
 
-  const sse = new EventSource(`${location.origin}/api/sse/plugins`);
+  if (location.pathname === "/") {
+    const sse = new EventSource(`${location.origin}/api/sse/plugins`);
 
-  sse.addEventListener("plugin-status", (e) => {
-    Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
-  });
+    sse.addEventListener("plugin-status", (e) => {
+      Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
+    });
 
-  sse.addEventListener("close", (event) => {
-    console.log('Received "close" event. Closing connection...');
-    sse.close();
-  });
+    sse.addEventListener("close", (event) => {
+      console.log('Received "close" event. Closing connection...');
+      sse.close();
+    });
 
-  sse.onerror = (error) => {
-    console.error("EventSource error:", error);
-  };
+    sse.onerror = (error) => {
+      console.error("EventSource error:", error);
+    };
+  }
 });
+
+// function selfDestruction() {
+//   return {
+//     //   expiry: new Date().setSeconds(
+//     //     new Date().getSeconds() + DEFAULT_CLOSE_TIMER
+//     //   ),
+//     //   remaining: null,
+//     close() {
+//       window.close();
+//     },
+//   };
+// }
