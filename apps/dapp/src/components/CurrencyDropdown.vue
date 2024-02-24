@@ -1,6 +1,6 @@
 
 
-<script setup>
+<script setup lang="ts">
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/solid'
 import { useCurrency } from '../hooks/useCurrency';
@@ -8,7 +8,7 @@ const { currency, setCurrency } = useCurrency()
 </script>
 
 <template>
-  <Menu as="div" class="relative inline-block text-left" v-slot="{ open, value }">
+  <Menu as="div" class="relative inline-block text-left">
     <div>
       <MenuButton class="inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2 text-xs shadow-sm">
         {{ currency }}

@@ -13,13 +13,16 @@ interface TokenBalance {
 	};
 	balance: number;
 }
-const user = reactive({
+
+const EMPTY_USER = () => ({
 	// TODO: empty wallet by default, this was random picked from richlist
 	// and just here for testing
 	wallet: "",
 	history: [] as string[],
 	balances: [] as TokenBalance[],
 });
+
+const user = reactive(EMPTY_USER());
 
 function setBalances(balances: TokenBalance[]) {
 	user.balances = balances;
@@ -32,6 +35,10 @@ function setWallet(wallet: string) {
 	user.wallet = wallet;
 }
 
+function resetUser() {
+	Object.assign(user, EMPTY_USER());
+}
+
 export function useUser() {
-	return { user, setWallet, setBalances };
+	return { user, setWallet, setBalances, resetUser };
 }

@@ -2,8 +2,12 @@
 import { ref } from 'vue';
 import { useUser } from '../hooks/useUser'
 import { useRouter } from 'vue-router';
+import { useModals } from '../hooks/useModals';
+import DiscordSignInVue from '../components/DiscordSignIn.vue';
+
 
 const { user, setWallet } = useUser()
+const { pushModal } = useModals()
 const wallet = ref(user.wallet)
 
 const router = useRouter()
@@ -32,10 +36,22 @@ function viewWallet() {
                     :class="wallet.length ? 'text-opacity-100 focus:scale-100 hover:scale-100' : 'text-opacity-25'">
                     View
                 </button>
-                <button class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200"
+
+
+                <button @click="pushModal('connectWallet')"
+                    class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200"
                     :class="wallet.length ? 'text-opacity-25' : 'text-opacity-100 focus:scale-100 hover:scale-100'">
                     Connect
                 </button>
+
+                <DiscordSignInVue />
+
+                <button class=" w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl
+                text-emerald-200"
+                    :class="wallet.length ? 'text-opacity-25' : 'text-opacity-100 focus:scale-100 hover:scale-100'">
+                    Discord
+                </button>
+
                 <!-- <button class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200"
                     :class="wallet.length ? 'text-opacity-25' : 'text-opacity-100 focus:scale-100 hover:scale-100'">
                     Discord
