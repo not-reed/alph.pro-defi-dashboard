@@ -13,7 +13,8 @@
     "@heroicons/vue": "^2.1.1",
     "nprogress": "^0.2.0",
     "vue": "^3.4.15",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "vue-toastification": "next"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.5.3",

@@ -7,10 +7,30 @@ import DataLoader from "dataloader";
 import type { BlockHash } from "../common/types/brands";
 import type { ExplorerTransaction } from "../explorer/types/transactions";
 import { logger } from "../logger";
+import { chunkArray } from "../../utils/arrays";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutMap = new Map<BlockHash, number>();
 const transactionMap = new Map<BlockHash, ExplorerTransaction[]>();
+function resetCacheTimer(
+	hash: BlockHash,
+	transactions?: ExplorerTransaction[],
+) {
+	if (transactions) {
+		transactionMap.set(hash, transactions);
+	}
+	setTimeout(() => {
+		const time = timeoutMap.get(hash);
+		if (time && time <= Date.now()) {
+			// remove timeout
+			timeoutMap.delete(hash);
+			// clear cached results
+			transactionMap.delete(hash);
+			// reset dataloader
+			transactionLoader.clear(hash);
+		}
+	}, 10_000);
+}
 const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 	async (hashes) => {
 		// for (const hash of hashes) {
@@ -47,48 +67,29 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 		// 	// await wait(50);
 		// }
 
+		const chunks = chunkArray(hashes, 10);
+
 		let cachedCounter = 0;
-		const transactions = [];
-		for (const hash of hashes) {
-			// refresh timeout
-			timeoutMap.set(hash, Date.now() + 5_000);
+		const transactions: ExplorerTransaction[][] = [];
+		for (const hashChunk of chunks) {
+			await Promise.all(
+				hashChunk.map(async (hash) => {
+					timeoutMap.set(hash, Date.now() + 5_000);
 
-			const cached = transactionMap.get(hash);
-			if (cached) {
-				cachedCounter++;
-				transactions.push(cached);
-				setTimeout(() => {
-					const time = timeoutMap.get(hash);
-					if (time && time <= Date.now()) {
-						// remove timeout
-						timeoutMap.delete(hash);
-						// clear cached results
-						transactionMap.delete(hash);
-						// reset dataloader
-						transactionLoader.clear(hash);
+					const cached = transactionMap.get(hash);
+					if (cached) {
+						cachedCounter++;
+						transactions.push(cached);
+						resetCacheTimer(hash);
+						return;
 					}
-				}, 10_000);
-				continue;
-			}
 
-			const transaction = await explorerService.block.transactions(hash);
-			// local copy for request
-			transactions.push(transaction);
-			// cached copy for next time
-			transactionMap.set(hash, transaction);
-
-			// clearout after a brief intermission
-			setTimeout(() => {
-				const time = timeoutMap.get(hash);
-				if (time && time <= Date.now()) {
-					// remove timeout
-					timeoutMap.delete(hash);
-					// clear cached results
-					transactionMap.delete(hash);
-					// reset dataloader
-					transactionLoader.clear(hash);
-				}
-			}, 10_000);
+					const transaction = await explorerService.block.transactions(hash);
+					transactions.push(transaction);
+					resetCacheTimer(hash, transaction);
+					return;
+				}),
+			);
 
 			// await wait(50)
 		}

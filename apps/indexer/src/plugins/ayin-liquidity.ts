@@ -39,6 +39,7 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 	PLUGIN_NAME = "ayin-liquidity";
 
 	async process(blocks: Block[]) {
+		logger.info(`Processing AyinPoolsPlugin - ${blocks.length} Blocks`);
 		const contractEvents = new Set(
 			blocks.flatMap((block) =>
 				block.transactions.flatMap((transaction) =>
@@ -197,6 +198,7 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
 				)
 				.execute();
 		}
+
 		return;
 	}
 }
