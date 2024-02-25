@@ -29,7 +29,7 @@ function getLink(nft) {
 
                     <div class="flex flex-col">
 
-                        <div>{{ nft.address.slice(0, 10) }}...{{ nft.address.slice(-10) }}</div>
+                        <div>{{ nft.address.slice(0, 6) }}...{{ nft.address.slice(-6) }}</div>
                         <a :href="`https://explorer.alephium.org/addresses/${nft.address}`" target="_blank"
                             class="text-calypso-500 cursor-pointer">
                             Explorer

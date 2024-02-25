@@ -18,7 +18,7 @@ const connectionOptions = reactive<
 	Pick<ConnectionOptions, "networkId" | "addressGroup" | "keyType">
 >({
 	networkId: "mainnet",
-	addressGroup: 2,
+	// addressGroup: 0,
 	keyType: "default",
 });
 

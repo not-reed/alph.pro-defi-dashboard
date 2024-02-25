@@ -33,10 +33,17 @@ const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
         balance: balance.balance / 10 ** balance.token.decimals,
         price: prices[balance.token.address],
     })
-}, [] as PartialToken[]).sort((a: PartialToken, b: PartialToken) => (b.balance * b.price) - (a.balance * a.price)))
+}, [] as PartialToken[]).sort((a: PartialToken, b: PartialToken) => {
+    const aWorth = a.balance * a.price
+    const bWorth = b.balance * b.price
+    if (!aWorth && bWorth) return 1
+    if (aWorth && !bWorth) return -1
+    if (aWorth && bWorth) return bWorth - aWorth
+    return a.token.symbol.localeCompare(b.token.symbol)
+}))
 
 
-const nfts = computed(() => user.balances.filter(a => Boolean(a.nft?.image)))
+const nfts = computed(() => user.balances.filter(a => Boolean(a.nft?.image)).sort((a, b) => a.nft?.name.localeCompare(b.nft?.name)))
 
 const tokenWorth = computed(() => {
     return pricedTokens.value.reduce((acc: number, balance: PartialToken) => {

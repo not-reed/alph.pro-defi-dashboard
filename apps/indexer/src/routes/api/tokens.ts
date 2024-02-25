@@ -7,6 +7,8 @@ import {
 } from "@alephium/web3";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { TokenSchema } from "../schemas/token";
+import { sql } from "kysely";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 const app = new OpenAPIHono<Env, Schema, "/api/tokens">();
 
@@ -62,6 +64,90 @@ app.get("/address/:address", async (c) => {
 		.selectFrom("Token")
 		.selectAll()
 		.where("address", "=", address)
+		.execute();
+
+	return c.json({
+		tokens: tokens.map((t) => {
+			return {
+				...t,
+				id: binToHex(contractIdFromAddress(t.address)),
+			};
+		}),
+	});
+});
+
+app.get("/holders", async (c) => {
+	// const { address } = c.req.param();
+	const holders = await db
+		.selectFrom("Balance")
+		.select((eb) => [
+			eb.fn.count("Balance.userAddress").as("holderCount"),
+			eb.fn.sum("Balance.balance").as("circulatingSupply"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("Token")
+					.selectAll()
+					.whereRef("Token.address", "=", "Balance.tokenAddress"),
+			).as("token"),
+		])
+		.groupBy("Balance.tokenAddress")
+		.orderBy("holderCount", "desc")
+		.execute();
+
+	return c.json({
+		holders,
+	});
+});
+
+app.get("/holders/:address", async (c) => {
+	const { address } = c.req.param();
+	const holders = await db
+		.selectFrom("Balance")
+		.select((eb) => [
+			eb.fn.count("Balance.userAddress").as("holderCount"),
+			eb.fn.sum("Balance.balance").as("circulatingSupply"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("Token")
+					.selectAll()
+					.whereRef("Token.address", "=", "Balance.tokenAddress"),
+			).as("token"),
+			jsonArrayFrom(
+				eb
+					.selectFrom("Balance")
+					.select(["balance", "userAddress"])
+					.where("Balance.tokenAddress", "=", address)
+					.orderBy("balance", "desc")
+					.limit(100),
+			).as("holders"),
+		])
+		.where("Balance.tokenAddress", "=", address)
+		.groupBy("Balance.tokenAddress")
+		.orderBy("holderCount", "desc")
+		.execute();
+
+	return c.json({
+		holders: holders.map((h) => {
+			return {
+				...h,
+				holders: h.holders.map((h) => {
+					return {
+						balance: BigInt(h.balance),
+						userAddress: h.userAddress,
+					};
+				}),
+			};
+		}),
+	});
+});
+
+app.get("/symbol/:symbol", async (c) => {
+	const { symbol } = c.req.param();
+	const tokens = await db
+		.selectFrom("Token")
+		.selectAll()
+		.where("symbol", "ilike", symbol)
+		.orderBy("verified", "desc")
 		.execute();
 
 	return c.json({
