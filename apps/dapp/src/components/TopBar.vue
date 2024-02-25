@@ -44,13 +44,21 @@ const page = computed(() => {
                     </li>
 
                     <template v-if="page.children">
-                        <RouterLink
-                            class="dark:text-calypso-400 dark:border-calypso-800 dark:hover:bg-calypso-800 dark:hover:text-calypso-200 text-zinc-500 border-zinc-300 hover:bg-calypso-300 hover:text-calypso-800 transition px-4 h-8 border-t border-r border-l pt-1 rounded-t -mb-px"
-                            :to="child.path"
-                            active-class="dark:border-calypso-800 dark:bg-calypso-800 border-calypso-800 bg-zinc-300  rounded-t border-t border-r border-l "
-                            v-for="child in page.children">
-                            <div>{{ child.meta?.title ?? child.name }}</div>
-                        </RouterLink>
+                        <template v-for="child in page.children">
+                            <RouterLink
+                                class="dark:text-calypso-400 dark:border-calypso-800 dark:hover:bg-calypso-800 dark:hover:text-calypso-200 text-zinc-500 border-zinc-300 hover:bg-calypso-300 hover:text-calypso-800 transition px-4 h-8 border-t border-r border-l pt-1 rounded-t -mb-px"
+                                :to="child.path"
+                                active-class="dark:border-calypso-800 dark:bg-calypso-800 border-calypso-800 bg-zinc-300  rounded-t border-t border-r border-l "
+                                v-if="!child.meta?.disabled">
+                                <div>{{ child.meta?.title ?? child.name }}</div>
+                            </RouterLink>
+                            <div v-else>
+
+                                <div
+                                    class="dark:text-calypso-400 dark:border-calypso-800 cursor-not-allowed text-zinc-500 border-zinc-300 transition px-4 h-8 border-t border-r border-l pt-1 rounded-t -mb-px">
+                                    {{ child.meta?.title ?? child.name }}</div>
+                            </div>
+                        </template>
                     </template>
                 </ul>
 

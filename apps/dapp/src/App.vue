@@ -17,10 +17,16 @@ const loaded = ref(false)
 onMounted(async () => {
   try {
     await loadSession()
+    const response: any = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, { credentials: 'include' }).then(a => a.json())
+    if (response.wallets[0]?.address) {
+      setWallet(response.wallets[0].address)
+    }
   } catch { }
   try {
     await autoConnect()
-    setWallet(account.address)
+    if (account.address) {
+      setWallet(account.address)
+    }
     await router.push('/portfolio/overview')
   } finally {
     loaded.value = true

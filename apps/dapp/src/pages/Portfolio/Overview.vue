@@ -128,7 +128,7 @@ const secondaryCurrencies = computed(() => {
 
         <!-- TODO: Ranked by Rarest+Highest Floor -->
         <!-- Only show first 4 or 8 -->
-        <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full" v-if="true">
+        <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full" v-if="nfts.length">
             <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
                 <img class="w-full h-32 shadow-lg object-cover rounded mb-3" :src="balance.nft.image" />
                 <div class="text-sm flex items-center justify-between leading-3">

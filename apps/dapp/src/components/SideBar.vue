@@ -36,9 +36,12 @@ const { links } = useNavLinks()
                     </template>
 
                     <ul class="p-1 flex flex-col gap-2 font-semibold">
-                        <li v-for=" child in link.children" class="inline-flex gap-1 [&_svg.icon]:hover:-rotate-12">
-                            <Icon :name="child.meta?.icon" />
+
+                        <li v-for=" child in link.children" class="inline-flex gap-1 [&_svg.icon]:hover:-rotate-12"
+                            :class="child.meta?.disabled ? 'opacity-50 cursor-not-allowed' : ''">
+                            <Icon :name="child.meta?.icon" :class="child.meta?.disabled ? 'pointer-events-none' : ''" />
                             <SideBarDropDownLink v-if="typeof child.name === 'string'" :to="child.path"
+                                :class="child.meta?.disabled ? 'pointer-events-none' : ''"
                                 :label="(child.meta?.title as string ?? child.name)" />
                         </li>
                     </ul>
