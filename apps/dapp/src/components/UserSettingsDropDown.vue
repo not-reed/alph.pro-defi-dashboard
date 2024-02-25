@@ -21,8 +21,8 @@ async function disconnectWallet() {
         await disconnect()
     } catch { }
 
+    await signOut()
     resetUser()
-    signOut()
     router.push('/')
 }
 </script>
@@ -57,10 +57,10 @@ async function disconnectWallet() {
                         No Connected Accounts
                     </button>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }" v-if="session?.user?.name">
+                    <MenuItem v-slot="{ active }" v-if="session?.user?.name || account.address">
                     <button type="button" @click="disconnectWallet"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
-                        Sign Out
+                        {{ session?.user?.name ? 'Sign Out' : 'Disconnect' }}
                     </button>
                     </MenuItem>
                     <MenuItem v-slot="{ active }" v-else>

@@ -23,6 +23,7 @@ import { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
 import { loadWalletData } from "./api/wallet";
 import { useDiscord } from "./hooks/useDiscord";
+import HoldersVue from "./pages/Tokens/Holders.vue";
 
 declare module "vue-router" {
 	interface RouteMeta {
@@ -117,6 +118,12 @@ export const routes = [
 				name: "New Tokens",
 				component: NewTokensVue,
 				meta: { title: "New Tokens" },
+			},
+			{
+				path: "/tokens/holders",
+				name: "Holders",
+				component: HoldersVue,
+				meta: { title: "Holders" },
 			},
 			{
 				path: "/tokens/hot",
