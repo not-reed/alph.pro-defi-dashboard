@@ -8,9 +8,11 @@ import { skipCSRFCheck } from "@auth/core";
 
 export function getAuthConfig(c: Context): AuthConfig {
 	return {
-		debug: true,
+		debug: false,
+
 		// skipCSRFCheck: skipCSRFCheck,
 		secret: config.AUTH_SECRET,
+		redirectProxyUrl: config.AUTH_REDIRECT_URL,
 		adapter: KyselyAdapter(db),
 		providers: [
 			Discord({
