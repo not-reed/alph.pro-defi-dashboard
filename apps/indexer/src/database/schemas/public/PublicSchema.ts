@@ -18,6 +18,9 @@ import { type default as AccountTable } from './Account';
 import { type default as SessionTable } from './Session';
 import { type default as VerificationTokenTable } from './VerificationToken';
 import { type default as UserWalletTable } from './UserWallet';
+import { type default as NftCollectionTable } from './NftCollection';
+import { type default as NftTable } from './Nft';
+import { type default as NftAttributeTable } from './NftAttribute';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -53,4 +56,10 @@ export default interface PublicSchema {
   VerificationToken: VerificationTokenTable;
 
   UserWallet: UserWalletTable;
+
+  NftCollection: NftCollectionTable;
+
+  Nft: NftTable;
+
+  NftAttribute: NftAttributeTable;
 }

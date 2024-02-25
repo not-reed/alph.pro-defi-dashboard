@@ -3,6 +3,8 @@ import { db } from "../database/db";
 import pkg from "../../package.json";
 import { listPlugins, processPlugin } from "./plugin";
 import { runSeeder } from "./seeder";
+import { findUnprocessedNfts, processCollection } from "./nfts";
+import type { ContractAddress } from "../services/common/types/brands";
 
 switch (argv._[0]) {
 	case "help":
@@ -13,6 +15,8 @@ Version: ${pkg.version}
 
 Commands:
     - ${chalk.green("help")}            => view all available commands
+    - ${chalk.green("seed")}            => seed database with dummy fake data
+    - ${chalk.green("nft")}             => process a collection to fill offchain data
     - ${chalk.green("plugins")}         => inspect and check plugins
         - ${chalk.yellow("list")}        => list all plugins
             i.e. bun cli plugins list
@@ -36,6 +40,13 @@ Commands:
 				);
 				break;
 		}
+		break;
+	case "nft":
+		await processCollection(argv._[1] as ContractAddress);
+		break;
+
+	case "nft:search":
+		await findUnprocessedNfts();
 		break;
 	case "seed":
 		await runSeeder();

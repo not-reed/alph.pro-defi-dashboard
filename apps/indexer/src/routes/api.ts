@@ -14,6 +14,7 @@ import pools from "./api/pools";
 import balances from "./api/balances";
 import prices from "./api/prices";
 import auth from "./api/auth";
+import nfts from "./api/nfts";
 import wallets from "./api/wallets";
 import { type AuthUser, type AuthConfig } from "@hono/auth-js";
 
@@ -110,6 +111,9 @@ app.route("/prices", prices);
 
 app.use("/wallets/*", corsOptions);
 app.route("/wallets", wallets);
+
+app.use("/nfts/*", corsOptions);
+app.route("/nfts", nfts);
 
 app.use("/auth/*", corsOptions);
 app.route("/auth", auth);
