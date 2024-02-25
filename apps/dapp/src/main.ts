@@ -18,7 +18,7 @@ createApp(App)
 
 const { updatePrices } = usePrices();
 // load core prices once at page load
-await updatePrices([
+updatePrices([
 	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq", // alph
 	"vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy", // ayin
 	"xUTp3RXGJ1fJpCGqsAY6GgyfRQ3WQ1MdcYR1SiwndAbR", // btc
