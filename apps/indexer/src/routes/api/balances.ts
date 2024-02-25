@@ -8,6 +8,10 @@ import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 const app = new OpenAPIHono<Env, Schema, "/api/balances">();
 
+async function fetchUserNfts(addresses: string[]) {
+	return nfts;
+}
+
 async function fetchUserBalances(addresses: string[]) {
 	const balances = await db
 		.selectFrom("Balance")
@@ -28,14 +32,35 @@ async function fetchUserBalances(addresses: string[]) {
 					])
 					.whereRef("Token.address", "=", "Balance.tokenAddress"),
 			).as("token"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("Nft")
+					.select([
+						"address",
+						"name",
+						"image",
+						"description",
+						"uri",
+						"nftIndex",
+					])
+					.whereRef("Nft.address", "=", "Balance.tokenAddress"),
+			).as("nft"),
 		])
 		.where("userAddress", "in", addresses)
 		.where("balance", ">", 0n)
 		.where((eb) =>
-			eb
-				.selectFrom("Token")
-				.whereRef("Token.address", "=", "Balance.tokenAddress")
-				.select("verified"),
+			eb.or([
+				eb
+					.selectFrom("Token")
+					.whereRef("Token.address", "=", "Balance.tokenAddress")
+					.select("verified"),
+				eb.exists(
+					eb
+						.selectFrom("Nft")
+						.whereRef("Nft.address", "=", "Balance.tokenAddress")
+						.select("id"),
+				),
+			]),
 		)
 		.execute();
 
@@ -87,6 +112,7 @@ const route = createRoute({
 app.openapi(route, async (c) => {
 	const { address } = c.req.valid("query");
 	const balances = await fetchUserBalances(address?.split(","));
+	// const nfts = await fetchUserNfts(address?.split(","));
 	return c.json({
 		balances,
 	});
