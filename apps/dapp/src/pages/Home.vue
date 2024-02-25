@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useUser } from '../hooks/useUser'
 import { useRouter } from 'vue-router';
 import { useModals } from '../hooks/useModals';
-import DiscordSignInVue from '../components/DiscordSignIn.vue';
+// import DiscordSignInVue from '../components/DiscordSignIn.vue';
 
 
 const { user, setWallet } = useUser()
@@ -44,7 +44,7 @@ function viewWallet() {
                     Connect
                 </button>
 
-                <DiscordSignInVue />
+                <!-- <DiscordSignInVue /> -->
 
                 <button class=" w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl
                 text-emerald-200"

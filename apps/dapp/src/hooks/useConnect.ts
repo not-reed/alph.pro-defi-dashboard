@@ -16,13 +16,11 @@ const connectorId = ref<ConnectorId | undefined>(
 
 const connectionOptions = reactive<
 	Pick<ConnectionOptions, "networkId" | "addressGroup" | "keyType">
->(
-	Storage.get(StorageKeys.LastUsedConnectionOptions) ?? {
-		networkId: "mainnet",
-		addressGroup: 0,
-		keyType: "default",
-	},
-);
+>({
+	networkId: "mainnet",
+	addressGroup: 2,
+	keyType: "default",
+});
 
 function getConnector(connector: ConnectorId) {
 	switch (connector) {

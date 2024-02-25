@@ -13,8 +13,15 @@ import tokens from "./api/tokens";
 import pools from "./api/pools";
 import balances from "./api/balances";
 import prices from "./api/prices";
+import auth from "./api/auth";
+import wallets from "./api/wallets";
+import { type AuthUser, type AuthConfig } from "@hono/auth-js";
 
-const app = new Hono<Env, Schema, "/api">();
+const app = new Hono<
+	{ Variables: { authUser: AuthUser; authConfig: AuthConfig } },
+	Schema,
+	"/api"
+>();
 
 app.route("/status", status);
 app.route("/sse", sse);
@@ -71,10 +78,20 @@ const corsOptions = cors({
 		"https://alph-pro.on.fleek.co",
 		"https://alph.pro",
 	],
-	allowHeaders: ["X-Custom-Header", "Upgrade-Insecure-Requests"],
-	allowMethods: ["POST", "GET", "OPTIONS"],
-	exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
-	maxAge: 600,
+	// allowHeaders: [
+	// 	"X-Custom-Header",
+	// 	"Upgrade-Insecure-Requests",
+	// 	// "X-Auth-Return-Redirect", // for auth-js
+	// 	// "X-CSRF-Token", // for auth-js
+	// 	// "Access-Control-Allow-Origin",
+	// ],
+	// // allowMethods: ["POST", "GET", "HEAD", "OPTIONS"],
+	// exposeHeaders: [
+	// 	"Content-Length",
+	// 	// "X-Kuma-Revision",
+	// 	// "Access-Control-Allow-Origin",
+	// ],
+	// maxAge: 600,
 	credentials: true,
 });
 
@@ -90,5 +107,17 @@ app.route("/balances", balances);
 
 app.use("/prices/*", corsOptions);
 app.route("/prices", prices);
+
+app.use("/wallets/*", corsOptions);
+app.route("/wallets", wallets);
+
+app.use("/auth/*", corsOptions);
+app.route("/auth", auth);
+
+// app.use("/api/*", verifyAuth());
+app.get("/api/protected", (c) => {
+	const auth = c.get("authUser");
+	return c.json(auth);
+});
 
 export default app;

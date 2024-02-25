@@ -54,6 +54,9 @@ const secondaryCurrencies = computed(() => {
 </script>
 <template>
     <div class="flex flex-col w-full max-w-2xl">
+        <div class="px-4 pt-4">
+            {{ user.wallet }}
+        </div>
         <div class="grid grid-cols-4 gap-2 m-4 w-full">
             <div
                 class="bg-zinc-200 dark:bg-calypso-900 shadow-xl col-span-2 row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">

@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "@alephium/web3": "^0.30.1",
+    "@auth/core": "^0.27.0",
+    "@hono/auth-js": "^1.0.3",
     "@hono/swagger-ui": "^0.2.1",
     "@hono/zod-openapi": "^0.9.6",
     "atlassian-openapi": "^1.0.18",

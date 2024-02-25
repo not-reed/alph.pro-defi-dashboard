@@ -2,8 +2,8 @@ import type {
 	BuiltInProviderType,
 	RedirectableProviderType,
 } from "@auth/core/providers";
-// import { base } from "$app/paths";
-const base = "api";
+
+const base = `${import.meta.env.VITE_API_ENDPOINT}/api`;
 
 type LiteralUnion<T extends U, U = string> = T | (U & Record<never, never>);
 
@@ -50,33 +50,37 @@ export async function signIn<
 	options?: SignInOptions,
 	authorizationParams?: SignInAuthorizationParams,
 ) {
-	const { callbackUrl = window.location.href, redirect = true } = options ?? {};
+	const { callbackUrl = window.location.href, redirect = false } =
+		options ?? {};
 
 	// TODO: Support custom providers
 	const isCredentials = providerId === "credentials";
 	const isEmail = providerId === "email";
 	const isSupportingReturn = isCredentials || isEmail;
+	console.log({ isSupportingReturn, redirect });
+	const action = isCredentials ? "callback" : "signin";
 
-	const basePath = base ?? "";
-	const signInUrl = `${basePath}/auth/${
-		isCredentials ? "callback" : "signin"
-	}/${providerId}`;
-
+	const signInUrl = `${base}/auth/${action}/${providerId}`;
+	console.log({ signInUrl });
 	const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`;
 
 	// TODO: Remove this since Sveltekit offers the CSRF protection via origin check
-	const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`);
+	const csrfTokenResponse = await fetch(`${base}/auth/csrf`, {
+		credentials: "include",
+	});
 	const { csrfToken } = await csrfTokenResponse.json();
-
+	// console.log({ csrfToken });
 	const res = await fetch(_signInUrl, {
 		method: "post",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
 			"X-Auth-Return-Redirect": "1",
+			// "X-CSRF-TOKEN": csrfToken,
 		},
-		// @ts-ignore
+		credentials: "include",
 		body: new URLSearchParams({
 			...options,
+			redirect: redirect.toString(),
 			csrfToken,
 			callbackUrl,
 		}),
@@ -86,9 +90,19 @@ export async function signIn<
 
 	if (redirect || !isSupportingReturn) {
 		// TODO: Do not redirect for Credentials and Email providers by default in next major
-		window.location.href = data.url ?? callbackUrl;
+		// window.location.href = data.url ?? callbackUrl;
+		// console.log(new URL(data.url ?? callbackUrl).pathname);
+		window.open(
+			data.url ?? callbackUrl,
+			"Discord Auth",
+			`width=${Math.min(800, window.innerWidth)},height=${Math.min(
+				600,
+				window.innerHeight,
+			)}`,
+		);
+		// router.push(new URL(data.url ?? callbackUrl).pathname);
 		// If url contains a hash, the browser does not reload the page. We reload manually
-		if (data.url.includes("#")) window.location.reload();
+		// if (data.url.includes("#")) window.location.reload();
 		return;
 	}
 
@@ -105,10 +119,13 @@ export async function signOut(options?: SignOutParams) {
 	const { callbackUrl = window.location.href } = options ?? {};
 	const basePath = base ?? "";
 	// TODO: Remove this since Sveltekit offers the CSRF protection via origin check
-	const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`);
+	const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`, {
+		credentials: "include",
+	});
 	const { csrfToken } = await csrfTokenResponse.json();
 	const res = await fetch(`${basePath}/auth/signout`, {
 		method: "post",
+		credentials: "include",
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
 			"X-Auth-Return-Redirect": "1",
@@ -121,7 +138,7 @@ export async function signOut(options?: SignOutParams) {
 	const data = await res.json();
 
 	const url = data.url ?? callbackUrl;
-	window.location.href = url;
+	// window.location.href = url;
 	// If url contains a hash, the browser does not reload the page. We reload manually
-	if (url.includes("#")) window.location.reload();
+	// if (url.includes("#")) window.location.reload();
 }
