@@ -30,10 +30,11 @@ app.route("/sse", sse);
 app.get("/docs.json", async (c) => {
 	const base = new URL(c.req.url).origin;
 
-	const [balances, tokens, prices] = (await Promise.all([
+	const [balances, tokens, nfts, prices] = (await Promise.all([
 		// TODO: include public routes here
 		fetch(`${base}/api/balances/docs.json`).then((a) => a.json()),
 		fetch(`${base}/api/tokens/docs.json`).then((a) => a.json()),
+		fetch(`${base}/api/nfts/docs.json`).then((a) => a.json()),
 		fetch(`${base}/api/prices/docs.json`).then((a) => a.json()),
 	])) as unknown as Swagger.SwaggerV3[];
 
@@ -47,6 +48,11 @@ app.get("/docs.json", async (c) => {
 			oas: tokens,
 			description: { append: true, title: { value: "Tokens" } },
 			pathModification: { prepend: "/api/tokens" },
+		},
+		{
+			oas: nfts,
+			description: { append: true, title: { value: "Nfts" } },
+			pathModification: { prepend: "/api/nfts" },
 		},
 		{
 			oas: prices,
@@ -76,7 +82,7 @@ app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
 const corsOptions = cors({
 	origin: [
 		"http://localhost:5173", // TODO: change to env, this is front end vite
-		"https://alph-pro.on.fleek.co",
+		"https://alph-pro.on.fleek.co/",
 		"https://alph.pro",
 	],
 	// allowHeaders: [
@@ -119,9 +125,9 @@ app.use("/auth/*", corsOptions);
 app.route("/auth", auth);
 
 // app.use("/api/*", verifyAuth());
-app.get("/api/protected", (c) => {
-	const auth = c.get("authUser");
-	return c.json(auth);
-});
+// app.get("/api/protected", (c) => {
+// 	const auth = c.get("authUser");
+// 	return c.json(auth);
+// });
 
 export default app;
