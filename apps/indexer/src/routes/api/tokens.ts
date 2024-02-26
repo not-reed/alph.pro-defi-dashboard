@@ -7,7 +7,7 @@ import {
 } from "@alephium/web3";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { TokenSchema } from "../schemas/token";
-import { sql } from "kysely";
+
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 const app = new OpenAPIHono<Env, Schema, "/api/tokens">();
@@ -58,8 +58,34 @@ app.openapi(route, async (c) => {
 	});
 });
 
-app.get("/address/:address", async (c) => {
-	const { address } = c.req.param();
+const addressRoute = createRoute({
+	method: "get",
+	tags: ["Tokens"],
+	path: "/address/{address}",
+	request: {
+		params: z.object({
+			address: z.string().openapi({
+				param: { name: "address", in: "path" },
+				example: "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
+			}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						tokens: z.array(TokenSchema),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+app.openapi(addressRoute, async (c) => {
+	const { address } = c.req.valid("param");
+	console.log({ address });
 	const tokens = await db
 		.selectFrom("Token")
 		.selectAll()
@@ -76,7 +102,113 @@ app.get("/address/:address", async (c) => {
 	});
 });
 
-app.get("/holders", async (c) => {
+const symbolRoute = createRoute({
+	method: "get",
+	tags: ["Tokens"],
+	path: "/symbol/{symbol}",
+	request: {
+		params: z.object({
+			symbol: z.string().openapi({
+				param: { name: "symbol", in: "path" },
+				example: "alph",
+			}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						tokens: z.array(TokenSchema),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+app.openapi(symbolRoute, async (c) => {
+	const { symbol } = c.req.param();
+	const tokens = await db
+		.selectFrom("Token")
+		.selectAll()
+		.where("symbol", "ilike", symbol)
+		.orderBy("verified", "desc")
+		.execute();
+
+	return c.json({
+		tokens: tokens.map((t) => {
+			return {
+				...t,
+				id: binToHex(contractIdFromAddress(t.address)),
+			};
+		}),
+	});
+});
+const idRoute = createRoute({
+	method: "get",
+	tags: ["Tokens"],
+	path: "/id/{id}",
+	request: {
+		params: z.object({
+			id: z.string().openapi({
+				param: { name: "id", in: "path" },
+				example:
+					"0000000000000000000000000000000000000000000000000000000000000000",
+			}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						tokens: z.array(TokenSchema),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+app.openapi(idRoute, async (c) => {
+	const { id } = c.req.param();
+	const address = addressFromContractId(id);
+	const tokens = await db
+		.selectFrom("Token")
+		.selectAll()
+		.where("address", "=", address)
+		.execute();
+
+	return c.json({ tokens });
+});
+
+const holdersRoute = createRoute({
+	method: "get",
+	tags: ["Tokens"],
+	path: "/holders",
+	request: {},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						holders: z.array(
+							z.object({
+								holderCount: z.number().openapi({ example: 10000 }),
+								circulatingSupply: z.number().openapi({ example: 1000000 }),
+								token: TokenSchema,
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(holdersRoute, async (c) => {
 	// const { address } = c.req.param();
 	const holders = await db
 		.selectFrom("Balance")
@@ -95,11 +227,65 @@ app.get("/holders", async (c) => {
 		.execute();
 
 	return c.json({
-		holders,
+		holders: holders.reduce((acc, h) => {
+			if (!h.token?.address) {
+				return acc;
+			}
+			return acc.concat({
+				holderCount: h.holderCount,
+				circulatingSupply: h.circulatingSupply,
+				token: {
+					...h.token,
+					id: binToHex(contractIdFromAddress(h.token.address)),
+				},
+			});
+		}, [] as unknown[]),
 	});
 });
 
-app.get("/holders/:address", async (c) => {
+const holdersAddressRoute = createRoute({
+	method: "get",
+	tags: ["Tokens"],
+	path: "/holders/{address}",
+	request: {
+		params: z.object({
+			address: z.string().openapi({
+				param: { name: "address", in: "path" },
+				example: "tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
+			}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						holders: z.array(
+							z.object({
+								holderCount: z.number().openapi({ example: 10000 }),
+								circulatingSupply: z.number().openapi({ example: 1000000 }),
+								holders: z.array(
+									z
+										.object({
+											userAddress: z.string().openapi({
+												example:
+													"17CtvwRZsaAhDjVLDm1YWNigKDETZbpcwqbrSkSsnV3XH",
+											}),
+											balance: z.string().openapi({ example: "1000000" }),
+										})
+										.openapi("Holder"),
+								),
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(holdersAddressRoute, async (c) => {
 	const { address } = c.req.param();
 	const holders = await db
 		.selectFrom("Balance")
@@ -127,49 +313,25 @@ app.get("/holders/:address", async (c) => {
 		.execute();
 
 	return c.json({
-		holders: holders.map((h) => {
-			return {
+		holders: holders.reduce((acc, h) => {
+			if (!h.token?.address) {
+				return acc;
+			}
+			return acc.concat({
 				...h,
+				token: {
+					...h.token,
+					id: binToHex(contractIdFromAddress(h.token.address)),
+				},
 				holders: h.holders.map((h) => {
 					return {
 						balance: BigInt(h.balance),
 						userAddress: h.userAddress,
 					};
 				}),
-			};
-		}),
+			});
+		}, [] as unknown[]),
 	});
-});
-
-app.get("/symbol/:symbol", async (c) => {
-	const { symbol } = c.req.param();
-	const tokens = await db
-		.selectFrom("Token")
-		.selectAll()
-		.where("symbol", "ilike", symbol)
-		.orderBy("verified", "desc")
-		.execute();
-
-	return c.json({
-		tokens: tokens.map((t) => {
-			return {
-				...t,
-				id: binToHex(contractIdFromAddress(t.address)),
-			};
-		}),
-	});
-});
-
-app.get("/id/:id", async (c) => {
-	const { id } = c.req.param();
-	const address = addressFromContractId(id);
-	const tokens = await db
-		.selectFrom("Token")
-		.selectAll()
-		.where("address", "=", address)
-		.execute();
-
-	return c.json({ tokens });
 });
 
 app.doc("/docs.json", {

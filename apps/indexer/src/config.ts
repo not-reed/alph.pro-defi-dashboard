@@ -7,6 +7,7 @@ export const config = {
 
 	// Redis
 	REDIS_PORT: Number(process.env.REDIS_PORT || 6379),
+	REDIS_HOST: process.env.REDIS_HOST || "127.0.0.1",
 
 	// Postgres
 	DB_HOST: process.env.DB_HOST || "localhost",
@@ -23,8 +24,9 @@ export const config = {
 	EXPLORER_BASIC_AUTH: process.env.EXPLORER_BASIC_AUTH,
 
 	// AuthJS
-	AUTH_SECRET: process.env.AUTH_SECRET,
+	AUTH_SECRET: process.env.AUTH_SECRET as string,
 	AUTH_URL: process.env.AUTH_URL,
+	AUTH_REDIRECT_URL: process.env.AUTH_REDIRECT_URL as string,
 
 	// Discord
 	DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,

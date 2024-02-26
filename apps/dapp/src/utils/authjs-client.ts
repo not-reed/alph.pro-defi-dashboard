@@ -61,7 +61,7 @@ export async function signIn<
 	const action = isCredentials ? "callback" : "signin";
 
 	const signInUrl = `${base}/auth/${action}/${providerId}`;
-	console.log({ signInUrl });
+
 	const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`;
 
 	// TODO: Remove this since Sveltekit offers the CSRF protection via origin check

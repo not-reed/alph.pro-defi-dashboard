@@ -9,7 +9,6 @@ import config from '../alephium.config'
 
 const network = 'devnet' as const
 
-
 const deployments = loadDeployments(network)
 
 let vendingMachineStates = deployments.contracts.VendingMachine?.contractInstance!
@@ -19,7 +18,7 @@ if (!vendingMachineStates) {
 }
 let vendingMachineContractAddress = vendingMachineStates.address
 
-web3.setCurrentNodeProvider(config.networks[network].nodeUrl, undefined, fetch) //MainNet
+web3.setCurrentNodeProvider(config.networks[network].nodeUrl, undefined, fetch)
 
 const keys = {
   devnet: testPrivateKey,
@@ -27,7 +26,7 @@ const keys = {
   mainnet: process.env.MAIN_NET_PRIVATE_KEYS as string
 }
 
-const signer = new PrivateKeyWallet({ privateKey: keys[network] }) 
+const signer = new PrivateKeyWallet({ privateKey: keys[network] })
 
 const NO_DECIMALS = 10 ** 18
 
@@ -94,22 +93,21 @@ export async function withdrawAlph() {
   console.log('Contract balance before withdraw', contractAlphBalance.balanceHint)
 
   if (BigInt(contractAlphBalance.balance) > ONE_ALPH) {
-  await WithdrawAlph.execute(signer, {
-    initialFields: {
-      vendingMachine: vendingMachineContractAddress as string,
-      to: signer.address,
-      amount: BigInt(contractAlphBalance.balance) - ONE_ALPH
-    },
-    attoAlphAmount: DUST_AMOUNT
-  })
-}
+    await WithdrawAlph.execute(signer, {
+      initialFields: {
+        vendingMachine: vendingMachineContractAddress as string,
+        to: signer.address,
+        amount: BigInt(contractAlphBalance.balance) - ONE_ALPH
+      },
+      attoAlphAmount: DUST_AMOUNT
+    })
+  }
 
   console.log('User ALPH after withdraw', (await getAlphBalance(signer.address, signer)).balanceHint)
   contractAlphBalance = await getAlphBalance(vendingMachineStates.address, signer)
   console.log('Contract after before withdraw', contractAlphBalance.balanceHint)
 }
 
-
 async function getAlphBalance(address: string, signer: PrivateKeyWallet): Promise<string | any> {
-  return (await signer.nodeProvider.addresses.getAddressesAddressBalance(address))
+  return await signer.nodeProvider.addresses.getAddressesAddressBalance(address)
 }
