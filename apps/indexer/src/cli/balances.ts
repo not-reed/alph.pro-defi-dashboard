@@ -17,6 +17,7 @@ export async function fixBalances(opts: {
 	user: string;
 	min: number;
 	max: number;
+	force: boolean;
 }) {
 	let query = db
 		.selectFrom("Balance")
@@ -77,7 +78,7 @@ export async function fixBalances(opts: {
 			BigInt(balances.balance) + BigInt(balances.lockedBalance),
 		);
 
-		if (BigInt(wallet.size) === user.count) {
+		if (BigInt(wallet.size) === user.count && !opts.force) {
 			continue;
 		}
 

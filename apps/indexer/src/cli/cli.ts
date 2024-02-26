@@ -55,6 +55,7 @@ Commands:
 			user: argv.user,
 			min: Number(argv.min || 0),
 			max: Number(argv.max || 0),
+			force: Boolean(argv.force),
 		});
 		break;
 	case "seed":
