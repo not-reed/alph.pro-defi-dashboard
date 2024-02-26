@@ -43,7 +43,7 @@ const page = computed(() => {
                         {{ page.name }}
                     </li>
 
-                    <template v-if="page.children">
+                    <!-- <template v-if="page.children">
                         <template v-for="child in page.children">
                             <RouterLink
                                 class="dark:text-calypso-400 dark:border-calypso-800 dark:hover:bg-calypso-800 dark:hover:text-calypso-200 text-zinc-500 border-zinc-300 hover:bg-calypso-300 hover:text-calypso-800 transition px-4 h-8 border-t border-r border-l pt-1 rounded-t -mb-px"
@@ -59,7 +59,7 @@ const page = computed(() => {
                                     {{ child.meta?.title ?? child.name }}</div>
                             </div>
                         </template>
-                    </template>
+                    </template> -->
                 </ul>
 
             </div>
