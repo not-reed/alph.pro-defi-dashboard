@@ -42,13 +42,13 @@ async function lp(interaction) {
     await messageDisplay.success(
       interaction,
       `${first_token} ${second_token} LP`,
-      "No LP amount"
+      "Coming Soon"
     );
   } else {
     await messageDisplay.success(
       interaction,
       `${first_token} ${second_token} LP`,
-      "LP amount provided"
+      "Coming Soon"
     );
   }
 }
