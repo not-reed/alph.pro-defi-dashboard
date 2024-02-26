@@ -75,7 +75,7 @@ export async function signIn<
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded",
 			"X-Auth-Return-Redirect": "1",
-			// "X-CSRF-TOKEN": csrfToken,
+			"X-CSRF-TOKEN": csrfToken,
 		},
 		credentials: "include",
 		body: new URLSearchParams({
