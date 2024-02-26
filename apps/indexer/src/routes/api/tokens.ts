@@ -304,6 +304,7 @@ app.openapi(holdersAddressRoute, async (c) => {
 					.selectFrom("Balance")
 					.select(["balance", "userAddress"])
 					.where("Balance.tokenAddress", "=", address)
+					.where("Balance.balance", "<>", 0n)
 					.orderBy("balance", "desc")
 					.limit(100),
 			).as("holders"),
