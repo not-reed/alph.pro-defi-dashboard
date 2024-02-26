@@ -222,6 +222,7 @@ app.openapi(holdersRoute, async (c) => {
 					.whereRef("Token.address", "=", "Balance.tokenAddress"),
 			).as("token"),
 		])
+		.where("balance", "<>", 0n)
 		.groupBy("Balance.tokenAddress")
 		.orderBy("holderCount", "desc")
 		.execute();
@@ -308,6 +309,7 @@ app.openapi(holdersAddressRoute, async (c) => {
 			).as("holders"),
 		])
 		.where("Balance.tokenAddress", "=", address)
+		.where("balance", "<>", 0n)
 		.groupBy("Balance.tokenAddress")
 		.orderBy("holderCount", "desc")
 		.execute();
