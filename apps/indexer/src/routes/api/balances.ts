@@ -8,10 +8,6 @@ import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 const app = new OpenAPIHono<Env, Schema, "/api/balances">();
 
-async function fetchUserNfts(addresses: string[]) {
-	return nfts;
-}
-
 async function fetchUserBalances(addresses: string[]) {
 	const balances = await db
 		.selectFrom("Balance")
