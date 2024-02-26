@@ -39,68 +39,79 @@ module.exports = { discordData, execute };
 
 //Command function
 async function tip(interaction) {
-  const provider = await WalletConnectProvider.init({
-    addressGroup: 0,
-    networkId: "testnet",
-    onDisconnected: () => {},
-    projectId: WALLET_CONNECT_PROJECT_ID,
-  });
-
-  provider.on("displayUri", async (uri) => {
-    const qrCodeDataURL = await QRCode.toDataURL(uri);
-    const buffer = Buffer.from(qrCodeDataURL.split(",")[1], "base64");
-    const attachment = new AttachmentBuilder(buffer, "walletconnect-qr.png");
-
-    const messageHelp = `Scan above barcorde to connect using Alephium mobile wallet, keep your wallet open, you will get a request to apporve the transaction`;
-    await messageDisplay.sendAttachment(
-      interaction,
-      "Barcode",
-      messageHelp,
-      attachment
-    );
-  });
-
-  await provider.connect();
-
-  //>>>>>Clear code later >> this is for alph network
-  const network = "testnet";
-
-  const deployments = loadDeployments(network);
-
-  let vendingMachineStates = deployments.contracts.VendingMachine;
-
-  if (!vendingMachineStates) {
-    throw new Error("Vending Machine contract not found");
-  }
-
-  web3.setCurrentNodeProvider(
-    config.default.networks[network].nodeUrl,
-    undefined,
-    fetch
-  );
-
-  const nftInfo =
-    await vendingMachineStates.contractInstance.methods.nftByIndex({
-      args: { index: 1n },
+  try {
+    const provider = await WalletConnectProvider.init({
+      addressGroup: 0,
+      networkId: "mainnet",
+      onDisconnected: () => {},
+      projectId: WALLET_CONNECT_PROJECT_ID,
     });
 
-  const tokenContractAddress = nftInfo.contracts[0].fields.foodsContractId;
-  const nftOwner = nftInfo.contracts[0].fields;
-  //>>>>>>>>>>>>>>>>>>>>> Clear code above after hack >>>>>>>
+    provider.on("displayUri", async (uri) => {
+      const qrCodeDataURL = await QRCode.toDataURL(uri);
+      const buffer = Buffer.from(qrCodeDataURL.split(",")[1], "base64");
+      const attachment = new AttachmentBuilder(buffer, "walletconnect-qr.png");
 
-  //Get user address/public key
-  const userPublicInfo = provider.account;
-  const userPublicKey = userPublicInfo.publicKey;
-  const userAddress = userPublicInfo.address;
+      const messageHelp = `Scan above barcorde to connect using Alephium mobile wallet, keep your wallet open, you will get a request to apporve the transaction`;
+      await messageDisplay.sendAttachment(
+        interaction,
+        "Barcode",
+        messageHelp,
+        attachment
+      );
+    });
 
-  //
-  const receiverAddress = interaction.options.getString("receiver_address");
-  let sendAmount = interaction.options.getString("send_amount");
-  sendAmount = sendAmount * 10 ** 18;
-  //
+    await provider.connect();
 
-  provider.signAndSubmitTransferTx({
-    signerAddress: userAddress,
-    destinations: [{ address: receiverAddress, attoAlphAmount: sendAmount }],
-  });
+    //>>>>>Clear code later >> this is for alph network
+    const network = "mainnet";
+
+    const deployments = loadDeployments(network);
+
+    let vendingMachineStates = deployments.contracts.VendingMachine;
+
+    if (!vendingMachineStates) {
+      throw new Error("Vending Machine contract not found");
+    }
+
+    web3.setCurrentNodeProvider(
+      config.default.networks[network].nodeUrl,
+      undefined,
+      fetch
+    );
+
+    const nftInfo =
+      await vendingMachineStates.contractInstance.methods.nftByIndex({
+        args: { index: 1n },
+      });
+
+    const tokenContractAddress = nftInfo.contracts[0].fields.foodsContractId;
+    const nftOwner = nftInfo.contracts[0].fields;
+    //>>>>>>>>>>>>>>>>>>>>> Clear code above after hack >>>>>>>
+
+    //Get user address/public key
+    const userPublicInfo = provider.account;
+    const userPublicKey = userPublicInfo.publicKey;
+    const userAddress = userPublicInfo.address;
+
+    //
+    const receiverAddress = interaction.options.getString("receiver_address");
+    let sendAmount = interaction.options.getString("send_amount");
+    sendAmount = sendAmount * 10 ** 18;
+    //
+
+    const sentTX = await provider.signAndSubmitTransferTx({
+      signerAddress: userAddress,
+      destinations: [{ address: receiverAddress, attoAlphAmount: sendAmount }],
+    });
+    if (sentTX) {
+      await messageDisplay.successFollowUp(
+        interaction,
+        "Successfully completed TX",
+        sentTX.txId
+      );
+    }
+  } catch (err) {
+    await messageDisplay.notSuccessFollowUp(interaction, "Error", err.message);
+  }
 }
