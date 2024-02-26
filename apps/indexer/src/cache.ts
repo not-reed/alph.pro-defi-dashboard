@@ -1,7 +1,8 @@
 import Client from "ioredis";
 import Redlock from "redlock";
+import { config } from "./config";
 
-export const cache = new Client();
+export const cache = new Client(`${config.REDIS_HOST}:${config.REDIS_PORT}`);
 
 export const lock = new Redlock([cache], {
 	// The expected clock drift; for more details see:
