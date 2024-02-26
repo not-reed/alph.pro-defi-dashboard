@@ -8,7 +8,10 @@ const discordData = new SlashCommandBuilder()
   .setDescription("Shows user's balances")
 
   .addStringOption((option) =>
-    option.setName("token_symbol").setDescription("Provide Token Symbol")
+    option
+      .setName("address")
+      .setDescription("Provide address")
+      .setRequired(true)
   );
 
 // Callback for discord
@@ -20,14 +23,20 @@ module.exports = { discordData, execute };
 
 //Command function
 async function balances(interaction) {
-  //Get user balance from API
+  let messageBalances = "";
+  const userAddress = interaction.options.getString("address");
+  const userBalances =
+    await fetch(`https://indexer.alph.pro/api/balances?address=${userAddress}
+  `).then((a) => a.json());
 
-  const tokenSymbol =
-    interaction.options.getString("token_symbol") ?? "noToken";
-
-  if (tokenSymbol == "noToken") {
-    await messageDisplay.success(interaction, `Balances`, "Show all balances");
-  } else {
-    await messageDisplay.success(interaction, `Token`, "Show token balances");
-  }
+  let tokenOrNft;
+  userBalances.balances.forEach((element) => {
+    if (element.nft == null) {
+      tokenOrNft = element.token.symbol;
+    } else {
+      tokenOrNft = element.nft.name;
+    }
+    messageBalances = `${messageBalances} ${tokenOrNft} : ${element.balance}\n`;
+  });
+  await messageDisplay.success(interaction, `Balances`, messageBalances);
 }

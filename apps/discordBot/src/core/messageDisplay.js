@@ -24,7 +24,21 @@ async function success(interaction, title, desc) {
   });
 }
 
+//Send attachment to user in channel when command is successful
+async function sendAttachment(interaction, title, desc, attachment) {
+  const messageEmbed = new EmbedBuilder()
+    .setColor(0x00ff00)
+    .setTitle(title)
+    .setDescription(desc);
+  interaction.reply({
+    embeds: [messageEmbed],
+    files: [attachment],
+    ephemeral: true,
+  });
+}
+
 module.exports = {
   success: success,
   notSuccess: notSuccess,
+  sendAttachment: sendAttachment,
 };
