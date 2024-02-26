@@ -3,6 +3,8 @@ import { type Env, type Schema } from "hono";
 import { db } from "../../database/db";
 import { binToHex, contractIdFromAddress } from "@alephium/web3";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { sql } from "kysely";
 
 const app = new OpenAPIHono<Env, Schema, "/api/nfts">();
 
@@ -54,6 +56,207 @@ app.openapi(nftRoute, async (c) => {
 				description: a.description,
 			};
 		}),
+	});
+});
+
+const holdersRoute = createRoute({
+	method: "get",
+	tags: ["NFTs"],
+	path: "/holders",
+	request: {},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						holders: z.array(
+							z.object({
+								id: z.string(),
+								address: z.string(),
+								name: z.string(),
+								description: z.string(),
+								image: z.string(),
+								holderCount: z.string(),
+								uri: z.string(),
+								// token: TokenSchema,
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(holdersRoute, async (c) => {
+	// const { address } = c.req.param();
+	const holders = await db
+		.selectFrom("NftCollection")
+		.selectAll()
+		.select((eb) => [
+			eb
+				.selectFrom("Nft")
+				.leftJoin("Balance", (join) =>
+					join.onRef("Nft.address", "=", "Balance.tokenAddress"),
+				)
+				.select([
+					sql<string>`count(distinct "Balance"."userAddress")`.as(
+						"holderCount",
+					),
+				])
+				.where("Balance.balance", ">", 0n)
+				.whereRef("Nft.collectionAddress", "=", "NftCollection.address")
+				.as("holderCount"),
+		])
+		.orderBy("holderCount", "desc")
+		.execute();
+
+	return c.json({
+		holders: holders.map((h) => {
+			return {
+				id: binToHex(contractIdFromAddress(h.address)),
+				address: h.address,
+				name: h.name,
+				description: h.description,
+				image: h.image,
+				holderCount: h.holderCount || "0",
+				uri: h.uri,
+			};
+		}),
+	});
+});
+
+const holdersAddressRoute = createRoute({
+	method: "get",
+	tags: ["NFTs"],
+	path: "/holders/{address}",
+	request: {
+		params: z.object({
+			address: z.string().openapi({
+				param: { name: "address", in: "path" },
+				example: "22W9Xqz3BZE9fsCEtgqsk6CTRHktF2tFYb5wc1RWWCa8X",
+			}),
+		}),
+	},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						holders: z.array(
+							z.object({
+								holderCount: z.number().openapi({ example: 10000 }),
+								circulatingSupply: z.number().openapi({ example: 1000000 }),
+								holders: z.array(
+									z
+										.object({
+											userAddress: z.string().openapi({
+												example:
+													"17CtvwRZsaAhDjVLDm1YWNigKDETZbpcwqbrSkSsnV3XH",
+											}),
+											balance: z.string().openapi({ example: "1000000" }),
+										})
+										.openapi("Holder"),
+								),
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(holdersAddressRoute, async (c) => {
+	const { address } = c.req.param();
+	const holders = await db
+		.selectFrom("NftCollection")
+		.selectAll()
+		.select((eb) => [
+			eb
+				.selectFrom("Nft")
+				.leftJoin("Balance", (join) =>
+					join.onRef("Nft.address", "=", "Balance.tokenAddress"),
+				)
+				.select([
+					sql<string>`count(distinct "Balance"."userAddress")`.as(
+						"holderCount",
+					),
+				])
+				.where("Balance.balance", ">", 0n)
+				.whereRef("Nft.collectionAddress", "=", "NftCollection.address")
+				.as("holderCount"),
+
+			jsonArrayFrom(
+				eb
+					.selectFrom("Nft")
+					.leftJoin("Balance", (join) =>
+						join.onRef("Nft.address", "=", "Balance.tokenAddress"),
+					)
+					.select([
+						"Balance.userAddress",
+						"Nft.address",
+						"Nft.image",
+						"Nft.name",
+						"Nft.nftIndex",
+						"Nft.description",
+						"Nft.uri",
+					])
+					.where("Balance.balance", ">", 0n)
+					.whereRef("Nft.collectionAddress", "=", "NftCollection.address")
+					.orderBy("userAddress"),
+			).as("holders"),
+		])
+		.where("NftCollection.address", "=", address)
+		.execute();
+
+	return c.json({
+		holders: holders.map((h) => {
+			return {
+				id: binToHex(contractIdFromAddress(h.address)),
+				address: h.address,
+				name: h.name,
+				description: h.description,
+				image: h.image,
+				uri: h.uri,
+				holderCount: h.holderCount || "0",
+				holders: h.holders.reduce((acc, h) => {
+					if (!h.userAddress || !h.address) {
+						return acc;
+					}
+					return acc.concat({
+						userAddress: h.userAddress,
+						address: h.address,
+						id: binToHex(contractIdFromAddress(h.address)),
+						image: h.image,
+						name: h.name,
+						nftIndex: h.nftIndex,
+						description: h.description,
+						uri: h.uri,
+					});
+				}, [] as unknown[]),
+			};
+		}),
+		// holders: holders.reduce((acc, h) => {
+		// 	if (!h.token?.address) {
+		// 		return acc;
+		// 	}
+		// 	return acc.concat({
+		// 		...h,
+		// 		token: {
+		// 			...h.token,
+		// 			id: binToHex(contractIdFromAddress(h.token.address)),
+		// 		},
+		// 		holders: h.holders.map((h) => {
+		// 			return {
+		// 				balance: BigInt(h.balance),
+		// 				userAddress: h.userAddress,
+		// 			};
+		// 		}),
+		// 	});
+		// }, [] as unknown[]),
 	});
 });
 

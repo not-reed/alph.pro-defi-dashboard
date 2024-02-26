@@ -75,7 +75,7 @@ export async function fixBalances(opts: {
 
 		wallet.set(
 			"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq",
-			BigInt(balances.balance) + BigInt(balances.lockedBalance),
+			BigInt(balances.balance || 0) + BigInt(balances.lockedBalance || 0),
 		);
 
 		if (BigInt(wallet.size) === user.count && !opts.force) {
