@@ -5,6 +5,7 @@ import { listPlugins, processPlugin } from "./plugin";
 import { runSeeder } from "./seeder";
 import { findUnprocessedNfts, processCollection } from "./nfts";
 import type { ContractAddress } from "../services/common/types/brands";
+import { fixBalances } from "./balances";
 
 switch (argv._[0]) {
 	case "help":
@@ -48,6 +49,14 @@ Commands:
 	case "nft:search":
 		await findUnprocessedNfts();
 		break;
+
+	case "balances:fix":
+		await fixBalances({
+			user: argv.user,
+			min: Number(argv.min || 0),
+			max: Number(argv.max || 0),
+		});
+		break;
 	case "seed":
 		await runSeeder();
 		break;
@@ -57,3 +66,5 @@ Commands:
 
 // close connection
 await db.destroy();
+console.log();
+process.exit(0);
