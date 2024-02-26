@@ -24,6 +24,7 @@ import { useUser } from "./hooks/useUser";
 import { loadWalletData } from "./api/wallet";
 import { useDiscord } from "./hooks/useDiscord";
 import HoldersVue from "./pages/Tokens/Holders.vue";
+import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
 
 declare module "vue-router" {
 	interface RouteMeta {
@@ -121,7 +122,7 @@ export const routes = [
 			},
 			{
 				path: "/tokens/holders",
-				name: "Holders",
+				name: "Token Holders",
 				component: HoldersVue,
 				meta: { title: "Holders" },
 			},
@@ -149,6 +150,12 @@ export const routes = [
 				name: "New NFTs",
 				component: NewNFTsVue,
 				meta: { title: "New NFTs" },
+			},
+			{
+				path: "/nfts/holders",
+				name: "Nft Holders",
+				component: NftHoldersVue,
+				meta: { title: "Holders" },
 			},
 			{
 				path: "/nfts/hot",
