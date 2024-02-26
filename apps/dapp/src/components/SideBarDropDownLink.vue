@@ -6,5 +6,6 @@ defineProps({
 </script>
 
 <template>
-    <router-link class="hover:underline" :to="to">{{ label }}</router-link>
+    <RouterLink class="hover:underline" :to="to" v-if="!to.startsWith('http')">{{ label }}</RouterLink>
+    <a class="hover:underline" :href="to" v-else>{{ label }}</a>
 </template>

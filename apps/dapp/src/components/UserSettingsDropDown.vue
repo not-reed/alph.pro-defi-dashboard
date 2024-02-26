@@ -69,12 +69,12 @@ async function disconnectWallet() {
                         Connect Discord
                     </button>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }">
+                    <!-- <MenuItem v-slot="{ active }">
                     <button type="button"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
                         Private Mode
                     </button>
-                    </MenuItem>
+                    </MenuItem> -->
                 </div>
             </MenuItems>
         </transition>
