@@ -15,10 +15,10 @@ module.exports = {
       try {
         console.log("Started refreshing application (/) commands.");
         //Run globally
-        await rest.put(
-          Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-          { body: commands }
-        );
+        // await rest.put(
+        //   Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
+        //   { body: commands }
+        // );
 
         //Run locally (only on guild)
         await rest.put(
