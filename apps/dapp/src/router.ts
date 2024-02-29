@@ -28,7 +28,7 @@ import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
 
 declare module "vue-router" {
 	interface RouteMeta {
-		title: string;
+		title?: string;
 		icon?: keyof typeof icons;
 		defaultOpen?: boolean;
 		needsWallet?: boolean;
@@ -177,12 +177,21 @@ export const routes = [
 		name: "More",
 		component: Home,
 		children: [
-			{ path: "/", name: "Twitter", component: Home },
-			{ path: "/", name: "Discord", component: Home },
-			{ path: "/", name: "Github", component: Home },
-			{ path: "/", name: "Docs", component: Home },
-			{ path: "/", name: "API", component: Home },
-			{ path: "/", name: "Brand Kit", component: Home },
+			{ path: "https://twitter.com/aiphpro", name: "Twitter", component: Home },
+			{
+				path: "https://discord.gg/pfcR8EQZjb",
+				name: "Discord",
+				component: Home,
+			},
+			{ path: "/", name: "Github", component: Home, meta: { disabled: true } },
+			{ path: "/", name: "Docs", component: Home, meta: { disabled: true } },
+			{ path: "/", name: "API", component: Home, meta: { disabled: true } },
+			{
+				path: "/",
+				name: "Brand Kit",
+				component: Home,
+				meta: { disabled: true },
+			},
 		],
 	},
 ] satisfies Readonly<RouteRecordRaw[]>;
