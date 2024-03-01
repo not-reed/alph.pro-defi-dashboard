@@ -7,6 +7,7 @@ import { findUnprocessedNfts, processCollection } from "./nfts";
 import type { ContractAddress } from "../services/common/types/brands";
 import { fixBalances } from "./balances";
 import { fillAyinPools } from "./ayin-pools";
+import { getAyinPrices } from "./ayin-prices";
 
 switch (argv._[0]) {
 	case "help":
@@ -49,6 +50,9 @@ Commands:
 
 	case "nft:search":
 		await findUnprocessedNfts();
+		break;
+	case "fix:prices":
+		await getAyinPrices();
 		break;
 	case "fix:pools":
 		await fillAyinPools();

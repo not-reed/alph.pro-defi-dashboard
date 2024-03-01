@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import { useUser } from '../hooks/useUser'
 import { useRouter } from 'vue-router';
-import { useModals } from '../hooks/useModals';
 import {
     TransitionRoot,
     TransitionChild,
@@ -13,12 +12,13 @@ import {
 import { useConnect } from '../hooks/useConnect';
 import { ConnectorId } from '../utils/connectors/constants';
 import { useDiscord } from '../hooks/useDiscord';
+import { useAccount } from '../hooks/useAccount';
 
 
 const { user, setWallet } = useUser()
+const { account } = useAccount()
 const { connect } = useConnect()
-const { pushModal, onModalClose } = useModals()
-const { signOut, signIn, session } = useDiscord()
+const { session } = useDiscord()
 const router = useRouter()
 const wallet = ref(user.wallet)
 
@@ -29,13 +29,13 @@ async function connectWith(id: ConnectorId) {
     await connect(id)
 
     closeModal()
-    router.push('/portfolio/overview')
+    router.push(`/portfolio/overview/${account.address}`)
 }
 
 
 function viewWallet() {
     setWallet(wallet.value)
-    router.push('/portfolio/overview')
+    router.push(`/portfolio/overview/${wallet.value}`)
 }
 
 const isOpen = ref(false)
@@ -60,10 +60,11 @@ function openModal() {
         <form @submit.prevent class="flex flex-col w-full gap-8 max-w-xl">
 
             <input autofocus type="text" v-model="wallet" placeholder="1CHYuhea7uaupotv2KkSwNLaJWYeNouDp4QffhkhTxKpr"
-                class="scale-95 focus:scale-100 hover:scale-100 transition text-emerald-200 px-4 py-2 rounded bg-calypso-900 shadow-xl text-xl placeholder-calypso-500 placeholder-opacity-25" />
+                class="scale-95 focus:scale-100 hover:scale-100 transition dark:text-emerald-200 px-4 py-2 rounded bg-zinc-100 dark:bg-calypso-900 shadow-xl text-xl placeholder-calypso-500 placeholder-opacity-25" />
 
             <div class="flex items-center gap-8 justify-center">
-                <button class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200"
+                <button
+                    class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200"
                     type="submit" @click="viewWallet"
                     :class="wallet.length ? 'text-opacity-100 focus:scale-100 hover:scale-100' : 'text-opacity-25'">
                     View
@@ -71,14 +72,14 @@ function openModal() {
 
 
                 <button @click="openModal"
-                    class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200"
+                    class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200"
                     :class="wallet.length ? 'text-opacity-25' : 'text-opacity-100 focus:scale-100 hover:scale-100'">
                     Connect
                 </button>
 
                 <button :disabled="Boolean(session.user.name)"
                     :class="session.user.name ? 'text-opacity-25 cursor-not-allowed' : 'text-opacity-100 focus:scale-100 hover:scale-100'"
-                    class="w-36 scale-95 transition px-4 py-2 bg-calypso-800 rounded text-xl shadow-xl text-emerald-200">
+                    class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200">
                     Discord
                 </button>
             </div>

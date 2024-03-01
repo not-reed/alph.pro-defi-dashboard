@@ -1,13 +1,9 @@
 import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
 import NProgress from "nprogress";
 import Home from "./pages/Home.vue";
-import PortfolioVue from "./pages/Portfolio.vue";
 import PortfolioOverviewVue from "./pages/Portfolio/Overview.vue";
 import PortfolioWalletVue from "./pages/Portfolio/Wallet.vue";
 import PortfolioDeFiVue from "./pages/Portfolio/DeFi.vue";
-import DeFiVue from "./pages/DeFi.vue";
-import TokensVue from "./pages/Tokens.vue";
-import NFTsVue from "./pages/NFTs.vue";
 import MintingVue from "./pages/NFTs/Minting.vue";
 import HotNFTsVue from "./pages/NFTs/HotNFTs.vue";
 import NewNFTsVue from "./pages/NFTs/NewNFTs.vue";
@@ -21,12 +17,12 @@ import UserSettingsVue from "./pages/UserSettings.vue";
 
 import { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
-import { loadWalletData } from "./api/wallet";
 import { useDiscord } from "./hooks/useDiscord";
 import HoldersVue from "./pages/Tokens/Holders.vue";
 import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
 import PageShellVue from "./pages/PageShell.vue";
 
+const { user, loadBalances } = useUser();
 declare module "vue-router" {
 	interface RouteMeta {
 		title?: string;
@@ -38,7 +34,7 @@ declare module "vue-router" {
 }
 
 export const routes = [
-	{ path: "/", name: "Home", component: Home },
+	{ path: "/", name: "Home", component: Home, meta: { hide: true } },
 	{
 		path: "/portfolio",
 		name: "Portfolio",
@@ -46,13 +42,13 @@ export const routes = [
 		meta: { title: "Portfolio", defaultOpen: true },
 		children: [
 			{
-				path: "/portfolio/overview",
+				path: "/portfolio/overview/:address",
 				name: "PortfolioOverview",
 				component: PortfolioOverviewVue,
-				meta: { title: "Overview", icon: "home", needsWallet: true },
-				beforeEnter: async (_to, _from, next) => {
-					// await loadWalletData();
-					next();
+				meta: {
+					title: "Overview",
+					icon: "home",
+					needsWallet: true,
 				},
 			},
 			{
@@ -108,6 +104,7 @@ export const routes = [
 		path: "/tokens",
 		name: "Tokens",
 		component: PageShellVue,
+		meta: { defaultOpen: true },
 		children: [
 			{
 				path: "/tokens/new",
@@ -116,7 +113,7 @@ export const routes = [
 				meta: { title: "New Tokens" },
 			},
 			{
-				path: "/tokens/holders",
+				path: "/tokens/holders/:address?",
 				name: "Token Holders",
 				component: HoldersVue,
 				meta: { title: "Holders" },
@@ -131,7 +128,7 @@ export const routes = [
 				path: "/tokens/fresh-liquidity",
 				name: "Fresh Liquidity",
 				component: FreshLiquidityVue,
-				meta: { title: "Fresh Liquidity" },
+				meta: { title: "Fresh Liquidity", disabled: true },
 			},
 		],
 	},
@@ -139,6 +136,7 @@ export const routes = [
 		path: "/nfts",
 		name: "NFTs",
 		component: PageShellVue,
+		meta: { defaultOpen: true },
 		children: [
 			{
 				path: "/nfts/new",
@@ -195,6 +193,12 @@ export const routes = [
 			},
 		],
 	},
+	{
+		path: "/:pathMatch(.*)*",
+		name: "NotFound",
+		component: Home,
+		meta: { hide: true },
+	},
 ] satisfies Readonly<RouteRecordRaw[]>;
 
 export const router = createRouter({
@@ -203,17 +207,22 @@ export const router = createRouter({
 });
 
 // used for guards & prefetching data
-const { user } = useUser();
 const { session, loadSession, setLoaded } = useDiscord();
 
 router.beforeEach(async (to, _from, next) => {
 	NProgress.start();
 
-	if (to.meta.needsWallet && !user.walletLoaded) {
-		await loadWalletData();
+	if (to.meta.needsWallet && to.params.address) {
+		const address = Array.isArray(to.params.address)
+			? to.params.address[0]
+			: to.params.address;
+		if (address === ":address") {
+			return next("/");
+		}
+		await loadBalances(address);
 	}
 
-	if (to.meta.needsWallet && !user.wallet) {
+	if (to.meta.needsWallet && !to.params.address) {
 		return next("/");
 	}
 

@@ -48,7 +48,7 @@ onMounted(async () => {
 
 async function viewWallet(address: string) {
     setWallet(address)
-    await router.push('/portfolio/overview')
+    await router.push(`/portfolio/overview/${address}`)
 }
 let inputWallet = ref('')
 async function saveWallet() {

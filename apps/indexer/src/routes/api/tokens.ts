@@ -308,16 +308,18 @@ app.openapi(holdersAddressRoute, async (c) => {
 			).as("token"),
 			jsonArrayFrom(
 				eb
-					.selectFrom("Balance")
+					.selectFrom("Balance as holders")
 					.select(["balance", "userAddress"])
-					.where("Balance.tokenAddress", "=", address)
-					.where("Balance.balance", "<>", 0n)
+					.where("holders.tokenAddress", "=", address)
+					.where("holders.balance", "<>", 0n)
+					.whereRef("holders.tokenAddress", "<>", "holders.userAddress")
 					.orderBy("balance", "desc")
 					.limit(2000),
 			).as("holders"),
 		])
 		.where("Balance.tokenAddress", "=", address)
 		.where("balance", "<>", 0n)
+		.whereRef("Balance.tokenAddress", "<>", "Balance.userAddress")
 		.groupBy("Balance.tokenAddress")
 		.orderBy("holderCount", "desc")
 		.execute();

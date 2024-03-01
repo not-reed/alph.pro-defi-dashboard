@@ -19,7 +19,7 @@ export default interface CurrentPriceTable {
 
 	price: ColumnType<number, number, number>;
 
-	liquidity: ColumnType<bigint | null, bigint | null, bigint | null>;
+	liquidity: ColumnType<number | null, number | null, number | null>;
 
 	source: ColumnType<string, string, string>;
 

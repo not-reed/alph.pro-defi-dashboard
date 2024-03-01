@@ -36,6 +36,7 @@
     "@hono/swagger-ui": "^0.2.1",
     "@hono/zod-openapi": "^0.9.6",
     "atlassian-openapi": "^1.0.18",
+    "bignumber.js": "^9.1.2",
     "cronstrue": "^2.48.0",
     "dataloader": "^2.2.2",
     "hono": "^4.0.1",

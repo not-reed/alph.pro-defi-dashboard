@@ -11,6 +11,7 @@ export const MAX_DURATION = THIRTY_MINUTES;
 export const OVERLAP_WINDOW = FIVE_MINUTES;
 
 // Cron Schedules
+export const EVERY_15_SECONDS = "*/15 * * * * *";
 export const EVERY_30_SECONDS = "*/30 * * * * *";
 export const EVERY_1_MINUTE = "* * * * *";
 export const EVERY_30_MINUTES = "*/30 * * * *";

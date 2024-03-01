@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import { computed, onMounted, ref } from 'vue';
+import ExternalLink from '../../components/ExternalLink.vue';
 const tokens = ref([])
 onMounted(async () => {
     const results = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/tokens`, { credentials: 'include' }).then(a => a.json())
@@ -18,7 +19,7 @@ const unverified = computed(() => tokens.value.filter((token: any) => !token.ver
                 Verified Tokens
             </div>
             <ul class="flex flex-col gap-2">
-                <li class="flex gap-2 w-full bg-calypso-900 p-2 font-bold rounded">
+                <li class="flex gap-2 w-full bg-zinc-300 dark:bg-calypso-900 p-2 font-bold rounded">
                     <div class="w-6 h-6 rounded-full " />
                     <div class="w-64">Name</div>
                     <div class="w-24">Symbol</div>
@@ -28,16 +29,15 @@ const unverified = computed(() => tokens.value.filter((token: any) => !token.ver
                         Explorer
                     </div>
                 </li>
-                <li v-for="token in verified" class="flex gap-2 w-full bg-calypso-900 p-2 rounded">
+                <li v-for="token in verified" class="flex gap-2 w-full bg-zinc-300 dark:bg-calypso-900 p-2 rounded">
                     <img :src="token.logo" class="w-6 h-6 rounded-full " />
                     <div class="w-64">{{ token.name }}</div>
                     <div class="w-24">{{ token.symbol }}</div>
                     <div class="w-20">{{ token.decimals }}</div>
 
-                    <a :href="`https://explorer.alephium.org/addresses/${token.address}`" target="_blank"
-                        class="text-calypso-500 cursor-pointer">
+                    <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.address}`" class="max-w-48">
                         {{ token.address.slice(0, 6) }}...{{ token.address.slice(-6) }}
-                    </a>
+                    </ExternalLink>
                 </li>
             </ul>
         </div>
@@ -46,7 +46,7 @@ const unverified = computed(() => tokens.value.filter((token: any) => !token.ver
 
             <div class="text-xl font-bold">Unverified Tokens</div>
             <ul class="flex flex-col gap-2">
-                <li class="flex gap-2 w-full bg-calypso-900 p-2 font-bold rounded">
+                <li class="flex gap-2 w-full bg-zinc-300 dark:bg-calypso-900 p-2 font-bold rounded">
                     <div class="w-6 h-6 rounded-full " />
                     <div class="w-64">Name</div>
                     <div class="w-24">Symbol</div>
@@ -56,16 +56,15 @@ const unverified = computed(() => tokens.value.filter((token: any) => !token.ver
                         Explorer
                     </div>
                 </li>
-                <li v-for="token in unverified" class="flex gap-2 w-full bg-calypso-900 p-2 rounded">
+                <li v-for="token in unverified" class="flex gap-2 w-full bg-zinc-300 dark:bg-calypso-900 p-2 rounded">
                     <QuestionMarkCircleIcon class="w-6 h-6 rounded-full" />
                     <div class="w-64">{{ token.name }}</div>
                     <div class="w-24">{{ token.symbol }}</div>
                     <div class="w-20">{{ token.decimals }}</div>
 
-                    <a :href="`https://explorer.alephium.org/addresses/${token.address}`" target="_blank"
-                        class="text-calypso-500 cursor-pointer">
+                    <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.address}`" class="max-w-48">
                         {{ token.address.slice(0, 6) }}...{{ token.address.slice(-6) }}
-                    </a>
+                    </ExternalLink>
                 </li>
             </ul>
         </div>
