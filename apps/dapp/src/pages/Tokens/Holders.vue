@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useRoute } from 'vue-router';
@@ -30,6 +31,7 @@ async function loadActive(address = route.params.address) {
 }
 
 const verified = computed(() => holders.value.filter((holder: any) => holder.token?.verified))
+const unverified = computed(() => holders.value.filter((holder: any) => holder.token && !holder.token?.verified))
 
 const marketCap = computed(() => {
     if (!active.value || !prices[active.value.token.address] || !active.value.circulatingSupply) {
@@ -48,17 +50,70 @@ const liquidity = computed(() => {
 
 <template>
     <div class="p-4 flex gap-4">
-        <ul class="max-w-xs w-full">
-            <RouterLink v-for="holder in verified" class="flex gap-2 hover:bg-zinc-200 hover:dark:bg-calypso-800 rounded"
-                :to="`/tokens/holders/${holder.token.address}`">
-                <div class="w-1/3">
-                    {{ holder.token.symbol }}
-                </div>
-                <div>
-                    {{ holder.holderCount }} Holders
-                </div>
-            </RouterLink>
-        </ul>
+        <div class="w-80">
+            <TabGroup>
+                <TabList class="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
+                    <Tab as="template" v-slot="{ selected }">
+                        <button :class="[
+                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                            selected
+                                ? 'bg-white text-blue-700 shadow'
+                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                        ]">
+                            Verified
+                        </button>
+                    </Tab>
+                    <Tab as="template" v-slot="{ selected }">
+                        <button :class="[
+                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                            selected
+                                ? 'bg-white text-blue-700 shadow'
+                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                        ]">
+                            Unverified
+                        </button>
+                    </Tab>
+                </TabList>
+                <TabPanels class="mt-2">
+                    <TabPanel :class="[
+                        'rounded-xl bg-white p-3',
+                        'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                    ]">
+                        <ul class="max-w-xs w-full">
+                            <RouterLink v-for="holder in verified"
+                                class="flex gap-2 hover:bg-zinc-200 hover:dark:bg-calypso-800 rounded"
+                                :to="`/tokens/holders/${holder.token.address}`">
+                                <div class="w-1/3">
+                                    {{ holder.token.symbol }}
+                                </div>
+                                <div>
+                                    {{ holder.holderCount }} Holders
+                                </div>
+                            </RouterLink>
+                        </ul>
+                    </TabPanel>
+                    <TabPanel :class="[
+                        'rounded-xl bg-white p-3',
+                        'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                    ]">
+                        <ul class="max-w-xs w-full">
+                            <RouterLink v-for="holder in unverified"
+                                class="flex gap-2 hover:bg-zinc-200 hover:dark:bg-calypso-800 rounded"
+                                :to="`/tokens/holders/${holder.token.address}`">
+                                <div class="w-1/3">
+                                    {{ holder.token.symbol }}
+                                </div>
+                                <div>
+                                    {{ holder.holderCount }} Holders
+                                </div>
+                            </RouterLink>
+                        </ul>
+                    </TabPanel>
+                </TabPanels>
+            </TabGroup>
+        </div>
 
         <div class="flex flex-col flex-grow gap-4" v-if="active">
             <div class="flex flex-col bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-72">
