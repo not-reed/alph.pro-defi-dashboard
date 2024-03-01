@@ -189,4 +189,57 @@ export default {
 			});
 		},
 	},
+	contracts: {
+		async fetchSubContracts(
+			address: ContractAddress,
+		): Promise<ContractAddress[]> {
+			const url = `${config.EXPLORER_URL}/contracts/${address}/sub-contracts?page=1&limit=100`;
+			const contracts: unknown = await fetch(url, { headers }).then((a) =>
+				a.json(),
+			);
+
+			if (
+				!contracts ||
+				typeof contracts !== "object" ||
+				!("subContracts" in contracts) ||
+				!Array.isArray(contracts.subContracts)
+			) {
+				throw new Error(
+					"Unsupported response - explorer.contracts.fetchSubContracts",
+				);
+			}
+			if (contracts.subContracts?.length >= 100) {
+				throw new Error(
+					"Time to handle pagination - explorer.contracts.fetchSubContracts",
+				);
+			}
+
+			return contracts.subContracts;
+		},
+
+		async fetchParentContract(
+			address: ContractAddress,
+		): Promise<ContractAddress | null> {
+			const url = `${config.EXPLORER_URL}/contracts/${address}/parent`;
+			const contracts: unknown = await fetch(url, { headers }).then((a) =>
+				a.json(),
+			);
+
+			if (!contracts || typeof contracts !== "object") {
+				throw new Error(
+					"Unsupported response - explorer.contracts.fetchParentContract",
+				);
+			}
+
+			if ("detail" in contracts) {
+				throw new Error(`Error fetching parent contract: ${contracts.detail}`);
+			}
+
+			if (!("parent" in contracts) || !contracts.parent) {
+				return null;
+			}
+
+			return contracts.parent as ContractAddress;
+		},
+	},
 };

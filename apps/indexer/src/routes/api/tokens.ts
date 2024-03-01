@@ -313,7 +313,7 @@ app.openapi(holdersAddressRoute, async (c) => {
 					.where("Balance.tokenAddress", "=", address)
 					.where("Balance.balance", "<>", 0n)
 					.orderBy("balance", "desc")
-					.limit(100),
+					.limit(2000),
 			).as("holders"),
 		])
 		.where("Balance.tokenAddress", "=", address)

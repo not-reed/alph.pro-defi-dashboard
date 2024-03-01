@@ -4,8 +4,9 @@ type Brand<K, T> = K & { __brand: T };
 export type U256 = Brand<`${number}`, "U256">;
 export type ByteVec = Brand<string, "ByteVec">;
 export type Address = Brand<string, "Address">;
-export type FieldType = "ByteVec" | "U256" | "Address";
-export type FieldValue = U256 | ByteVec | Address;
+export type Bool = Brand<true | false, "Bool">;
+export type FieldType = "ByteVec" | "U256" | "Address" | "Bool";
+export type FieldValue = U256 | ByteVec | Address | Bool;
 
 // Hashes
 export type BlockHash = Brand<string, "BlockHash">;

@@ -6,6 +6,7 @@ import { runSeeder } from "./seeder";
 import { findUnprocessedNfts, processCollection } from "./nfts";
 import type { ContractAddress } from "../services/common/types/brands";
 import { fixBalances } from "./balances";
+import { fillAyinPools } from "./ayin-pools";
 
 switch (argv._[0]) {
 	case "help":
@@ -49,8 +50,10 @@ Commands:
 	case "nft:search":
 		await findUnprocessedNfts();
 		break;
-
-	case "balances:fix":
+	case "fix:pools":
+		await fillAyinPools();
+		break;
+	case "fix:balances":
 		await fixBalances({
 			user: argv.user,
 			min: Number(argv.min || 0),

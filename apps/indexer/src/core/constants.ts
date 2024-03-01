@@ -1,3 +1,5 @@
+import type { ContractAddress } from "../services/common/types/brands";
+
 export const THIRTY_MINUTES = 1_800_000;
 export const ONE_MINUTE = 60_000;
 export const FIVE_MINUTES = 300_000;
@@ -12,3 +14,9 @@ export const OVERLAP_WINDOW = FIVE_MINUTES;
 export const EVERY_30_SECONDS = "*/30 * * * * *";
 export const EVERY_1_MINUTE = "* * * * *";
 export const EVERY_30_MINUTES = "*/30 * * * *";
+
+export const ALPH_ADDRESS =
+	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
+
+export const AYIN_FACTORY =
+	"vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R" as ContractAddress;

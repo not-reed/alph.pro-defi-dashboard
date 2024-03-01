@@ -1,5 +1,6 @@
 import type {
 	Address,
+	Bool,
 	ByteVec,
 	FieldType,
 	FieldValue,
@@ -10,29 +11,71 @@ interface FieldGeneric {
 	type: FieldType;
 	value: FieldValue;
 }
-interface FieldByteVec extends FieldGeneric {
+export interface FieldByteVec extends FieldGeneric {
 	type: "ByteVec";
 	value: ByteVec;
 }
-interface FieldU256 extends FieldGeneric {
+export interface FieldU256 extends FieldGeneric {
 	type: "U256";
 	value: U256;
 }
-interface FieldAddress extends FieldGeneric {
+export interface FieldAddress extends FieldGeneric {
 	type: "Address";
 	value: Address;
 }
 
-export type Field = FieldByteVec | FieldU256 | FieldAddress;
+export interface FieldBool extends FieldGeneric {
+	type: "Bool";
+	value: Bool;
+}
 
-export function transformField(obj: unknown): Field {
+export type Field = FieldByteVec | FieldU256 | FieldAddress | FieldBool;
+
+export function parseValue(field: FieldU256): bigint;
+export function parseValue(field: FieldByteVec): ByteVec;
+export function parseValue(field: FieldAddress): Address;
+export function parseValue(field: FieldBool): boolean;
+export function parseValue(field: Field): string | bigint | boolean {
+	if (field.type === "ByteVec") {
+		return field.value as ByteVec;
+	}
+
+	if (field.type === "U256") {
+		return BigInt(field.value);
+	}
+
+	if (field.type === "Address") {
+		return field.value as Address;
+	}
+
+	if (field.type === "Bool") {
+		return field.value as Bool;
+	}
+
+	throw new Error(`Invalid field type ${field}`);
+}
+
+function getField(obj: unknown): Field {
 	if (typeof obj !== "object" || obj === null) {
 		throw new Error("Invalid field");
 	}
-	const { type, value } = obj as { type: FieldType; value: U256 | ByteVec };
+	if (!("type" in obj) || !("value" in obj)) {
+		throw new Error("Invalid field");
+	}
+
+	return {
+		type: obj.type,
+		value: obj.value,
+	} as Field;
+}
+
+export function transformField(obj: unknown): Field {
+	const field = getField(obj);
+
+	const { type, value } = field;
 	if (type === "ByteVec") {
 		return {
-			type,
+			type: field.type,
 			value: value as ByteVec,
 		};
 	}
@@ -42,5 +85,19 @@ export function transformField(obj: unknown): Field {
 			value: value as U256,
 		};
 	}
-	throw new Error("Invalid field type");
+
+	if (type === "Address") {
+		return {
+			type,
+			value: value as Address,
+		};
+	}
+
+	// if (type === "Bool") {
+	// 	return {
+	// 		type,
+	// 		value: value as Bool,
+	// 	};
+	// }
+	throw new Error(`Invalid field type ${type} => ${value}`);
 }
