@@ -49,12 +49,17 @@ const verified = computed(() => holders.value.filter((holder: any) => holder.tok
                     <div class="opacity-75">Holders:</div> {{ active.holderCount }}
                 </div>
             </div>
-            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded">
-                <li v-for="holder in active.holders" class="flex">
-                    <div class="w-1/2">
+            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded max-w-lg">
+                <li v-for="holder in active.holders" class="grid grid-cols-5 gap-4">
+                    <div class="col-span-2">
                         {{ Math.round(Number(holder.balance) / 10 ** Number(active.token.decimals)) }}
                     </div>
-                    <div class="">
+
+                    <div>
+                        {{ Math.round(holder.balance / active.circulatingSupply * 10000) / 100 }}%
+                    </div>
+
+                    <div class="col-span-2">
                         <a :href="`https://explorer.alephium.org/addresses/${holder.userAddress}`" target="_blank"
                             class="text-calypso-500 cursor-pointer">
                             {{ holder.userAddress.slice(0, 4) }}...{{ holder.userAddress.slice(-4) }}

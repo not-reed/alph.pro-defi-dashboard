@@ -25,6 +25,7 @@ import { loadWalletData } from "./api/wallet";
 import { useDiscord } from "./hooks/useDiscord";
 import HoldersVue from "./pages/Tokens/Holders.vue";
 import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
+import PageShellVue from "./pages/PageShell.vue";
 
 declare module "vue-router" {
 	interface RouteMeta {
@@ -39,15 +40,9 @@ declare module "vue-router" {
 export const routes = [
 	{ path: "/", name: "Home", component: Home },
 	{
-		path: "/settings",
-		name: "Settings",
-		component: UserSettingsVue,
-		meta: { title: "Settings", needsDiscord: true },
-	},
-	{
 		path: "/portfolio",
 		name: "Portfolio",
-		component: PortfolioVue,
+		component: PageShellVue,
 		meta: { title: "Portfolio", defaultOpen: true },
 		children: [
 			{
@@ -56,7 +51,7 @@ export const routes = [
 				component: PortfolioOverviewVue,
 				meta: { title: "Overview", icon: "home", needsWallet: true },
 				beforeEnter: async (_to, _from, next) => {
-					await loadWalletData();
+					// await loadWalletData();
 					next();
 				},
 			},
@@ -87,7 +82,7 @@ export const routes = [
 	{
 		path: "/defi",
 		name: "DeFi",
-		component: DeFiVue,
+		component: PageShellVue,
 		children: [
 			{
 				path: "/defi/liquidity-pools",
@@ -112,7 +107,7 @@ export const routes = [
 	{
 		path: "/tokens",
 		name: "Tokens",
-		component: TokensVue,
+		component: PageShellVue,
 		children: [
 			{
 				path: "/tokens/new",
@@ -136,14 +131,14 @@ export const routes = [
 				path: "/tokens/fresh-liquidity",
 				name: "Fresh Liquidity",
 				component: FreshLiquidityVue,
-				meta: { title: "Fresh Liquidity", disabled: true },
+				meta: { title: "Fresh Liquidity" },
 			},
 		],
 	},
 	{
 		path: "/nfts",
 		name: "NFTs",
-		component: NFTsVue,
+		component: PageShellVue,
 		children: [
 			{
 				path: "/nfts/new",
@@ -175,7 +170,7 @@ export const routes = [
 	{
 		path: "/",
 		name: "More",
-		component: Home,
+		component: PageShellVue,
 		children: [
 			{ path: "https://twitter.com/aiphpro", name: "Twitter", component: Home },
 			{
@@ -192,6 +187,12 @@ export const routes = [
 				component: Home,
 				meta: { disabled: true },
 			},
+			{
+				path: "/settings",
+				name: "Settings",
+				component: UserSettingsVue,
+				meta: { title: "Settings", needsDiscord: true },
+			},
 		],
 	},
 ] satisfies Readonly<RouteRecordRaw[]>;
@@ -203,13 +204,27 @@ export const router = createRouter({
 
 // used for guards & prefetching data
 const { user } = useUser();
-const { session } = useDiscord();
+const { session, loadSession, setLoaded } = useDiscord();
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
 	NProgress.start();
+
+	if (to.meta.needsWallet && !user.walletLoaded) {
+		await loadWalletData();
+	}
+
 	if (to.meta.needsWallet && !user.wallet) {
 		return next("/");
 	}
+
+	if (to.meta.needsDiscord && !session?.loaded) {
+		try {
+			await loadSession();
+		} catch {
+			setLoaded();
+		}
+	}
+
 	if (to.meta.needsDiscord && !session?.user?.name) {
 		return next("/");
 	}

@@ -18,6 +18,7 @@ const EMPTY_USER = () => ({
 	// TODO: empty wallet by default, this was random picked from richlist
 	// and just here for testing
 	wallet: "",
+	walletLoaded: false,
 	history: [] as string[],
 	balances: [] as TokenBalance[],
 });
@@ -25,10 +26,12 @@ const EMPTY_USER = () => ({
 const user = reactive(EMPTY_USER());
 
 function setBalances(balances: TokenBalance[]) {
+	user.walletLoaded = true;
 	user.balances = balances;
 }
 
 function setWallet(wallet: string) {
+	user.walletLoaded = false;
 	if (user.wallet) {
 		user.history.push(user.wallet);
 	}

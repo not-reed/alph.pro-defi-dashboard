@@ -44,10 +44,10 @@ async function disconnectWallet() {
                 class="absolute right-0 w-64 z-10 mt-2 origin-top-right rounded-md bg-calypso-800 focus:outline-none">
                 <div class="py-1">
                     <MenuItem v-slot="{ active }">
-                    <button type="button" v-if="session?.user?.name"
-                        :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
+                    <div v-if="session?.user?.name"
+                        class="dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700 text-center text-zinc-200">
                         {{ session.user.name }}
-                    </button>
+                    </div>
                     <button type="button" v-else-if="account.address"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
                         {{ account.address.slice(0, 8) }}...{{ account.address.slice(-8) }}
@@ -57,16 +57,22 @@ async function disconnectWallet() {
                         No Connected Accounts
                     </button>
                     </MenuItem>
-                    <MenuItem v-slot="{ active }" v-if="session?.user?.name || account.address">
+                    <MenuItem v-slot="{ active }" v-if="session?.user?.name">
                     <button type="button" @click="disconnectWallet"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
-                        {{ session?.user?.name ? 'Sign Out' : 'Disconnect' }}
+                        Sign Out
                     </button>
                     </MenuItem>
                     <MenuItem v-slot="{ active }" v-else>
                     <button type="button" @click="signIn"
                         :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
                         Connect Discord
+                    </button>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }" v-if="account.address">
+                    <button type="button" @click="disconnect"
+                        :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">
+                        Disconnect Wallet
                     </button>
                     </MenuItem>
                     <!-- <MenuItem v-slot="{ active }">

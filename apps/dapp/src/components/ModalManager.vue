@@ -7,10 +7,10 @@ const { modals, hasModals, popModal, modalComponents } = useModals()
 
 <template>
     <Transition name="fade">
-        <div v-if="hasModals" @click.self="popModal"
+        <div v-if="hasModals" @click.self="popModal(false)"
             class="bg-zinc-800 bg-opacity-50 z-index-50 fixed top-0 bottom-0 left-0 right-0 flex items-center justify-center">
             <div class="bg-calypso-800 p-4 rounded-xl" v-for="modal in modals">
-                <component :is="modalComponents[modal]" @close="popModal" />
+                <component :is="modalComponents[modal]" @close="(success, data) => popModal(success, data)" />
             </div>
         </div>
     </Transition>

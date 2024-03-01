@@ -196,7 +196,7 @@ export default {
 		}
 
 		// TODO: improve loader, most plugins are out of time by ~1ms which breaks this cache
-		// should group together
+		// should group together - i.e. one starts at timestamp 1700000000000 and another 1700000000001
 
 		logger.info("block fetching starting");
 		const blocks = await basicBlockDataLoader.load(`${from}-${to}`);
@@ -231,7 +231,7 @@ export default {
 							gasPrice: t.gasPrice,
 							events: t.events,
 							inputs: transactionMap.get(t.transactionHash)?.inputs ?? [],
-							outputs: transactionMap.get(t.transactionHash)?.outputs ?? [],
+							outputs: t.outputs ?? [],
 						};
 					}),
 				};

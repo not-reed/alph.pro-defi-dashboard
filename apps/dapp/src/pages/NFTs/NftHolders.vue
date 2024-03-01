@@ -48,7 +48,7 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                     <div class="opacity-75">Holders:</div> {{ active.holderCount }}
                 </div>
             </div>
-            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded">
+            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded max-w-lg">
                 <li v-for="holder in activeHolders" class="flex">
 
                     <div class="w-56">

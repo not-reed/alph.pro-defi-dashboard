@@ -1,16 +1,49 @@
-import { type Env, Hono, type Schema } from "hono";
+import { type Env, type Schema } from "hono";
 import { db } from "../../database/db";
-import {
-	addressFromContractId,
-	binToHex,
-	contractIdFromAddress,
-} from "@alephium/web3";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { binToHex, contractIdFromAddress } from "@alephium/web3";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { TokenSchema } from "../schemas/token";
 
-const app = new Hono<Env, Schema, "/api/pools">();
+const app = new OpenAPIHono<Env, Schema, "/api/pools">();
 
-app.get("/", async (c) => {
-	const tokens = await db
+app.doc("/docs.json", {
+	info: {
+		title: "Alph.Pro Indexer API",
+		version: "v2",
+	},
+	openapi: "3.1.0",
+});
+const poolsRoute = createRoute({
+	method: "get",
+	tags: ["Pools"],
+	path: "",
+	request: {},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						pools: z.array(
+							z.object({
+								factory: z.string(),
+								amount0: z.string().nullable(),
+								amount1: z.string().nullable(),
+								pair: TokenSchema,
+								token0: TokenSchema,
+								token1: TokenSchema,
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(poolsRoute, async (c) => {
+	const pools = await db
 		.selectFrom("Pool")
 		.select(["Pool.factory"])
 		// .select(["Pool.factory", "Pool.pair as pairAddress"]) // TODO: why/how did token indexer miss some pools
@@ -18,19 +51,46 @@ app.get("/", async (c) => {
 			jsonObjectFrom(
 				eb
 					.selectFrom("Token")
-					.select(["address", "name", "symbol", "decimals", "totalSupply"])
+					.select([
+						"address",
+						"name",
+						"symbol",
+						"decimals",
+						"totalSupply",
+						"description",
+						"logo",
+						"verified",
+					])
 					.whereRef("Token.address", "=", "Pool.pair"),
 			).as("pair"),
 			jsonObjectFrom(
 				eb
 					.selectFrom("Token")
-					.select(["address", "name", "symbol", "decimals", "totalSupply"])
+					.select([
+						"address",
+						"name",
+						"symbol",
+						"decimals",
+						"totalSupply",
+						"description",
+						"logo",
+						"verified",
+					])
 					.whereRef("Token.address", "=", "Pool.token0"),
 			).as("token0"),
 			jsonObjectFrom(
 				eb
 					.selectFrom("Token")
-					.select(["address", "name", "symbol", "decimals", "totalSupply"])
+					.select([
+						"address",
+						"name",
+						"symbol",
+						"decimals",
+						"totalSupply",
+						"description",
+						"logo",
+						"verified",
+					])
 					.whereRef("Token.address", "=", "Pool.token1"),
 			).as("token1"),
 		])
@@ -51,7 +111,7 @@ app.get("/", async (c) => {
 		.execute();
 
 	return c.json({
-		pools: tokens.map((t) => {
+		pools: pools.map((t) => {
 			const pair = t.pair
 				? {
 						...t.pair,

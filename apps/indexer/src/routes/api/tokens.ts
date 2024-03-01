@@ -12,6 +12,14 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 const app = new OpenAPIHono<Env, Schema, "/api/tokens">();
 
+app.doc("/docs.json", {
+	info: {
+		title: "Alph.Pro Indexer API",
+		version: "v2",
+	},
+	openapi: "3.1.0",
+});
+
 const route = createRoute({
 	method: "get",
 	tags: ["Tokens"],
@@ -209,7 +217,6 @@ const holdersRoute = createRoute({
 });
 
 app.openapi(holdersRoute, async (c) => {
-	// const { address } = c.req.param();
 	const holders = await db
 		.selectFrom("Balance")
 		.select((eb) => [
@@ -335,14 +342,6 @@ app.openapi(holdersAddressRoute, async (c) => {
 			});
 		}, [] as unknown[]),
 	});
-});
-
-app.doc("/docs.json", {
-	info: {
-		title: "Alph.Pro Indexer API",
-		version: "v2",
-	},
-	openapi: "3.1.0",
 });
 
 export default app;

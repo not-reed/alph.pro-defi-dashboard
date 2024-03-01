@@ -1,9 +1,10 @@
 import cron from "node-cron";
-import { EVERY_30_SECONDS } from "./schedules";
+
 import { toString as parseCron } from "cronstrue";
 import { logger } from "../services/logger";
 import type { NewCurrentPrice } from "../database/schemas/public/CurrentPrice";
 import { db } from "../database/db";
+import { EVERY_30_SECONDS } from "../core/constants";
 
 async function savePrices(prices: NewCurrentPrice[]): Promise<void> {
 	logger.info("Saving Prices");
