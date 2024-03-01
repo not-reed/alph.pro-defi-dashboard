@@ -16,6 +16,8 @@ export default interface UserWalletTable {
   address: ColumnType<string, string, string>;
 
   verified: ColumnType<boolean, boolean | undefined, boolean>;
+
+  isTipBot: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type UserWallet = Selectable<UserWalletTable>;

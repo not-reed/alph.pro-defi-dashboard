@@ -3,7 +3,6 @@ import { useConnect } from '../hooks/useConnect'
 import { ConnectorId } from '../utils/connectors/constants';
 
 import { useUser } from '../hooks/useUser'
-import { useRouter } from 'vue-router';
 import { useAccount } from '../hooks/useAccount';
 
 const { connect } = useConnect()
@@ -12,14 +11,10 @@ const { account } = useAccount()
 
 const emits = defineEmits(['close'])
 
-const router = useRouter()
-
 async function connectWith(id: ConnectorId) {
     await connect(id)
-
     setWallet(account.address)
-    emits('close')
-    router.push('/portfolio/overview')
+    emits('close', true, account)
 }
 </script>
 

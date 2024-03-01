@@ -3,39 +3,32 @@
 
 import { type default as KyselyMigrationTable } from './KyselyMigration';
 import { type default as KyselyMigrationLockTable } from './KyselyMigrationLock';
-import { type default as BlockTable } from './Block';
-import { type default as PluginTable } from './Plugin';
-import { type default as PoolTable } from './Pool';
-import { type default as TokenTable } from './Token';
-import { type default as PluginBlockTable } from './PluginBlock';
+import { type default as AccountTable } from './Account';
 import { type default as AyinLiquidityEventTable } from './AyinLiquidityEvent';
 import { type default as AyinReserveTable } from './AyinReserve';
 import { type default as AyinSwapTable } from './AyinSwap';
 import { type default as BalanceTable } from './Balance';
+import { type default as BlockTable } from './Block';
 import { type default as CurrentPriceTable } from './CurrentPrice';
-import { type default as UserTable } from './User';
-import { type default as AccountTable } from './Account';
-import { type default as SessionTable } from './Session';
-import { type default as VerificationTokenTable } from './VerificationToken';
-import { type default as UserWalletTable } from './UserWallet';
-import { type default as NftCollectionTable } from './NftCollection';
 import { type default as NftTable } from './Nft';
 import { type default as NftAttributeTable } from './NftAttribute';
+import { type default as NftCollectionTable } from './NftCollection';
+import { type default as PluginTable } from './Plugin';
+import { type default as PluginBlockTable } from './PluginBlock';
+import { type default as PoolTable } from './Pool';
+import { type default as SessionTable } from './Session';
+import { type default as TokenTable } from './Token';
+import { type default as UserTable } from './User';
+import { type default as UserWalletTable } from './UserWallet';
+import { type default as VerificationTokenTable } from './VerificationToken';
+import { type default as NonceTable } from './Nonce';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
 
   kysely_migration_lock: KyselyMigrationLockTable;
 
-  Block: BlockTable;
-
-  Plugin: PluginTable;
-
-  Pool: PoolTable;
-
-  Token: TokenTable;
-
-  PluginBlock: PluginBlockTable;
+  Account: AccountTable;
 
   AyinLiquidityEvent: AyinLiquidityEventTable;
 
@@ -45,21 +38,31 @@ export default interface PublicSchema {
 
   Balance: BalanceTable;
 
+  Block: BlockTable;
+
   CurrentPrice: CurrentPriceTable;
-
-  User: UserTable;
-
-  Account: AccountTable;
-
-  Session: SessionTable;
-
-  VerificationToken: VerificationTokenTable;
-
-  UserWallet: UserWalletTable;
-
-  NftCollection: NftCollectionTable;
 
   Nft: NftTable;
 
   NftAttribute: NftAttributeTable;
+
+  NftCollection: NftCollectionTable;
+
+  Plugin: PluginTable;
+
+  PluginBlock: PluginBlockTable;
+
+  Pool: PoolTable;
+
+  Session: SessionTable;
+
+  Token: TokenTable;
+
+  User: UserTable;
+
+  UserWallet: UserWalletTable;
+
+  VerificationToken: VerificationTokenTable;
+
+  Nonce: NonceTable;
 }

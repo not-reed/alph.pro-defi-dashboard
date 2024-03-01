@@ -19,24 +19,25 @@ const { currency, setCurrency } = useCurrency()
     <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95"
       enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75"
       leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-      <MenuItems class="absolute right-0 z-10 mt-2 origin-top-right rounded-md bg-calypso-800 focus:outline-none">
+      <MenuItems
+        class="absolute right-0 z-10 mt-2 origin-top-right rounded-md bg-zinc-300 dark:bg-calypso-800 focus:outline-none">
         <div class="py-1">
           <MenuItem v-slot="{ active }">
           <button type="button" @click="setCurrency('USD')"
-            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">USD</button>
+            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-800 dark:text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">USD</button>
           </MenuItem>
           <MenuItem v-slot="{ active }">
           <button type="button" @click="setCurrency('BTC')"
-            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">BTC</button>
+            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-800 dark:text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">BTC</button>
           </MenuItem>
           <MenuItem v-slot="{ active }">
           <button type="button" @click="setCurrency('ETH')"
-            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">ETH</button>
+            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-800 dark:text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">ETH</button>
           </MenuItem>
 
           <MenuItem v-slot="{ active }">
           <button type="button" @click="setCurrency('ALPH')"
-            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">ALPH</button>
+            :class="[active ? 'bg-gray-100 text-gray-900' : 'text-zinc-800 dark:text-zinc-200', 'dark:hover:text-zinc-100 block px-4 py-2 text-sm w-full dark:hover:bg-calypso-700']">ALPH</button>
           </MenuItem>
 
         </div>

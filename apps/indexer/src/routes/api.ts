@@ -1,9 +1,10 @@
-import { type Env, Hono, type Schema } from "hono";
+import { Hono, type Schema } from "hono";
 import { cors } from "hono/cors";
 import { type Swagger } from "atlassian-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { isErrorResult, merge } from "openapi-merge";
 import { logger } from "../services/logger";
+import { type AuthUser, type AuthConfig } from "@hono/auth-js";
 // indexer routes
 import status from "./api/status";
 import sse from "./api/sse";
@@ -16,7 +17,8 @@ import prices from "./api/prices";
 import auth from "./api/auth";
 import nfts from "./api/nfts";
 import wallets from "./api/wallets";
-import { type AuthUser, type AuthConfig } from "@hono/auth-js";
+import web3 from "./api/web3";
+import bot from "./api/bot";
 
 const app = new Hono<
 	{ Variables: { authUser: AuthUser; authConfig: AuthConfig } },
@@ -30,36 +32,46 @@ app.route("/sse", sse);
 app.get("/docs.json", async (c) => {
 	const base = new URL(c.req.url).origin;
 
-	const [balances, tokens, nfts, prices] = (await Promise.all([
+	const [balances, nfts, pools, prices, tokens] = (await Promise.all([
 		// TODO: include public routes here
 		fetch(`${base}/api/balances/docs.json`).then((a) => a.json()),
-		fetch(`${base}/api/tokens/docs.json`).then((a) => a.json()),
 		fetch(`${base}/api/nfts/docs.json`).then((a) => a.json()),
+		fetch(`${base}/api/pools/docs.json`).then((a) => a.json()),
 		fetch(`${base}/api/prices/docs.json`).then((a) => a.json()),
+		fetch(`${base}/api/tokens/docs.json`).then((a) => a.json()),
 	])) as unknown as Swagger.SwaggerV3[];
 
-	const mergeResult = merge([
-		{
-			oas: balances,
-			description: { append: true, title: { value: "Balances" } },
-			pathModification: { prepend: "/api/balances" },
-		},
-		{
-			oas: tokens,
-			description: { append: true, title: { value: "Tokens" } },
-			pathModification: { prepend: "/api/tokens" },
-		},
-		{
-			oas: nfts,
-			description: { append: true, title: { value: "Nfts" } },
-			pathModification: { prepend: "/api/nfts" },
-		},
-		{
-			oas: prices,
-			description: { append: true, title: { value: "Prices" } },
-			pathModification: { prepend: "/api/prices" },
-		},
-	]);
+	const mergeResult = merge(
+		[
+			{
+				oas: prices,
+				description: { append: true, title: { value: "Prices" } },
+				pathModification: { prepend: "/api/prices" },
+			},
+			{
+				oas: balances,
+				description: { append: true, title: { value: "Balances" } },
+				pathModification: { prepend: "/api/balances" },
+			},
+			{
+				oas: nfts,
+				description: { append: true, title: { value: "Nfts" } },
+				pathModification: { prepend: "/api/nfts" },
+			},
+			{
+				oas: pools,
+				description: { append: true, title: { value: "Pools" } },
+				pathModification: { prepend: "/api/pools" },
+			},
+			{
+				oas: tokens,
+				description: { append: true, title: { value: "Tokens" } },
+				pathModification: { prepend: "/api/tokens" },
+			},
+		].sort((a, b) =>
+			a.pathModification.prepend.localeCompare(b.pathModification.prepend),
+		),
+	);
 
 	if (isErrorResult(mergeResult)) {
 		logger.error(`${mergeResult.message} (${mergeResult.type})`);
@@ -123,6 +135,12 @@ app.route("/nfts", nfts);
 
 app.use("/auth/*", corsOptions);
 app.route("/auth", auth);
+
+app.use("/web3/*", corsOptions);
+app.route("/web3", web3);
+
+app.use("/bot/*", corsOptions);
+app.route("/bot", bot);
 
 // app.use("/api/*", verifyAuth());
 // app.get("/api/protected", (c) => {

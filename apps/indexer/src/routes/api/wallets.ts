@@ -24,8 +24,10 @@ app.get("", async (c) => {
 		return c.json({
 			wallets: await db
 				.selectFrom("UserWallet")
-				.select(["address", "verified"])
+				.select(["address", "verified", "isTipBot"])
 				.where("userId", "=", auth.user?.id as UserId)
+				.orderBy("UserWallet.verified", "desc")
+				.orderBy("UserWallet.address", "desc")
 				.execute(),
 		});
 	}
@@ -52,7 +54,7 @@ app.post("", async (c) => {
 app.delete("", async (c) => {
 	const auth = c.get("authUser");
 	const body = await c.req.json();
-	console.log({ auth, body });
+
 	if (auth.user?.id) {
 		await db
 			.deleteFrom("UserWallet")
@@ -60,6 +62,31 @@ app.delete("", async (c) => {
 			.where("address", "=", body.address)
 			.execute();
 	}
+	return c.json({ success: true });
+});
+
+app.post("tip-bot", async (c) => {
+	const auth = c.get("authUser");
+	const { address } = await c.req.json();
+
+	await db.transaction().execute(async (trx) => {
+		await db
+			.updateTable("UserWallet")
+			.where("userId", "=", auth.user?.id as UserId)
+			.where("verified", "=", true)
+			.where("address", "<>", address)
+			.set({ isTipBot: false })
+			.execute();
+
+		await db
+			.updateTable("UserWallet")
+			.where("userId", "=", auth.user?.id as UserId)
+			.where("verified", "=", true)
+			.where("address", "=", address)
+			.set({ isTipBot: true })
+			.execute();
+	});
+
 	return c.json({ success: true });
 });
 

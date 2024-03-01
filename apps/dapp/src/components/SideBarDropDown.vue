@@ -1,5 +1,5 @@
 <template>
-    <details class="[&_svg.dropdown-arrow]:open:-rotate-180  border-emerald-200 border-opacity-25">
+    <details class="[&_svg.dropdown-arrow]:open:-rotate-180 border-emerald-200 border-opacity-25">
         <summary class="flex items-center justify-between gap-2">
             <div>
                 <slot name="summary" />

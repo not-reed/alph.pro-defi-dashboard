@@ -10,9 +10,7 @@ import { config } from "../config";
 import type { ContractAddress } from "../services/common/types/brands";
 import { logger } from "../services/logger";
 import explorerService from "../services/explorer";
-
-const ALPH_ADDRESS =
-	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
+import { ALPH_ADDRESS } from "../core/constants";
 
 // little flag to include alph every run at startup
 let hasAlph = false;
@@ -39,7 +37,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 	// return data to be saved.
 	// whatever is returned here will be passed to the insert function
 	async process(blocks: Block[]): Promise<NewToken[]> {
-		logger.info("GOT TO PROCESS TOKEN")
+		logger.info("GOT TO PROCESS TOKEN");
 		const tokenAddresses = new Set<ContractAddress>();
 		for (const block of blocks) {
 			for (const transaction of block.transactions) {
@@ -54,7 +52,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 				}
 			}
 		}
-		logger.info(`FOUND TOKENS: ${tokenAddresses.size}`)
+		logger.info(`FOUND TOKENS: ${tokenAddresses.size}`);
 		if (tokenAddresses.size === 0 && hasAlph) {
 			return [];
 		}
@@ -128,7 +126,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 	}
 
 	private async loadMetadata(tokens: Set<ContractAddress>) {
-		return await explorerService.tokens.fungibleMetadata(Array.from(tokens))
+		return await explorerService.tokens.fungibleMetadata(Array.from(tokens));
 		// const chunks = Array.from(tokens).reduce((all, one, i) => {
 		// 	const ch = Math.floor(i / 80);
 		// 	if (all[ch]) {

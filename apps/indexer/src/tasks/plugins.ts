@@ -1,4 +1,6 @@
 import {
+	EVERY_30_SECONDS,
+	FIVE_MINUTES,
 	GENESIS_TS,
 	MAX_DURATION,
 	OVERLAP_WINDOW,
@@ -10,7 +12,7 @@ import { db } from "../database/db";
 import { logger } from "../services/logger";
 import sdk from "../services/sdk";
 import cron from "node-cron";
-import { EVERY_30_SECONDS } from "./schedules";
+
 import { toString as parseCron } from "cronstrue";
 import { config } from "../config";
 
@@ -126,7 +128,7 @@ export async function startPluginTask() {
 						from,
 					).toLocaleString()}`,
 				);
-				const now = Date.now();
+				const now = Date.now() - FIVE_MINUTES; // five minute delay to allow explorer to keep up
 
 				while (from < now) {
 					logger.info(

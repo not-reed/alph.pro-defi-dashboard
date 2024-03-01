@@ -20,8 +20,9 @@ const { links } = useNavLinks()
         </RouterLink>
 
         <ul class="text-sm flex flex-col gap-2">
-            <li class="pb-2 px-4 first:border-b-0 border-b border-emerald-200 border-opacity-25" v-for="link in links">
-                <div class="5" v-if="link.name && link.path && !link.children?.length && link.name !== 'Home'">
+            <li class="pb-2 px-4 first:border-b-0 border-b border-emerald-200 border-opacity-25"
+                v-for="link in links.filter(a => !a.meta?.hide)">
+                <div class="5" v-if="link.name && link.path && !link.children?.length">
                     <RouterLink :to="link.path">
                         <div class="">
                             {{ link.name }}

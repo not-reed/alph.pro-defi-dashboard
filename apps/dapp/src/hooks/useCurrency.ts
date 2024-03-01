@@ -26,7 +26,6 @@ function formatCrypto(currency_: keyof typeof cryptoSymbols) {
 			return parts.reduce((acc, part) => {
 				switch (part.type) {
 					case "currency": {
-						console.log({ acc, cur: cryptoSymbols[currency] });
 						// do whatever you need with the symbol.
 						// here I just replace it with the value from the map
 						return `${acc}${cryptoSymbols[currency_]}`;

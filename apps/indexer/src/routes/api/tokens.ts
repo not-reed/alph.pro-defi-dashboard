@@ -12,6 +12,14 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 const app = new OpenAPIHono<Env, Schema, "/api/tokens">();
 
+app.doc("/docs.json", {
+	info: {
+		title: "Alph.Pro Indexer API",
+		version: "v2",
+	},
+	openapi: "3.1.0",
+});
+
 const route = createRoute({
 	method: "get",
 	tags: ["Tokens"],
@@ -209,7 +217,6 @@ const holdersRoute = createRoute({
 });
 
 app.openapi(holdersRoute, async (c) => {
-	// const { address } = c.req.param();
 	const holders = await db
 		.selectFrom("Balance")
 		.select((eb) => [
@@ -301,16 +308,18 @@ app.openapi(holdersAddressRoute, async (c) => {
 			).as("token"),
 			jsonArrayFrom(
 				eb
-					.selectFrom("Balance")
+					.selectFrom("Balance as holders")
 					.select(["balance", "userAddress"])
-					.where("Balance.tokenAddress", "=", address)
-					.where("Balance.balance", "<>", 0n)
+					.where("holders.tokenAddress", "=", address)
+					.where("holders.balance", "<>", 0n)
+					.whereRef("holders.tokenAddress", "<>", "holders.userAddress")
 					.orderBy("balance", "desc")
-					.limit(100),
+					.limit(2000),
 			).as("holders"),
 		])
 		.where("Balance.tokenAddress", "=", address)
 		.where("balance", "<>", 0n)
+		.whereRef("Balance.tokenAddress", "<>", "Balance.userAddress")
 		.groupBy("Balance.tokenAddress")
 		.orderBy("holderCount", "desc")
 		.execute();
@@ -335,14 +344,6 @@ app.openapi(holdersAddressRoute, async (c) => {
 			});
 		}, [] as unknown[]),
 	});
-});
-
-app.doc("/docs.json", {
-	info: {
-		title: "Alph.Pro Indexer API",
-		version: "v2",
-	},
-	openapi: "3.1.0",
 });
 
 export default app;

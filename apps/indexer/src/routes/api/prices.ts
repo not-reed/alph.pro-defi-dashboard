@@ -82,7 +82,7 @@ app.openapi(route, async (c) => {
 							...price.token,
 					  }
 					: null,
-				price: price.markets[0].price, // TODO: calculate average based on liquidity
+				price: price.markets?.[0]?.price, // TODO: calculate average based on liquidity
 				markets: price.markets,
 			};
 		}),

@@ -57,7 +57,7 @@ export async function signIn<
 	const isCredentials = providerId === "credentials";
 	const isEmail = providerId === "email";
 	const isSupportingReturn = isCredentials || isEmail;
-	console.log({ isSupportingReturn, redirect });
+
 	const action = isCredentials ? "callback" : "signin";
 
 	const signInUrl = `${base}/auth/${action}/${providerId}`;
@@ -69,7 +69,7 @@ export async function signIn<
 		credentials: "include",
 	});
 	const { csrfToken } = await csrfTokenResponse.json();
-	// console.log({ csrfToken });
+
 	const res = await fetch(_signInUrl, {
 		method: "post",
 		headers: {

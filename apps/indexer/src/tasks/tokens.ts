@@ -2,8 +2,9 @@ import cron from "node-cron";
 import { logger } from "../services/logger";
 import { addressFromContractId } from "@alephium/web3";
 import { db } from "../database/db";
-import { EVERY_30_MINUTES } from "./schedules";
+
 import { toString as parseCron } from "cronstrue";
+import { EVERY_30_MINUTES } from "../core/constants";
 
 const GITHUB_URL =
 	"https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json";
@@ -20,7 +21,7 @@ export async function startTokensTask() {
 	cron.schedule(
 		schedule,
 		async () => {
-			const results = await fetch(GITHUB_URL).then((a) => a.json());
+			const results: unknown = await fetch(GITHUB_URL).then((a) => a.json());
 
 			if (
 				!results ||

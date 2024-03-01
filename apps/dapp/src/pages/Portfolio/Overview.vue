@@ -4,6 +4,8 @@ import Icon from '../../components/Icon.vue';
 import { useUser } from '../../hooks/useUser';
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
+import ExternalLink from '../../components/ExternalLink.vue';
 // import { formatCurrency } from '../../utils/currency';
 
 const { user } = useUser()
@@ -64,9 +66,7 @@ const secondaryCurrencies = computed(() => {
 </script>
 <template>
     <div class="flex flex-col w-full max-w-2xl">
-        <div class="px-4 pt-4">
-            {{ user.wallet }}
-        </div>
+
         <div class="grid grid-cols-4 gap-2 m-4 w-full">
             <div
                 class="bg-zinc-200 dark:bg-calypso-900 shadow-xl col-span-2 row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
@@ -78,7 +78,6 @@ const secondaryCurrencies = computed(() => {
                     {{ format(netWorth, secondary) }}
                 </span>
             </div>
-
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Wallet</span>
                 <span class="text-lg font-bold">{{ format(tokenWorth) }}</span>
@@ -94,6 +93,24 @@ const secondaryCurrencies = computed(() => {
             <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Claimable</span>
                 <span class="text-lg font-bold">{{ format(claimableWorth) }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 m-4 w-full">
+            <div
+                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex justify-between border-b border-b-calypso-800 w-full">
+
+                <div>
+                    {{ $route.params.address }}
+                </div>
+
+                <ExternalLink :href="`https://explorer.alephium.org/addresses/${$route.params.address}`">
+                    Explorer
+                </ExternalLink>
+
+                <ExternalLink :href="`https://deadrare.io/account/${$route.params.address}`" t>
+                    DeadRare
+                </ExternalLink>
             </div>
         </div>
 
@@ -149,6 +166,11 @@ const secondaryCurrencies = computed(() => {
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Listed:</div> -
                 </div>
+
+                <ExternalLink :href="`https://deadrare.io/nft/${balance.nft.address}`">
+                    DeadRare
+                </ExternalLink>
+
             </li>
         </ul>
 

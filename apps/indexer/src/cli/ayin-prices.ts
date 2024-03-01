@@ -1,131 +1,28 @@
-import cron from "node-cron";
-
-import { toString as parseCron } from "cronstrue";
-import { logger } from "../services/logger";
-import type { NewCurrentPrice } from "../database/schemas/public/CurrentPrice";
+import { ALPH_ADDRESS } from "../core/constants";
 import { db } from "../database/db";
-import { ALPH_ADDRESS, EVERY_30_SECONDS } from "../core/constants";
+import type { NewCurrentPrice } from "../database/schemas/public/CurrentPrice";
+import type { ContractAddress } from "../services/common/types/brands";
 import BigNumber from "bignumber.js";
+import { logger } from "../services/logger";
 
-async function savePrices(prices: NewCurrentPrice[]): Promise<void> {
-	logger.info("Saving Prices");
-	await db
-		.insertInto("CurrentPrice")
-		.values(prices)
-		.onConflict((col) =>
-			col.columns(["address", "source", "sourceKey"]).doUpdateSet((eb) => ({
-				price: eb.ref("excluded.price"),
-				liquidity: eb.ref("excluded.liquidity"),
-				timestamp: eb.ref("excluded.timestamp"),
-			})),
-		)
-		.execute();
-}
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-async function fetchCoingeckoPrice(): Promise<any> {
-	return await fetch(
-		"https://api.coingecko.com/api/v3/simple/price?ids=alephium,ayin,bitcoin,ethereum,tether&vs_currencies=usd",
-	).then((a) => a.json());
-}
+// async function fetchCoingeckoPrice(): Promise<any> {
+// 	return await fetch(
+// 		"https://api.coingecko.com/api/v3/simple/price?ids=alephium,ayin,bitcoin,ethereum,tether&vs_currencies=usd",
+// 	).then((a) => a.json());
+// }
+
+const AYIN_ADDRESS =
+	"vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy" as ContractAddress;
 
 const coingeckoPrices = {
-	alephium: 0,
-	ayin: 0,
-	bitcoin: 0,
-	ethereum: 0,
-	usdt: 0,
+	[ALPH_ADDRESS]: 3.39,
+	[AYIN_ADDRESS]: 26.68, // ayin
+	xUTp3RXGJ1fJpCGqsAY6GgyfRQ3WQ1MdcYR1SiwndAbR: 61904,
+	vP6XSUyjmgWCB2B9tD5Rqun56WJqDdExWnfwZVEqzhQb: 3418.07,
+	zSRgc7goAYUgYsEBYdAzogyyeKv3ne3uvWb3VDtxnaEK: 0.999371,
 };
 
-export async function startPricesTask() {
-	const schedule = EVERY_30_SECONDS;
-
-	logger.info(`Starting Prices Task: ${parseCron(schedule)}`);
-
-	// run on start and cache prices every 30 seconds
-	cron.schedule(
-		schedule,
-		async () => {
-			const resp = await fetchCoingeckoPrice();
-			coingeckoPrices.alephium = Number(resp.alephium.usd);
-			coingeckoPrices.ayin = Number(resp.ayin.usd);
-			coingeckoPrices.bitcoin = Number(resp.bitcoin.usd);
-			coingeckoPrices.ethereum = Number(resp.ethereum.usd);
-			coingeckoPrices.usdt = Number(resp.tether.usd);
-		},
-		{ runOnInit: true },
-	);
-
-	cron.schedule(schedule, async () => {
-		// fetch prices from coingecko
-		// https://api.coingecko.com/api/v3/simple/price?ids=alephium,ayin,bitcoin,ethereum,tether&vs_currencies=usd
-		// i.e. {"alephium":{"usd":3.0},"ayin":{"usd":16.2},"bitcoin":{"usd":50921},"ethereum":{"usd":2924.58},"tether":{"usd":1.001}}
-		if (!coingeckoPrices.alephium) {
-			logger.warn("No coingecko price data, skipping");
-			return;
-		}
-
-		await saveCoingeckoPrices();
-	});
-
-	cron.schedule(schedule, async () => {
-		// fetch prices from coingecko
-		// https://api.coingecko.com/api/v3/simple/price?ids=alephium,ayin,bitcoin,ethereum,tether&vs_currencies=usd
-		// i.e. {"alephium":{"usd":3.0},"ayin":{"usd":16.2},"bitcoin":{"usd":50921},"ethereum":{"usd":2924.58},"tether":{"usd":1.001}}
-		if (!coingeckoPrices.alephium) {
-			logger.warn("No coingecko price data, skipping");
-			return;
-		}
-
-		await saveOnChainPrices();
-	});
-}
-
-async function saveCoingeckoPrices() {
-	savePrices([
-		{
-			address: ALPH_ADDRESS, // alph
-			price: coingeckoPrices.alephium,
-			liquidity: null, // used to determine weight of price source
-			source: "coingecko", // coingecko | ayin
-			sourceKey: "alephium", // pairAddress, coingecko id, etc
-			timestamp: new Date(),
-		},
-		{
-			address: "vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy", // ayin
-			price: coingeckoPrices.ayin,
-			liquidity: null, // used to determine weight of price source
-			source: "coingecko", // coingecko | ayin
-			sourceKey: "ayin", // pairAddress, coingecko id, etc
-			timestamp: new Date(),
-		},
-		{
-			address: "xUTp3RXGJ1fJpCGqsAY6GgyfRQ3WQ1MdcYR1SiwndAbR", // btc
-			price: coingeckoPrices.bitcoin,
-			liquidity: null, // used to determine weight of price source
-			source: "coingecko", // coingecko | ayin
-			sourceKey: "bitcoin", // pairAddress, coingecko id, etc
-			timestamp: new Date(),
-		},
-		{
-			address: "vP6XSUyjmgWCB2B9tD5Rqun56WJqDdExWnfwZVEqzhQb", // eth
-			price: coingeckoPrices.ethereum,
-			liquidity: null, // used to determine weight of price source
-			source: "coingecko", // coingecko | ayin
-			sourceKey: "ethereum", // pairAddress, coingecko id, etc
-			timestamp: new Date(),
-		},
-		{
-			address: "zSRgc7goAYUgYsEBYdAzogyyeKv3ne3uvWb3VDtxnaEK", // usdt
-			price: coingeckoPrices.usdt,
-			liquidity: null, // used to determine weight of price source
-			source: "coingecko", // coingecko | ayin
-			sourceKey: "tether", // pairAddress, coingecko id, etc
-			timestamp: new Date(),
-		},
-	]);
-}
-
-export async function saveOnChainPrices() {
+export async function getAyinPrices() {
 	const timestamp = new Date();
 	const tokens = await db.selectFrom("Token").selectAll().execute();
 	const pools = await db
@@ -137,9 +34,7 @@ export async function saveOnChainPrices() {
 		.execute();
 
 	const alphAyin = pools.find(
-		(pool) =>
-			pool.token0 === ALPH_ADDRESS &&
-			pool.token1 === "vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy",
+		(pool) => pool.token0 === ALPH_ADDRESS && pool.token1 === AYIN_ADDRESS,
 	);
 	if (!alphAyin?.amount0 || !alphAyin?.amount1) {
 		throw new Error("Alph/Ayin pool not found");
@@ -171,7 +66,7 @@ export async function saveOnChainPrices() {
 					.dividedBy(10 ** decimal1)
 					.toString(),
 			)
-			.multipliedBy(coingeckoPrices.alephium);
+			.multipliedBy(coingeckoPrices[ALPH_ADDRESS]);
 
 		const price0 = new BigNumber(
 			new BigNumber(pool.amount1.toString())
@@ -246,7 +141,7 @@ export async function saveOnChainPrices() {
 
 		const decimal0 = decimals.get(pool.token0);
 		const decimal1 = decimals.get(pool.token1);
-		if (decimal0 === undefined || decimal1 === undefined) {
+		if (!decimal0 || !decimal1) {
 			logger.warn("tokens missing decimals");
 			continue;
 		}
@@ -352,5 +247,29 @@ export async function saveOnChainPrices() {
 		}
 	}
 
+	console.log({
+		prices: tokenPrices.filter((a) =>
+			[
+				"2535B6wgHEF299ePEWdnVdbBsxrxvXzpjj8YzHuMp6QGf",
+				"yqxv1UFaeGVwV8M5Yd6A9A2je3w4Xw4uKU2SxDQW9aVM",
+				"w1qtoyjpzpwruPWN54rzR6cmHGMUDtik7URJ5E8284fq",
+			].includes(a.sourceKey),
+		),
+	});
 	await savePrices(tokenPrices);
+}
+
+async function savePrices(prices: NewCurrentPrice[]): Promise<void> {
+	logger.info("Saving Prices");
+	await db
+		.insertInto("CurrentPrice")
+		.values(prices)
+		.onConflict((col) =>
+			col.columns(["address", "source", "sourceKey"]).doUpdateSet((eb) => ({
+				price: eb.ref("excluded.price"),
+				liquidity: eb.ref("excluded.liquidity"),
+				timestamp: eb.ref("excluded.timestamp"),
+			})),
+		)
+		.execute();
 }

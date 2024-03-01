@@ -34,8 +34,6 @@ async function updatePrices(tokenAddresses: string[]) {
 		return;
 	}
 
-	console.log({ data });
-
 	for (const price of data.prices) {
 		prices[price.token.address] = price.price;
 		markets[price.token.address] = price.markets;

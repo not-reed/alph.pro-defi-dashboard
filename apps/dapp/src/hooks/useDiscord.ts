@@ -6,6 +6,7 @@ import {
 
 type Session =
 	| {
+			loaded: true;
 			expires: string;
 			user: {
 				name: string;
@@ -14,6 +15,7 @@ type Session =
 			};
 	  }
 	| {
+			loaded: boolean;
 			expires: null;
 			user: {
 				name: null;
@@ -24,6 +26,7 @@ type Session =
 
 function createEmptySession(): Session {
 	return {
+		loaded: false,
 		expires: null,
 		user: {
 			name: null,
@@ -35,6 +38,10 @@ function createEmptySession(): Session {
 
 const session = reactive<Session>(createEmptySession());
 
+function setLoaded() {
+	session.loaded = true;
+}
+
 async function loadSession() {
 	const session_ = await fetch(
 		`${import.meta.env.VITE_API_ENDPOINT}/api/auth/session`,
@@ -42,6 +49,8 @@ async function loadSession() {
 			credentials: "include",
 		},
 	).then((a) => a.json());
+
+	setLoaded();
 
 	if (session_) {
 		session.expires = session_.expires;
@@ -85,5 +94,5 @@ async function signOut() {
 }
 
 export function useDiscord() {
-	return { session, loadSession, signIn, signOut };
+	return { session, loadSession, signIn, signOut, setLoaded };
 }
