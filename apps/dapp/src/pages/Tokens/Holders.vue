@@ -58,7 +58,7 @@ const liquidity = computed(() => {
                             'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
                             'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
                             selected
-                                ? 'bg-white text-blue-700 shadow'
+                                ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
                                 : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
                         ]">
                             Verified
@@ -69,7 +69,7 @@ const liquidity = computed(() => {
                             'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
                             'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
                             selected
-                                ? 'bg-white text-blue-700 shadow'
+                                ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
                                 : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
                         ]">
                             Unverified
@@ -78,7 +78,7 @@ const liquidity = computed(() => {
                 </TabList>
                 <TabPanels class="mt-2">
                     <TabPanel :class="[
-                        'rounded-xl bg-white p-3',
+                        'rounded-xl bg-white dark:bg-calypso-900 p-3',
                         'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
                     ]">
                         <ul class="max-w-xs w-full">
@@ -95,7 +95,7 @@ const liquidity = computed(() => {
                         </ul>
                     </TabPanel>
                     <TabPanel :class="[
-                        'rounded-xl bg-white p-3',
+                        'rounded-xl bg-white dark:bg-calypso-900 p-3',
                         'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
                     ]">
                         <ul class="max-w-xs w-full">
