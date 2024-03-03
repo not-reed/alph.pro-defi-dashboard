@@ -12,11 +12,11 @@ export default interface UserTable {
 
   name: ColumnType<string | null, string | null, string | null>;
 
-  email: ColumnType<string, string, string>;
+  image: ColumnType<string | null, string | null, string | null>;
+
+  email: ColumnType<string | null, string | null, string | null>;
 
   emailVerified: ColumnType<Date | null, Date | string | null, Date | string | null>;
-
-  image: ColumnType<string | null, string | null, string | null>;
 }
 
 export type User = Selectable<UserTable>;
