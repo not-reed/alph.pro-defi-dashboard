@@ -9,16 +9,16 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import { useConnect } from '../hooks/useConnect';
+import { useAlephiumConnect } from '../hooks/useAlephiumConnect';
 import { ConnectorId } from '../utils/connectors/constants';
-import { useDiscord } from '../hooks/useDiscord';
-import { useAccount } from '../hooks/useAccount';
+import { useDiscordAccount } from '../hooks/useDiscordAccount';
+import { useAlephiumAccount } from '../hooks/useAlephiumAccount';
 
 
 const { user, setWallet } = useUser()
-const { account } = useAccount()
-const { connect } = useConnect()
-const { session } = useDiscord()
+const { account } = useAlephiumAccount()
+const { connect } = useAlephiumConnect()
+const { session } = useDiscordAccount()
 const router = useRouter()
 const wallet = ref(user.wallet)
 
@@ -48,6 +48,7 @@ function openModal() {
 }
 
 </script>
+
 <template>
     <div class="flex flex-col gap-8 items-center justify-center h-full">
 
@@ -66,19 +67,19 @@ function openModal() {
                 <button
                     class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200"
                     type="submit" @click="viewWallet"
-                    :class="wallet.length ? 'text-opacity-100 focus:scale-100 hover:scale-100' : 'text-opacity-25'">
+                    :class="wallet.length ? 'opacity-100 focus:scale-100 hover:scale-100' : 'opacity-50'">
                     View
                 </button>
 
 
                 <button @click="openModal"
                     class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200"
-                    :class="wallet.length ? 'text-opacity-25' : 'text-opacity-100 focus:scale-100 hover:scale-100'">
+                    :class="wallet.length ? 'opacity-50' : 'opacity-100 focus:scale-100 hover:scale-100'">
                     Connect
                 </button>
 
                 <button :disabled="Boolean(session.user.name)"
-                    :class="session.user.name ? 'text-opacity-25 cursor-not-allowed' : 'text-opacity-100 focus:scale-100 hover:scale-100'"
+                    :class="session.user.name ? 'opacity-50 cursor-not-allowed' : 'opacity-100 focus:scale-100 hover:scale-100'"
                     class="w-36 scale-95 transition px-4 py-2 bg-zinc-200 dark:bg-calypso-800 rounded text-xl shadow-xl text-zinc-600 dark:text-emerald-200">
                     Discord
                 </button>
@@ -132,4 +133,4 @@ function openModal() {
             </div>
         </Dialog>
     </TransitionRoot>
-</template>
+</template>../hooks/useAlephiumAccount

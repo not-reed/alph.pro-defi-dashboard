@@ -14,7 +14,7 @@ export const MarketSchema = z
 export const PriceSchema = z
 	.object({
 		token: TokenSchema,
-		price: z.number().openapi({ example: 3.51 }), // calculated average current price
+		price: z.string().openapi({ example: "3510000000000000000" }), // calculated average current price with 18 decimals
 		markets: z.array(MarketSchema),
 	})
 	.openapi("Price");

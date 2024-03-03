@@ -22,7 +22,7 @@ export type ConnectResult = ConnectResultSuccess | ConnectResultFailure;
 
 export interface ConnectionOptions {
 	networkId: NetworkId;
-	addressGroup: number;
+	addressGroup?: number;
 	keyType: KeyType;
 	onDisconnected: (...args: unknown[]) => void;
 	onConnected: (...args: unknown[]) => void;

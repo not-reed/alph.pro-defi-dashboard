@@ -6,10 +6,12 @@ import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
 import ExternalLink from '../../components/ExternalLink.vue';
-// import { formatCurrency } from '../../utils/currency';
+import { truncateAddress } from '../../utils/addresses';
+import { useRoute } from 'vue-router';
 
 const { user } = useUser()
 const { currency, format } = useCurrency()
+const route = useRoute()
 
 const { prices } = usePrices()
 
@@ -60,10 +62,12 @@ const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + clai
 
 const secondaryCurrencies = computed(() => {
     const options = ['USD', 'ALPH', 'BTC', 'ETH'] as const
-    return options.filter(a => a !== currency.value)
+    return options.filter(a => a !== currency.value).slice(0, 3)
 })
 
+const routeUserAddress = route.params.address as string
 </script>
+
 <template>
     <div class="flex flex-col w-full max-w-2xl">
 
@@ -78,19 +82,23 @@ const secondaryCurrencies = computed(() => {
                     {{ format(netWorth, secondary) }}
                 </span>
             </div>
-            <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+            <div
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Wallet</span>
                 <span class="text-lg font-bold">{{ format(tokenWorth) }}</span>
             </div>
-            <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+            <div
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Staked</span>
                 <span class="text-lg font-bold">{{ format(stakedWorth) }}</span>
             </div>
-            <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+            <div
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">NFTs</span>
                 <span class="text-lg font-bold">{{ format(nftWorth) }}</span>
             </div>
-            <div class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+            <div
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Claimable</span>
                 <span class="text-lg font-bold">{{ format(claimableWorth) }}</span>
             </div>
@@ -98,23 +106,26 @@ const secondaryCurrencies = computed(() => {
 
         <div class="flex gap-2 m-4 w-full">
             <div
-                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex justify-between border-b border-b-calypso-800 w-full">
+                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex items-center justify-between border-b border-b-calypso-800 w-full">
 
                 <div>
-                    {{ $route.params.address }}
+                    {{ truncateAddress(routeUserAddress, 50) }}
                 </div>
 
-                <ExternalLink :href="`https://explorer.alephium.org/addresses/${$route.params.address}`">
-                    Explorer
-                </ExternalLink>
+                <div>
 
-                <ExternalLink :href="`https://deadrare.io/account/${$route.params.address}`" t>
-                    DeadRare
-                </ExternalLink>
+                    <ExternalLink :href="`https://explorer.alephium.org/addresses/${routeUserAddress}`" class="">
+                        Explorer
+                    </ExternalLink>
+
+                    <ExternalLink :href="`https://deadrare.io/account/${routeUserAddress}`" class="">
+                        DeadRare
+                    </ExternalLink>
+                </div>
             </div>
         </div>
 
-        <!-- TODO: only show i.e. top 10 tokens here -->
+        <!-- TODO: only show i.e. top 10 tokens here? -->
         <ul class="grid gap-2 m-4 w-full">
             <li v-for="balance in pricedTokens"
                 class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
@@ -136,7 +147,7 @@ const secondaryCurrencies = computed(() => {
                 </div>
 
             </li>
-            <!-- <li
+            <li v-if="false"
                 class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
                 <div class="flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -147,7 +158,7 @@ const secondaryCurrencies = computed(() => {
 
                     <div class="pl-2 text-sm opacity-50">View More</div>
                 </div>
-            </li> -->
+            </li>
         </ul>
 
         <!-- TODO: Ranked by Rarest+Highest Floor -->
@@ -181,7 +192,7 @@ const secondaryCurrencies = computed(() => {
                     <div class="w-1/3">
                         <div class="font-bold">ALPH-AYIN</div>
                         <div class="leading-3 text-xs opacity-50">{{
-                            format(stakedWorth / 2, 'ALPH') }} ALPH</div>
+                        format(stakedWorth / 2, 'ALPH') }} ALPH</div>
                         <div class="leading-3 text-xs opacity-50">{{ format(stakedWorth / 2, 'ALPH') }}
                             AYIN</div>
                     </div>
@@ -189,12 +200,12 @@ const secondaryCurrencies = computed(() => {
                         <div>
                             <div class="text-xs">Currently Staked</div>
                             <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                                format(stakedWorth) }}</div>
+                        format(stakedWorth) }}</div>
                         </div>
                         <div>
                             <div class="text-xs">Rewards</div>
                             <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                                format(claimableWorth) }}</div>
+                        format(claimableWorth) }}</div>
                         </div>
                         <div>
                             <div class="text-xs">Total Yield</div>

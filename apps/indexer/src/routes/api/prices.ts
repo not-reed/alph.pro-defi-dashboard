@@ -75,6 +75,7 @@ app.openapi(route, async (c) => {
 	const prices = await fetchCurrentPrices(address?.split(","));
 	return c.json({
 		prices: prices.map((price) => {
+			console.log({ price });
 			return {
 				token: price.token
 					? {
@@ -82,8 +83,12 @@ app.openapi(route, async (c) => {
 							...price.token,
 					  }
 					: null,
-				price: price.markets?.[0]?.price, // TODO: calculate average based on liquidity
-				markets: price.markets,
+				price: BigInt(price.markets?.[0]?.price || 0), // TODO: calculate average based on liquidity
+				markets: price.markets.map((a) => ({
+					...a,
+					price: BigInt(a.price || 0),
+					liquidity: a.liquidity ? BigInt(a.liquidity) : null,
+				})),
 			};
 		}),
 	});

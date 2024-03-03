@@ -4,7 +4,11 @@ import { toString as parseCron } from "cronstrue";
 import { logger } from "../services/logger";
 import type { NewCurrentPrice } from "../database/schemas/public/CurrentPrice";
 import { db } from "../database/db";
-import { ALPH_ADDRESS, EVERY_30_SECONDS } from "../core/constants";
+import {
+	ALPH_ADDRESS,
+	AYIN_ADDRESS,
+	EVERY_30_SECONDS,
+} from "../core/constants";
 import BigNumber from "bignumber.js";
 import { config } from "../config";
 
@@ -29,6 +33,15 @@ async function fetchCoingeckoPrice(): Promise<any> {
 	).then((a) => a.json());
 }
 
+export async function updateCoinGeckoPrices() {
+	const resp = await fetchCoingeckoPrice();
+	coingeckoPrices.alephium = Number(resp.alephium.usd);
+	coingeckoPrices.ayin = Number(resp.ayin.usd);
+	coingeckoPrices.bitcoin = Number(resp.bitcoin.usd);
+	coingeckoPrices.ethereum = Number(resp.ethereum.usd);
+	coingeckoPrices.usdt = Number(resp.tether.usd);
+}
+
 const coingeckoPrices = {
 	alephium: 0,
 	ayin: 0,
@@ -51,12 +64,7 @@ export async function startPricesTask() {
 	cron.schedule(
 		schedule,
 		async () => {
-			const resp = await fetchCoingeckoPrice();
-			coingeckoPrices.alephium = Number(resp.alephium.usd);
-			coingeckoPrices.ayin = Number(resp.ayin.usd);
-			coingeckoPrices.bitcoin = Number(resp.bitcoin.usd);
-			coingeckoPrices.ethereum = Number(resp.ethereum.usd);
-			coingeckoPrices.usdt = Number(resp.tether.usd);
+			await updateCoinGeckoPrices();
 		},
 		{ runOnInit: true },
 	);
@@ -86,11 +94,11 @@ export async function startPricesTask() {
 	});
 }
 
-async function saveCoingeckoPrices() {
+export async function saveCoingeckoPrices() {
 	savePrices([
 		{
 			address: ALPH_ADDRESS, // alph
-			price: coingeckoPrices.alephium,
+			price: BigInt(coingeckoPrices.alephium * 1e18),
 			liquidity: null, // used to determine weight of price source
 			source: "coingecko", // coingecko | ayin
 			sourceKey: "alephium", // pairAddress, coingecko id, etc
@@ -98,7 +106,7 @@ async function saveCoingeckoPrices() {
 		},
 		{
 			address: "vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy", // ayin
-			price: coingeckoPrices.ayin,
+			price: BigInt(coingeckoPrices.ayin * 1e18),
 			liquidity: null, // used to determine weight of price source
 			source: "coingecko", // coingecko | ayin
 			sourceKey: "ayin", // pairAddress, coingecko id, etc
@@ -106,7 +114,7 @@ async function saveCoingeckoPrices() {
 		},
 		{
 			address: "xUTp3RXGJ1fJpCGqsAY6GgyfRQ3WQ1MdcYR1SiwndAbR", // btc
-			price: coingeckoPrices.bitcoin,
+			price: BigInt(coingeckoPrices.bitcoin * 1e18),
 			liquidity: null, // used to determine weight of price source
 			source: "coingecko", // coingecko | ayin
 			sourceKey: "bitcoin", // pairAddress, coingecko id, etc
@@ -114,7 +122,7 @@ async function saveCoingeckoPrices() {
 		},
 		{
 			address: "vP6XSUyjmgWCB2B9tD5Rqun56WJqDdExWnfwZVEqzhQb", // eth
-			price: coingeckoPrices.ethereum,
+			price: BigInt(coingeckoPrices.ethereum * 1e18),
 			liquidity: null, // used to determine weight of price source
 			source: "coingecko", // coingecko | ayin
 			sourceKey: "ethereum", // pairAddress, coingecko id, etc
@@ -122,7 +130,7 @@ async function saveCoingeckoPrices() {
 		},
 		{
 			address: "zSRgc7goAYUgYsEBYdAzogyyeKv3ne3uvWb3VDtxnaEK", // usdt
-			price: coingeckoPrices.usdt,
+			price: BigInt(coingeckoPrices.usdt * 1e18),
 			liquidity: null, // used to determine weight of price source
 			source: "coingecko", // coingecko | ayin
 			sourceKey: "tether", // pairAddress, coingecko id, etc
@@ -143,9 +151,7 @@ export async function saveOnChainPrices() {
 		.execute();
 
 	const alphAyin = pools.find(
-		(pool) =>
-			pool.token0 === ALPH_ADDRESS &&
-			pool.token1 === "vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy",
+		(pool) => pool.token0 === ALPH_ADDRESS && pool.token1 === AYIN_ADDRESS,
 	);
 	if (!alphAyin?.amount0 || !alphAyin?.amount1) {
 		throw new Error("Alph/Ayin pool not found");
@@ -155,6 +161,7 @@ export async function saveOnChainPrices() {
 	const alphPools = pools.filter((pool) => pool.token0 === ALPH_ADDRESS);
 	const nonAlphPools = pools.filter((pool) => pool.token0 !== ALPH_ADDRESS);
 	const decimals = new Map(tokens.map((t) => [t.address, t.decimals]));
+
 	// get all alph pools first
 	for (const pool of alphPools) {
 		if (!pool.amount0 || !pool.amount1) {
@@ -163,7 +170,8 @@ export async function saveOnChainPrices() {
 
 		const decimal0 = decimals.get(pool.token0);
 		const decimal1 = decimals.get(pool.token1);
-		if (!decimal0 || !decimal1) {
+		if (decimal0 === undefined || decimal1 === undefined) {
+			logger.warn("tokens missing decimals");
 			continue;
 		}
 
@@ -195,11 +203,14 @@ export async function saveOnChainPrices() {
 			address: pool.token0,
 			source: "ayin",
 			sourceKey: pool.pair,
-			price: price0.toNumber(),
-			liquidity: new BigNumber(pool.amount0.toString())
-				.dividedBy(10 ** decimal0)
-				.multipliedBy(price0)
-				.toNumber(),
+			price: BigInt(price0.multipliedBy(1e18).toFixed(0)),
+			liquidity: BigInt(
+				new BigNumber(pool.amount0.toString())
+					.dividedBy(10 ** decimal0)
+					.multipliedBy(price0)
+					.multipliedBy(1e18)
+					.toFixed(0),
+			),
 			timestamp,
 		});
 
@@ -207,12 +218,14 @@ export async function saveOnChainPrices() {
 			address: pool.token1,
 			source: "ayin",
 			sourceKey: pool.pair,
-			price: price1.toNumber(),
-			liquidity: new BigNumber(pool.amount1.toString())
-				.dividedBy(10 ** decimal1)
-				.multipliedBy(price1)
-				.toNumber(),
-
+			price: BigInt(price1.multipliedBy(1e18).toFixed(0)),
+			liquidity: BigInt(
+				new BigNumber(pool.amount1.toString())
+					.dividedBy(10 ** decimal1)
+					.multipliedBy(price1)
+					.multipliedBy(1e18)
+					.toFixed(0),
+			),
 			timestamp,
 		});
 	}
@@ -268,7 +281,7 @@ export async function saveOnChainPrices() {
 						.dividedBy(10 ** decimal1)
 						.toString(),
 				)
-				.multipliedBy(source.price);
+				.multipliedBy(new BigNumber(source.price.toString()).dividedBy(1e18));
 
 			const price0 = new BigNumber(
 				new BigNumber(pool.amount1.toString())
@@ -286,11 +299,14 @@ export async function saveOnChainPrices() {
 				address: pool.token0,
 				source: "ayin",
 				sourceKey: pool.pair,
-				price: price0.toNumber(),
-				liquidity: new BigNumber(pool.amount0.toString())
-					.dividedBy(10 ** decimal0)
-					.multipliedBy(price0)
-					.toNumber(),
+				price: BigInt(price0.multipliedBy(1e18).toFixed(0)),
+				liquidity: BigInt(
+					new BigNumber(pool.amount0.toString())
+						.dividedBy(10 ** decimal0)
+						.multipliedBy(price0)
+						.multipliedBy(1e18)
+						.toFixed(0),
+				),
 				timestamp,
 			});
 
@@ -298,12 +314,14 @@ export async function saveOnChainPrices() {
 				address: pool.token1,
 				source: "ayin",
 				sourceKey: pool.pair,
-				price: price1.toNumber(),
-				liquidity: new BigNumber(pool.amount1.toString())
-					.dividedBy(10 ** decimal1)
-					.multipliedBy(price1)
-					.toNumber(),
-
+				price: BigInt(price1.multipliedBy(1e18).toFixed(0)),
+				liquidity: BigInt(
+					new BigNumber(pool.amount1.toString())
+						.dividedBy(10 ** decimal1)
+						.multipliedBy(price1)
+						.multipliedBy(1e18)
+						.toFixed(0),
+				),
 				timestamp,
 			});
 		} else if (pool.token1 === source.address) {
@@ -317,7 +335,7 @@ export async function saveOnChainPrices() {
 						.dividedBy(10 ** decimal0)
 						.toString(),
 				)
-				.multipliedBy(source.price);
+				.multipliedBy(new BigNumber(source.price.toString()).dividedBy(1e18));
 
 			const price1 = new BigNumber(
 				new BigNumber(pool.amount0.toString())
@@ -335,11 +353,14 @@ export async function saveOnChainPrices() {
 				address: pool.token0,
 				source: "ayin",
 				sourceKey: pool.pair,
-				price: price0.toNumber(),
-				liquidity: new BigNumber(pool.amount0.toString())
-					.dividedBy(10 ** decimal0)
-					.multipliedBy(price0)
-					.toNumber(),
+				price: BigInt(price0.multipliedBy(1e18).toFixed(0)),
+				liquidity: BigInt(
+					new BigNumber(pool.amount0.toString())
+						.dividedBy(10 ** decimal0)
+						.multipliedBy(price0)
+						.multipliedBy(1e18)
+						.toFixed(0),
+				),
 				timestamp,
 			});
 
@@ -347,12 +368,14 @@ export async function saveOnChainPrices() {
 				address: pool.token1,
 				source: "ayin",
 				sourceKey: pool.pair,
-				price: price1.toNumber(),
-				liquidity: new BigNumber(pool.amount1.toString())
-					.dividedBy(10 ** decimal1)
-					.multipliedBy(price1)
-					.toNumber(),
-
+				price: BigInt(price1.multipliedBy(1e18).toFixed(0)),
+				liquidity: BigInt(
+					new BigNumber(pool.amount1.toString())
+						.dividedBy(10 ** decimal1)
+						.multipliedBy(price1)
+						.multipliedBy(1e18)
+						.toFixed(0),
+				),
 				timestamp,
 			});
 		}

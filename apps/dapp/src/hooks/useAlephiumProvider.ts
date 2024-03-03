@@ -20,6 +20,6 @@ function clearProvider() {
 	raw = null;
 }
 
-export function useProvider() {
+export function useAlephiumProvider() {
 	return { provider, getProvider, setProvider, clearProvider };
 }
