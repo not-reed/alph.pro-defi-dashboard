@@ -75,7 +75,6 @@ app.openapi(route, async (c) => {
 	const prices = await fetchCurrentPrices(address?.split(","));
 	return c.json({
 		prices: prices.map((price) => {
-			console.log({ price });
 			return {
 				token: price.token
 					? {
