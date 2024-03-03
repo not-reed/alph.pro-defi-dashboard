@@ -21,6 +21,6 @@ function clearAccount() {
 	account.address = "";
 	account.publicKey = "";
 }
-export function useAccount() {
+export function useAlephiumAccount() {
 	return { account, setAccount, clearAccount };
 }

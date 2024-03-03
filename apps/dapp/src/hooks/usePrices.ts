@@ -1,16 +1,8 @@
 import { reactive } from "vue";
+import { Token } from "../types/token";
 
 interface TokenPrice {
-	token: {
-		id: string;
-		address: string;
-		symbol: string;
-		name: string;
-		decimals: number;
-		logo: string;
-		description: string;
-		verified: boolean;
-	};
+	token: Token;
 	price: number;
 	markets: {
 		price: number;
@@ -22,7 +14,19 @@ interface TokenPrice {
 }
 
 const prices = reactive<Record<string, number>>({});
+const tokens = reactive<Record<string, TokenPrice["token"]>>({});
 const markets = reactive<Record<string, TokenPrice["markets"]>>({});
+
+async function updateAllPrices() {
+	const tokens = Object.keys(prices);
+	if (!tokens.length) {
+		return;
+	}
+
+	await updatePrices(tokens);
+}
+
+setInterval(updateAllPrices, 1000 * 30);
 
 async function updatePrices(tokenAddresses: string[]) {
 	const query = new URLSearchParams({ address: [tokenAddresses].join(",") });
@@ -35,11 +39,12 @@ async function updatePrices(tokenAddresses: string[]) {
 	}
 
 	for (const price of data.prices) {
-		prices[price.token.address] = price.price;
+		tokens[price.token.address] = price.token;
+		prices[price.token.address] = price.price / 1e18;
 		markets[price.token.address] = price.markets;
 	}
 }
 
 export function usePrices() {
-	return { prices, markets, updatePrices };
+	return { prices, markets, tokens, updatePrices };
 }

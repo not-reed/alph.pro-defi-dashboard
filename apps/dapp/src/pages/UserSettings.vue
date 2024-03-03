@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { CheckBadgeIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import { ExclamationCircleIcon } from '@heroicons/vue/24/solid';
-import nProgress from 'nprogress';
-import { computed, onMounted, ref } from 'vue';
+
+import { computed, ref } from 'vue';
 import { useUser } from '../hooks/useUser';
 import { useRouter } from 'vue-router';
-import { useAccount } from '../hooks/useAccount';
-import { useConnect } from '../hooks/useConnect';
+import { useAlephiumAccount } from '../hooks/useAlephiumAccount';
+import { useAlephiumConnect } from '../hooks/useAlephiumConnect';
 import {
     TransitionRoot,
     TransitionChild,
@@ -15,7 +15,9 @@ import {
     DialogTitle,
 } from '@headlessui/vue'
 import { ConnectorId } from '../utils/connectors/constants';
-import { useProvider } from '../hooks/useProvider';
+import { useAlephiumProvider } from '../hooks/useAlephiumProvider';
+import { useDiscordAccount } from '../hooks/useDiscordAccount';
+import { truncateAddress } from '../utils/addresses';
 
 const isOpen = ref(false)
 
@@ -28,23 +30,17 @@ function openModal() {
 
 
 const { setWallet } = useUser()
-const { account } = useAccount()
-const { connect, disconnect } = useConnect()
-const { provider, getProvider } = useProvider()
+const { account } = useAlephiumAccount()
+const { connect, disconnect } = useAlephiumConnect()
+const { provider, getProvider } = useAlephiumProvider()
+const { saveUnverifiedWallet, deleteWallet, refreshWallets, wallets, tipBotAddress, setTipBotAddress } = useDiscordAccount({
+    loadWalletsOnMount: true
+})
 
 const router = useRouter()
 
-const wallets = ref<{ address: string, verified: boolean, isTipBot: boolean }[]>([])
-const tipBotAddress = ref('')
-async function refreshWallets() {
-    const response: any = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, { credentials: 'include' }).then(a => a.json())
-    wallets.value = response.wallets
 
-    tipBotAddress.value = wallets.value.find(a => a.isTipBot)?.address ?? ''
-}
-onMounted(async () => {
-    await refreshWallets()
-})
+
 
 async function viewWallet(address: string) {
     setWallet(address)
@@ -52,41 +48,17 @@ async function viewWallet(address: string) {
 }
 let inputWallet = ref('')
 async function saveWallet() {
-    nProgress.start()
-    try {
-
-        await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: inputWallet.value }),
-            credentials: 'include'
-        })
-        await refreshWallets()
-        inputWallet.value = ''
-    } finally {
-        nProgress.done()
-    }
+    await saveUnverifiedWallet(inputWallet.value)
+    inputWallet.value = ''
 }
 
-async function deleteWallet(address: string) {
+async function deleteSelectedWallet(address: string) {
     const confirmed = confirm('Are you sure you want to delete this wallet?')
     if (!confirmed) return;
-    nProgress.start()
-    try {
-        await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address }),
-            credentials: 'include'
-        })
-        await refreshWallets()
-    } finally {
-        nProgress.done()
-    }
+    deleteWallet(address)
 }
 
 async function signWallet() {
-
     const { message } = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/web3/get-challenge`, {
         method: 'POST',
         credentials: 'include',
@@ -94,7 +66,7 @@ async function signWallet() {
     }).then(a => a.json())
 
 
-    let result = await getProvider().signer?.signMessage({
+    const result = await getProvider().signer?.signMessage({
         message: message,
         messageHasher: 'alephium',
         signerAddress: account.address
@@ -119,18 +91,9 @@ async function connectWith(id: ConnectorId) {
         return;
     }
 
-
     if (!wallets.value.some(wallet => wallet.address === account.address)) {
-        await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: account.address }),
-            credentials: 'include'
-        })
-        await refreshWallets()
+        await saveUnverifiedWallet(account.address)
     }
-
-
 
     closeModal()
 }
@@ -139,27 +102,13 @@ const activeAccountIsVerified = computed(() => {
     return wallets.value.some(a => a.address === account.address && a.verified)
 })
 
-async function setTipBot(address: string) {
-    await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets/tip-bot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address }),
-        credentials: 'include'
-    })
-    await refreshWallets()
-}
-
-function formatAddress(address: string, maxLength = 24) {
-    if (address.length <= maxLength) return address
-
-    return `${address.slice(0, ((maxLength / 2) - 1))}...${address.slice(-1 * ((maxLength / 2) - 1))}`
-}
 
 </script>
+
 <template>
     <div class="p-6 flex flex-col gap-9">
         <div class="flex">
-            <div class="flex flex-col dark:bg-calypso-900 p-4 rounded">
+            <div class="flex flex-col dark:bg-calypso-900 p-4 rounded w-full max-w-lg">
                 <div @click="openModal">Connect & Verify Wallet</div>
                 <div class="flex gap-4">
                     <button class="px-4 py-2 rounded bg-calypso-800  transition" :disabled="!!account.address"
@@ -180,7 +129,7 @@ function formatAddress(address: string, maxLength = 24) {
         </div>
 
         <div class="flex">
-            <div class="flex flex-col gap-4 dark:bg-calypso-900 rounded p-4 w-auto">
+            <div class="flex flex-col gap-4 dark:bg-calypso-900 rounded p-4 w-full max-w-lg">
                 <div @click="openModal">Add <span class="italic -mb-2">Watch-Only</span> Wallet</div>
                 <form @submit.prevent="saveWallet" class="flex gap-2 -mt-4">
                     <input type="text" class="px-4 py-2 bg-calypso-700 w-96 rounded" v-model="inputWallet" />
@@ -190,7 +139,7 @@ function formatAddress(address: string, maxLength = 24) {
         </div>
 
         <div class="flex">
-            <ul class="dark:bg-calypso-900 rounded p-4 flex flex-col">
+            <ul class="dark:bg-calypso-900 rounded p-4 flex flex-col w-full max-w-lg">
                 <li class="grid grid-cols-2 gap-2 my-4">
                     <div class="font-bold text-xl">
                         Verified Wallets:
@@ -206,7 +155,7 @@ function formatAddress(address: string, maxLength = 24) {
 
                 <li v-for="wallet in wallets" :key="wallet.address" class="grid grid-cols-2 gap-2">
                     <div @click="viewWallet(wallet.address)" class="hover:underline cursor-pointer">
-                        {{ formatAddress(wallet.address) }}
+                        {{ truncateAddress(wallet.address) }}
                     </div>
 
                     <div class="flex gap-2 items-center justify-center w-64">
@@ -218,8 +167,9 @@ function formatAddress(address: string, maxLength = 24) {
                         <div class="flex-1 flex items-center justify-center">
                             <label class="relative flex items-center p-3 rounded-full cursor-pointer"
                                 v-if="wallet.verified">
-                                <input name="color" type="radio" :value="wallet.address" v-model="tipBotAddress"
-                                    @input="setTipBot(wallet.address)"
+                                <input name="color" type="radio" :value="wallet.address"
+                                    :checked="tipBotAddress === wallet.address"
+                                    @input="setTipBotAddress(wallet.address)"
                                     class="peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-calypso-300 text-calypso-600 transition-all" />
                                 <span
                                     class="absolute text-sky-500 transition scale-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:scale-100">
@@ -231,7 +181,7 @@ function formatAddress(address: string, maxLength = 24) {
                             </label>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                            <button @click="deleteWallet(wallet.address)">
+                            <button @click="deleteSelectedWallet(wallet.address)">
                                 <TrashIcon class="w-8 h-8 text-red-700" />
                             </button>
                         </div>
@@ -287,4 +237,4 @@ function formatAddress(address: string, maxLength = 24) {
             </div>
         </Dialog>
     </TransitionRoot>
-</template>
+</template>../hooks/useAlephiumAccount

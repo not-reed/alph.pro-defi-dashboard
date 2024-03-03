@@ -44,7 +44,7 @@ const liquidity = computed(() => {
     if (!active.value || !markets[active.value.token.address]) {
         return 0
     }
-    return markets[active.value.token.address].reduce((acc, cur) => acc + cur.liquidity, 0)
+    return markets[active.value.token.address].reduce((acc, cur) => acc + (cur.liquidity / 1e18), 0)
 })
 </script>
 
@@ -55,23 +55,23 @@ const liquidity = computed(() => {
                 <TabList class="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
                     <Tab as="template" v-slot="{ selected }">
                         <button :class="[
-                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
-                            selected
-                                ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
-                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
-                        ]">
+                        'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                        'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                        selected
+                            ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
+                            : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                    ]">
                             Verified
                         </button>
                     </Tab>
                     <Tab as="template" v-slot="{ selected }">
                         <button :class="[
-                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
-                            selected
-                                ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
-                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
-                        ]">
+                        'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                        'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                        selected
+                            ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
+                            : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                    ]">
                             Unverified
                         </button>
                     </Tab>

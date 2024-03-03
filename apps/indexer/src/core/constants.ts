@@ -14,10 +14,14 @@ export const OVERLAP_WINDOW = FIVE_MINUTES;
 export const EVERY_15_SECONDS = "*/15 * * * * *";
 export const EVERY_30_SECONDS = "*/30 * * * * *";
 export const EVERY_1_MINUTE = "* * * * *";
+export const EVERY_15_MINUTES = "*/15 * * * *";
 export const EVERY_30_MINUTES = "*/30 * * * *";
 
 export const ALPH_ADDRESS =
 	"tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq" as ContractAddress;
+
+export const AYIN_ADDRESS =
+	"vT49PY8ksoUL6NcXiZ1t2wAmC7tTPRfFfER8n3UCLvXy" as ContractAddress;
 
 export const AYIN_FACTORY =
 	"vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R" as ContractAddress;

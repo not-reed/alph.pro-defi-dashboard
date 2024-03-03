@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import Layout from './components/Layout.vue'
-import { useConnect } from './hooks/useConnect';
-import { useAccount } from './hooks/useAccount';
+import { useAlephiumConnect } from './hooks/useAlephiumConnect';
+import { useAlephiumAccount } from './hooks/useAlephiumAccount';
 import { useRoute, useRouter } from 'vue-router';
 import { useUser } from './hooks/useUser';
-import { useDiscord } from './hooks/useDiscord';
+import { useDiscordAccount } from './hooks/useDiscordAccount';
 
-const { autoConnect } = useConnect()
-const { account } = useAccount()
+const { autoConnect } = useAlephiumConnect()
+const { account } = useAlephiumAccount()
 const { setWallet } = useUser()
-const { loadSession, setLoaded } = useDiscord()
+const { loadSession, setLoaded } = useDiscordAccount()
 const router = useRouter()
 const route = useRoute()
 const loaded = ref(false)
@@ -50,5 +50,4 @@ onMounted(async () => {
   <Layout>
     <RouterView v-if="loaded" />
   </Layout>
-</template>
-
+</template>./hooks/useAlephiumAccount

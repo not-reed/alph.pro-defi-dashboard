@@ -17,7 +17,7 @@ import UserSettingsVue from "./pages/UserSettings.vue";
 
 import { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
-import { useDiscord } from "./hooks/useDiscord";
+import { useDiscordAccount } from "./hooks/useDiscordAccount";
 import HoldersVue from "./pages/Tokens/Holders.vue";
 import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
 import PageShellVue from "./pages/PageShell.vue";
@@ -207,7 +207,7 @@ export const router = createRouter({
 });
 
 // used for guards & prefetching data
-const { session, loadSession, setLoaded } = useDiscord();
+const { session, loadSession, setLoaded } = useDiscordAccount();
 
 router.beforeEach(async (to, _from, next) => {
 	NProgress.start();

@@ -4,8 +4,8 @@ import { connector as injected } from "../utils/connectors/injected";
 import { connector as qrcode } from "../utils/connectors/qrCodeWalletConnect";
 import { Storage, StorageKeys } from "../utils/connectors/storage";
 import { ConnectionOptions } from "../utils/connectors/types";
-import { Account, useAccount } from "./useAccount";
-import { useProvider } from "./useProvider";
+import { Account, useAlephiumAccount } from "./useAlephiumAccount";
+import { useAlephiumProvider } from "./useAlephiumProvider";
 import { ConnectorId } from "../utils/connectors/constants";
 import { POSITION, useToast } from "vue-toastification";
 
@@ -18,7 +18,7 @@ const connectionOptions = reactive<
 	Pick<ConnectionOptions, "networkId" | "addressGroup" | "keyType">
 >({
 	networkId: "mainnet",
-	// addressGroup: 0,
+	// addressGroup: 0, // disabled, connect to any group
 	keyType: "default",
 });
 
@@ -33,14 +33,14 @@ function getConnector(connector: ConnectorId) {
 	}
 }
 
-export function useConnect() {
+export function useAlephiumConnect() {
 	const defaultConnectionCallbacks = {
 		onDisconnected: () => console.log("disconnected"),
 		onConnected: () => console.log("connected"),
 	} satisfies Pick<ConnectionOptions, "onDisconnected" | "onConnected">;
 
-	const { account, setAccount, clearAccount } = useAccount();
-	const { getProvider, setProvider, clearProvider } = useProvider();
+	const { account, setAccount, clearAccount } = useAlephiumAccount();
+	const { getProvider, setProvider, clearProvider } = useAlephiumProvider();
 
 	const connect = async (
 		id: ConnectorId,
