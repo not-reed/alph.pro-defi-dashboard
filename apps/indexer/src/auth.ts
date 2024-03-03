@@ -5,6 +5,7 @@ import { type OAuthUserConfig, type OAuthConfig } from "@auth/core/providers";
 import { config } from "./config";
 import { db } from "./database/db";
 import { KyselyAdapter } from "./kysely-adapter";
+import type { Adapter } from "@auth/core/adapters";
 
 function Discord<P extends DiscordProfile>(
 	options: OAuthUserConfig<P>,
@@ -30,7 +31,7 @@ function Discord<P extends DiscordProfile>(
 			return {
 				id: profile.id,
 				name: profile.global_name ?? profile.username,
-				email: profile.email,
+				email: null,
 				image: profile.image_url,
 			};
 		},
@@ -46,7 +47,7 @@ export function getAuthConfig(c: Context): AuthConfig {
 		// skipCSRFCheck: skipCSRFCheck,
 		secret: config.AUTH_SECRET,
 		redirectProxyUrl: config.AUTH_REDIRECT_URL,
-		adapter: KyselyAdapter(db),
+		adapter: KyselyAdapter(db) as Adapter,
 		providers: [
 			Discord({
 				clientId: config.DISCORD_CLIENT_ID,
