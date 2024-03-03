@@ -6,6 +6,7 @@ import type { NewCurrentPrice } from "../database/schemas/public/CurrentPrice";
 import { db } from "../database/db";
 import { ALPH_ADDRESS, EVERY_30_SECONDS } from "../core/constants";
 import BigNumber from "bignumber.js";
+import { config } from "../config";
 
 async function savePrices(prices: NewCurrentPrice[]): Promise<void> {
 	logger.info("Saving Prices");
@@ -37,6 +38,11 @@ const coingeckoPrices = {
 };
 
 export async function startPricesTask() {
+	if (config.INDEXING_DISABLED) {
+		logger.info("Prices Task Disabled: Skipping");
+		return;
+	}
+
 	const schedule = EVERY_30_SECONDS;
 
 	logger.info(`Starting Prices Task: ${parseCron(schedule)}`);

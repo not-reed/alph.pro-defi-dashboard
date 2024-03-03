@@ -5,6 +5,7 @@ import { db } from "../database/db";
 
 import { toString as parseCron } from "cronstrue";
 import { EVERY_30_MINUTES } from "../core/constants";
+import { config } from "../config";
 
 const GITHUB_URL =
 	"https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json";
@@ -14,6 +15,11 @@ const GITHUB_URL =
  * and updates any missing/changed metadata every 30 minutes
  */
 export async function startTokensTask() {
+	if (config.INDEXING_DISABLED) {
+		logger.info("Tokens Task Disabled: Skipping");
+		return;
+	}
+
 	const schedule = EVERY_30_MINUTES;
 
 	logger.info(`Starting Tokens Task: ${parseCron(schedule)}`);
