@@ -9,6 +9,11 @@ app.get("", (c) => {
   return c.html(<IndexerStatus />);
 });
 
+app.get("/wc", (c) => {
+  const { uri } = c.req.query();
+  return c.redirect(`alephium://wc=${uri}`);
+});
+
 app.get("/success", (c) => {
   return c.html(<Success />);
 });
