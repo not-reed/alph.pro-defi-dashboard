@@ -170,7 +170,11 @@ export const routes = [
 		name: "More",
 		component: PageShellVue,
 		children: [
-			{ path: "https://twitter.com/aiphpro", name: "Twitter", component: Home },
+			{
+				path: "https://twitter.com/alphdotpro",
+				name: "Twitter",
+				component: Home,
+			},
 			{
 				path: "https://discord.gg/pfcR8EQZjb",
 				name: "Discord",
