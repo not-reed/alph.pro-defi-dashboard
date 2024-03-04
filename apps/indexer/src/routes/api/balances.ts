@@ -31,13 +31,25 @@ async function fetchUserBalances(addresses: string[]) {
 			jsonObjectFrom(
 				eb
 					.selectFrom("Nft")
-					.select([
-						"address",
-						"name",
-						"image",
-						"description",
-						"uri",
-						"nftIndex",
+					.select((eb) => [
+						"Nft.address",
+						"Nft.name",
+						"Nft.image",
+						"Nft.description",
+						"Nft.uri",
+						"Nft.nftIndex",
+						jsonObjectFrom(
+							eb
+								.selectFrom("NftCollection")
+								.select([
+									"NftCollection.address",
+									"NftCollection.uri",
+									"NftCollection.image",
+									"NftCollection.name",
+									"NftCollection.description",
+								])
+								.whereRef("NftCollection.address", "=", "collectionAddress"),
+						).as("collection"),
 					])
 					.whereRef("Nft.address", "=", "Balance.tokenAddress"),
 			).as("nft"),
@@ -63,10 +75,22 @@ async function fetchUserBalances(addresses: string[]) {
 	return balances.map((balance) => {
 		return {
 			...balance,
-			token: balance.token
+			token: balance.token?.address
 				? {
 						id: binToHex(contractIdFromAddress(balance.token.address)),
 						...balance.token,
+				  }
+				: null,
+			nft: balance.nft?.address
+				? {
+						id: binToHex(contractIdFromAddress(balance.nft.address)),
+						...balance.nft,
+						collection: {
+							id: binToHex(
+								contractIdFromAddress(balance.nft.collection?.address || ""),
+							),
+							...balance.nft.collection,
+						},
 				  }
 				: null,
 		};
