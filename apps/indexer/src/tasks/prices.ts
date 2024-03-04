@@ -295,12 +295,6 @@ export async function saveOnChainPrices() {
 				)
 				.multipliedBy(price1.toString());
 
-			console.log({
-				price0,
-				amount1: new BigNumber(pool.amount0.toString())
-					.dividedBy(10 ** decimal0)
-					.toString(),
-			});
 			tokenPrices.push({
 				address: pool.token0,
 				source: "ayin",
