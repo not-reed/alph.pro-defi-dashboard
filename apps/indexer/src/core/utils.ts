@@ -6,7 +6,7 @@ import { Plugin } from "../common/plugins/abstract";
 
 import { db } from "../database/db";
 
-export async function loadPlugins(): Promise<Plugin<unknown>[]> {
+export async function autoLoadPluginsFromFolder(): Promise<Plugin<unknown>[]> {
 	const files = await getFiles(join(__dirname, "../plugins"));
 	if (!files?.length) {
 		return [];

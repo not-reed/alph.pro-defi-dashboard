@@ -11,6 +11,8 @@ import {
 } from "../core/constants";
 import BigNumber from "bignumber.js";
 import { config } from "../config";
+import { loadAllTokens } from "../database/services/token";
+import { loadAllPools } from "../database/services/pool";
 
 async function savePrices(prices: NewCurrentPrice[]): Promise<void> {
 	logger.info("Saving Prices");
@@ -141,14 +143,8 @@ export async function saveCoingeckoPrices() {
 
 export async function saveOnChainPrices() {
 	const timestamp = new Date();
-	const tokens = await db.selectFrom("Token").selectAll().execute();
-	const pools = await db
-		.selectFrom("Pool")
-		.leftJoin("AyinReserve", (join) =>
-			join.onRef("AyinReserve.pairAddress", "=", "Pool.pair"),
-		)
-		.select(["pair", "token0", "token1", "amount0", "amount1", "totalSupply"])
-		.execute();
+	const tokens = await loadAllTokens();
+	const pools = await loadAllPools();
 
 	const alphAyin = pools.find(
 		(pool) => pool.token0 === ALPH_ADDRESS && pool.token1 === AYIN_ADDRESS,

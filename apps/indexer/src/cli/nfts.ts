@@ -10,7 +10,7 @@ import { config } from "../config";
 import type { ContractAddress } from "../services/common/types/brands";
 import { logger } from "../services/logger";
 import { db } from "../database/db";
-import type { NewNft } from "../database/schemas/public/Nft";
+import type { NewNft, NftUpdate } from "../database/schemas/public/Nft";
 import type { NewNftCollection } from "../database/schemas/public/NftCollection";
 import type { NewNftAttribute } from "../database/schemas/public/NftAttribute";
 import { chunkArray } from "../utils/arrays";
@@ -20,6 +20,8 @@ import type { NewBalance } from "../database/schemas/public/Balance";
 import NFTPublicSaleCollectionSequentialWithRoyaltyArtifact from "../abi/deadrare/NFTPublicSaleCollectionSequentialWithRoyalty.ral.json";
 import type { Artifact } from "../services/common/types/artifact";
 import type { NodeState } from "../services/node/types/state";
+import { updateNftBalances } from "../database/services/balance";
+import { bulkUpdateNft } from "../database/services/nft";
 
 const CACHE_TIME =
 	process.env.NODE_ENV === "production" ? 15 * 60 : 60 * 60 * 6; // 15 minutes in prod, 6 hours in dev
@@ -114,27 +116,18 @@ export async function findUnprocessedNfts() {
 		const responses = await fetchNftMetadata(parent.parent, subContracts);
 
 		await processCollection(parent.parent);
-		await db.transaction().execute(async (trx) => {
-			const updates = responses.map((r) => ({
-				address: addressFromContractId(r.id),
-				uri: r.tokenUri,
-				collectionAddress: parent.parent,
-				nftIndex: BigInt(r.nftIndex),
-				tokenIndex: BigInt(r.nftIndex),
-			}));
-			// console.log({ updates });
-			const t = await trx
-				.updateTable("Nft")
-				.from(values(updates, "c"))
-				.set((eb) => ({
-					address: eb.ref("c.address"),
-					uri: eb.ref("c.uri"),
-				}))
-				.whereRef("Nft.collectionAddress", "=", "c.collectionAddress")
-				.where((ab) => sql<boolean>`"Nft"."nftIndex" = c."nftIndex"::numeric`)
-				.returningAll()
-				.execute();
+		const updates = responses.map(
+			(r) =>
+				({
+					address: addressFromContractId(r.id),
+					uri: r.tokenUri,
+					collectionAddress: parent.parent,
+					nftIndex: BigInt(r.nftIndex),
+				}) satisfies NftUpdate,
+		);
 
+		await db.transaction().execute(async (trx) => {
+			const t = await bulkUpdateNft(updates, trx);
 			console.log(
 				`Finished processing collection ${t.length} Minted NFT's for this collection`,
 			);
@@ -294,16 +287,7 @@ export async function processCollection(
 		}
 
 		if (balances.length) {
-			await trx
-				.deleteFrom("Balance")
-				.where(
-					"Balance.tokenAddress",
-					"in",
-					balances.map((b) => b.tokenAddress),
-				)
-				.execute();
-
-			await trx.insertInto("Balance").values(balances).execute();
+			await updateNftBalances(balances, trx);
 		}
 
 		console.log(`Finished processing collection ${result.meta.name}`);

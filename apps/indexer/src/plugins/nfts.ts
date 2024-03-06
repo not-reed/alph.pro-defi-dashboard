@@ -17,6 +17,8 @@ import sdk from "../services/sdk";
 import type { NodeState } from "../services/node/types/state";
 import type { Artifact } from "../services/common/types/artifact";
 import NFTPublicSaleCollectionSequentialWithRoyaltyArtifact from "../abi/deadrare/NFTPublicSaleCollectionSequentialWithRoyalty.ral.json";
+import { findCollections } from "../database/services/nftCollection";
+import { findNftOrTokenAddresses } from "../database/services/nft";
 
 interface PluginData {
 	nfts: NewNft[];
@@ -57,11 +59,7 @@ export class NftPlugin extends Plugin<PluginData> {
 
 		if (tokenAddresses.size > 0) {
 			// if its found, we can ignore it completely
-			const found = await db
-				.selectFrom("Nft")
-				.selectAll()
-				.where("address", "in", Array.from(tokenAddresses))
-				.execute();
+			const found = await findNftOrTokenAddresses(Array.from(tokenAddresses));
 
 			const foundSet = new Set(found.map((token) => token.address));
 
@@ -108,13 +106,7 @@ export class NftPlugin extends Plugin<PluginData> {
 			const collectionAddresses: string[] = Array.from(
 				new Set(nftMetadata.map((nft) => nft.collectionAddress)),
 			);
-			const collections = collectionAddresses.length
-				? await db
-						.selectFrom("NftCollection")
-						.selectAll()
-						.where("address", "in", collectionAddresses)
-						.execute()
-				: [];
+			const collections = await findCollections(collectionAddresses);
 
 			const missedCollections = collectionAddresses.filter(
 				(address) => !collections.find((col) => col.address === address),
@@ -178,12 +170,21 @@ export class NftPlugin extends Plugin<PluginData> {
 
 	private parseAttributes(
 		json: unknown,
-	): Omit<NewNftAttribute, "nftId" | "contractAddress">[] {
+	): Omit<NewNftAttribute, "nftId" | "collectionAddress">[] {
+		if (
+			!json ||
+			typeof json !== "object" ||
+			!("attributes" in json) ||
+			!Array.isArray(json.attributes)
+		) {
+			console.log({ json });
+			throw new Error("Unable to parse JSON");
+		}
 		const tokenAttributes = json.attributes.map((a) => {
 			return {
-				key: a.trait_type,
-				value: a.value,
-				raw: a,
+				key: a.trait_type as string,
+				value: a.value as string,
+				raw: a as unknown,
 			};
 		});
 		return tokenAttributes;

@@ -6,6 +6,7 @@ import { db } from "../database/db";
 import { toString as parseCron } from "cronstrue";
 import { EVERY_30_MINUTES } from "../core/constants";
 import { config } from "../config";
+import { findTokensByAddress, updateToken } from "../database/services/token";
 
 const GITHUB_URL =
 	"https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json";
@@ -43,11 +44,7 @@ export async function startTokensTask() {
 				new Set<string>(results.tokens.map((token) => token.id)),
 			);
 			const tokenListAddresses = tokenListIds.map(addressFromContractId);
-			const tokens = await db
-				.selectFrom("Token")
-				.selectAll()
-				.where("address", "in", tokenListAddresses)
-				.execute();
+			const tokens = await findTokensByAddress(tokenListAddresses);
 
 			if (tokens.length !== tokenListIds.length) {
 				logger.warn(
@@ -70,11 +67,7 @@ export async function startTokensTask() {
 
 			await db.transaction().execute(async (trx) => {
 				for (const token of tokens) {
-					await trx
-						.updateTable("Token")
-						.set(token)
-						.where("id", "=", token.id)
-						.execute();
+					await updateToken(token, trx);
 				}
 			});
 

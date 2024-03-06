@@ -10,6 +10,7 @@ import type { ContractAddress } from "../services/common/types/brands";
 import { logger } from "../services/logger";
 import explorerService from "../services/explorer";
 import { ALPH_ADDRESS } from "../core/constants";
+import { findTokenOrNftAddresses } from "../database/services/token";
 
 // little flag to include alph every run at startup
 let hasAlph = false;
@@ -53,11 +54,7 @@ export class TokenPlugin extends Plugin<NewToken[]> {
 		const newTokens = new Map<string, NewToken>();
 
 		if (tokenAddresses.size > 0) {
-			const found = await db
-				.selectFrom("Token")
-				.selectAll()
-				.where("address", "in", Array.from(tokenAddresses))
-				.execute();
+			const found = await findTokenOrNftAddresses(Array.from(tokenAddresses));
 
 			const foundSet = new Set(found.map((token) => token.address));
 			const missingSet = new Set(

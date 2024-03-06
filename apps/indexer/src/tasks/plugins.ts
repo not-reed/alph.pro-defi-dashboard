@@ -8,7 +8,10 @@ import {
 	TRIBUTE_TS,
 } from "../core/constants";
 import { getLock, setLock } from "../core/lock";
-import { filterUnprocessedBlocks, loadPlugins } from "../core/utils";
+import {
+	filterUnprocessedBlocks,
+	autoLoadPluginsFromFolder,
+} from "../core/utils";
 import { db } from "../database/db";
 import { logger } from "../services/logger";
 import sdk from "../services/sdk";
@@ -16,6 +19,11 @@ import cron from "node-cron";
 
 import { toString as parseCron } from "cronstrue";
 import { config } from "../config";
+import {
+	findPlugins,
+	insertPluginTimestamp,
+	updatePluginTimestamp,
+} from "../database/services/plugin";
 
 /**
  * Loops through all plugins and runs them, processing any and all blocks until up to date
@@ -29,7 +37,7 @@ export async function startPluginTask() {
 
 	logger.info(`Starting Plugin Task: ${parseCron(schedule)}`);
 
-	const plugins = await loadPlugins();
+	const plugins = await autoLoadPluginsFromFolder();
 
 	const pluginNames = new Set();
 	for (const plugin of plugins) {
@@ -41,7 +49,7 @@ export async function startPluginTask() {
 		process.exit(1);
 	}
 
-	const pluginState = await db.selectFrom("Plugin").selectAll().execute();
+	const pluginState = await findPlugins();
 	const pluginActive = new Map(
 		pluginState.map((state) => [state.name, state.status]),
 	);
@@ -77,18 +85,16 @@ export async function startPluginTask() {
 			const data = await plugin.process(blocksToProcess);
 
 			await db.transaction().execute(async (trx) => {
-				// insert first as it doesn't yet exist
-				await trx
-					.insertInto("Plugin")
-					.values({
-						name: plugin.PLUGIN_NAME,
-						timestamp: new Date(GENESIS_TS),
-					})
-					.execute();
 				try {
 					await plugin.insert(trx, data);
-					// update local cache
 					pluginActive.set(plugin.PLUGIN_NAME, true);
+
+					// insert first timestamp as it doesn't yet exist
+					await insertPluginTimestamp(
+						plugin.PLUGIN_NAME,
+						new Date(GENESIS_TS),
+						trx,
+					);
 					latestMap.set(plugin.PLUGIN_NAME, GENESIS_TS);
 				} catch (err) {
 					logger.error({
@@ -159,15 +165,8 @@ export async function startPluginTask() {
 
 						await db.transaction().execute(async (trx) => {
 							// only update if above continues successfully, otherwise will retry
-
 							const lastTo = new Date(Math.min(to, now));
-
-							await trx
-								.updateTable("Plugin")
-								.set({ timestamp: lastTo })
-								.where("name", "=", plugin.PLUGIN_NAME)
-								.execute();
-
+							await updatePluginTimestamp(plugin.PLUGIN_NAME, lastTo, trx);
 							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
 
 							// use actual 'to' value, not lastTo
@@ -193,13 +192,7 @@ export async function startPluginTask() {
 							// only update if above continues successfully, otherwise will retry
 
 							const lastTo = new Date(Math.min(to, now));
-
-							await trx
-								.updateTable("Plugin")
-								.set({ timestamp: lastTo })
-								.where("name", "=", plugin.PLUGIN_NAME)
-								.execute();
-
+							await updatePluginTimestamp(plugin.PLUGIN_NAME, lastTo, trx);
 							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
 
 							// use actual 'to' value, not lastTo
@@ -215,18 +208,12 @@ export async function startPluginTask() {
 
 					await db.transaction().execute(async (trx) => {
 						try {
+							// save processed plugin data
 							await plugin.insert(trx, data);
 
 							// only update if above continues successfully, otherwise will retry
-
 							const lastTo = new Date(Math.min(to, now));
-
-							await trx
-								.updateTable("Plugin")
-								.set({ timestamp: lastTo })
-								.where("name", "=", plugin.PLUGIN_NAME)
-								.execute();
-
+							await updatePluginTimestamp(plugin.PLUGIN_NAME, lastTo, trx);
 							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
 
 							// use actual 'to' value, not lastTo
