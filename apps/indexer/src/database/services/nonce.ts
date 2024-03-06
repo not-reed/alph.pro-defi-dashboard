@@ -23,7 +23,7 @@ export async function fetchUserNonce(userId: UserId) {
 }
 
 export async function burnUserNonces(userId: UserId) {
-	await db
+	return await db
 		.updateTable("Nonce")
 		.set({ deletedAt: sql`CURRENT_TIMESTAMP` })
 		.where("userId", "=", userId)

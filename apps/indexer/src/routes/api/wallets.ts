@@ -8,6 +8,10 @@ import {
 } from "@hono/auth-js";
 import { db } from "../../database/db";
 import type { UserId } from "../../database/schemas/public/User";
+import {
+	deleteWalletForUser,
+	setTipBotWallet,
+} from "../../database/services/userWallet";
 
 const app = new Hono<
 	{ Variables: { authUser: AuthUser; authConfig: AuthConfig } },
@@ -56,11 +60,7 @@ app.delete("", async (c) => {
 	const body = await c.req.json();
 
 	if (auth.user?.id) {
-		await db
-			.deleteFrom("UserWallet")
-			.where("userId", "=", auth.user?.id as UserId)
-			.where("address", "=", body.address)
-			.execute();
+		await deleteWalletForUser(auth.user?.id as UserId, body.address);
 	}
 	return c.json({ success: true });
 });
@@ -70,21 +70,7 @@ app.post("tip-bot", async (c) => {
 	const { address } = await c.req.json();
 
 	await db.transaction().execute(async (trx) => {
-		await db
-			.updateTable("UserWallet")
-			.where("userId", "=", auth.user?.id as UserId)
-			.where("verified", "=", true)
-			.where("address", "<>", address)
-			.set({ isTipBot: false })
-			.execute();
-
-		await db
-			.updateTable("UserWallet")
-			.where("userId", "=", auth.user?.id as UserId)
-			.where("verified", "=", true)
-			.where("address", "=", address)
-			.set({ isTipBot: true })
-			.execute();
+		await setTipBotWallet(auth.user?.id as UserId, address, trx);
 	});
 
 	return c.json({ success: true });

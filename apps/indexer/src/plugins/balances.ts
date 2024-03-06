@@ -101,11 +101,9 @@ export class BalancesPlugin extends Plugin<PluginData> {
 	// insert data
 	async insert(trx: Transaction<Database>, data: PluginData) {
 		if (!data.blocks?.length) {
-
 			return;
 		}
 
-		logger.info(`Saving Balances`)
 		if (!data.balances?.length) {
 			logger.warn("No balances to insert, but had block balances...");
 			return;

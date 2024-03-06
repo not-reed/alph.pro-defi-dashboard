@@ -1,7 +1,10 @@
 import type { TransactionHash } from "../../common/types/brands";
 import type { TokenBalance } from "../../common/types/token";
 import type { BlockEvent } from "./events";
-
+interface OutputRef {
+	hint: number;
+	key: string;
+}
 export interface NodeTransaction {
 	transactionHash: TransactionHash;
 	events: BlockEvent[];
@@ -15,6 +18,7 @@ export interface NodeTransaction {
 	// 	inputs: [];
 	// 	fixedOutputs: [];
 	// };
+	inputs: OutputRef[];
 	gasAmount: bigint;
 	gasPrice: bigint;
 	outputs: TokenBalance[];

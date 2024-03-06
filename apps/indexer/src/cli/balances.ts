@@ -2,6 +2,11 @@ import { sql } from "kysely";
 import { db } from "../database/db";
 import { config } from "../config";
 import { addressFromContractId } from "@alephium/web3";
+import type { NewBalance } from "../database/schemas/public/Balance";
+import {
+	deleteUserBalances,
+	insertUserBalances,
+} from "../database/services/balance";
 
 const nodeHeaders: Record<string, string> = { Accept: "application/json" };
 
@@ -82,28 +87,17 @@ export async function fixBalances(opts: {
 			continue;
 		}
 
+		const newBalances: NewBalance[] = [];
+		for (const [addr, bal] of wallet) {
+			newBalances.push({
+				userAddress: user.userAddress,
+				tokenAddress: addr,
+				balance: bal,
+			});
+		}
 		await db.transaction().execute(async (trx) => {
-			await trx
-				.updateTable("Balance")
-				.set("balance", 0n)
-				.where("userAddress", "=", user.userAddress)
-				.execute();
-
-			for (const [addr, bal] of wallet) {
-				await trx
-					.insertInto("Balance")
-					.values({
-						userAddress: user.userAddress,
-						tokenAddress: addr,
-						balance: bal,
-					})
-					.onConflict((oc) =>
-						oc.columns(["userAddress", "tokenAddress"]).doUpdateSet({
-							balance: (eb) => eb.ref("excluded.balance"),
-						}),
-					)
-					.execute();
-			}
+			await deleteUserBalances(user.userAddress, trx);
+			await insertUserBalances(newBalances, trx);
 		});
 
 		console.log(`Fixed ${user.userAddress} balances`);

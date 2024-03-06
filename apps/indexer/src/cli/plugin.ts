@@ -1,11 +1,12 @@
 import chalk from "chalk";
-import { loadPlugins } from "../core/utils";
+import { autoLoadPluginsFromFolder } from "../core/utils";
 import sdk from "../services/sdk";
 import { db } from "../database/db";
 import { GENESIS_TS, MAX_DURATION } from "../core/constants";
+import { findPlugins } from "../database/services/plugin";
 
-const rawPlugins = await loadPlugins();
-const pluginState = await db.selectFrom("Plugin").selectAll().execute();
+const rawPlugins = await autoLoadPluginsFromFolder();
+const pluginState = await findPlugins();
 const plugins = rawPlugins.map((plugin) => {
 	return {
 		plugin,

@@ -4,6 +4,7 @@ import type {
 	BlockHash,
 	ContractAddress,
 	TransactionHash,
+	UserAddress,
 } from "../common/types/brands";
 import type { ContractEvent } from "../node/types/events";
 
@@ -12,6 +13,8 @@ import type { ExplorerTransaction } from "./types/transactions";
 import { mapRawInputToTokenBalance } from "../common/utils/token";
 import { transformField } from "../common/types/fields";
 import { logger } from "../logger";
+import type { CollectionMetadata } from "./types/nfts";
+import { chunkArray } from "../../utils/arrays";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -108,6 +111,13 @@ export default {
 		},
 	},
 	block: {
+		async latest() {
+			const { blocks } = await fetch(`${config.EXPLORER_URL}/blocks?limit=1`, {
+				headers,
+			}).then((a) => a.json());
+			const [block] = blocks;
+			return block;
+		},
 		transactions: async (
 			blockHash: BlockHash,
 		): Promise<ExplorerTransaction[]> => {
@@ -190,31 +200,42 @@ export default {
 		},
 	},
 	contracts: {
+		async fetchHolders(address: ContractAddress): Promise<UserAddress[]> {
+			const url = `${config.EXPLORER_URL}/tokens/${binToHex(
+				contractIdFromAddress(address),
+			)}/addresses`;
+			return (await getPaginatedResults(url)) as UserAddress[];
+		},
 		async fetchSubContracts(
 			address: ContractAddress,
 		): Promise<ContractAddress[]> {
-			const url = `${config.EXPLORER_URL}/contracts/${address}/sub-contracts?page=1&limit=100`;
-			const contracts: unknown = await fetch(url, { headers }).then((a) =>
-				a.json(),
-			);
+			const subContracts: ContractAddress[] = [];
+			let page = 1;
+			const limit = 100;
+			do {
+				console.log("fetching sub contracts for");
+				const subContractResponse: unknown = await fetch(
+					`${config.EXPLORER_URL}/contracts/${address}/sub-contracts?limit=${limit}&page=${page}`,
+					{
+						headers,
+					},
+				).then((a) => a.json());
+				if (
+					!subContractResponse ||
+					typeof subContractResponse !== "object" ||
+					!("subContracts" in subContractResponse) ||
+					!Array.isArray(subContractResponse.subContracts)
+				) {
+					throw new Error(
+						"Unsupported response - explorer.contracts.fetchSubContracts",
+					);
+				}
 
-			if (
-				!contracts ||
-				typeof contracts !== "object" ||
-				!("subContracts" in contracts) ||
-				!Array.isArray(contracts.subContracts)
-			) {
-				throw new Error(
-					"Unsupported response - explorer.contracts.fetchSubContracts",
-				);
-			}
-			if (contracts.subContracts?.length >= 100) {
-				throw new Error(
-					"Time to handle pagination - explorer.contracts.fetchSubContracts",
-				);
-			}
+				subContracts.push(...subContractResponse.subContracts);
+				page++;
+			} while (subContracts.length !== 0 && subContracts.length % limit === 0);
 
-			return contracts.subContracts;
+			return subContracts;
 		},
 
 		async fetchParentContract(
@@ -240,6 +261,44 @@ export default {
 			}
 
 			return contracts.parent as ContractAddress;
+		},
+	},
+
+	nfts: {
+		async collectionMetadata(collections: ContractAddress[]) {
+			const metadatas: unknown = await fetch(
+				`${config.EXPLORER_URL}/tokens/nft-collection-metadata`,
+				{
+					method: "POST",
+					headers: headers,
+					body: JSON.stringify(collections),
+				},
+			).then((a) => a.json());
+
+			return metadatas;
+		},
+		metadata: async (contractAddresses: ContractAddress[]) => {
+			const chunks = chunkArray(contractAddresses, 80);
+			interface NftMetaData {
+				id: string;
+				tokenUri: string;
+				collectionId: string;
+				nftIndex: string;
+			}
+
+			const metadata: NftMetaData[] = [];
+			for (const chunk of chunks) {
+				const data = await fetch(`${config.EXPLORER_URL}/tokens/nft-metadata`, {
+					method: "POST",
+					headers: headers,
+					body: JSON.stringify(
+						chunk.map((a) => binToHex(contractIdFromAddress(a))),
+					),
+				}).then((a) => a.json());
+				metadata.push(...data);
+			}
+
+			return metadata;
 		},
 	},
 };

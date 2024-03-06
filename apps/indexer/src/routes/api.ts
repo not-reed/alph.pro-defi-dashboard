@@ -2,9 +2,10 @@ import { Hono, type Schema } from "hono";
 import { cors } from "hono/cors";
 import { type Swagger } from "atlassian-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
-import { isErrorResult, merge } from "openapi-merge";
+import { isErrorResult, merge, type MergeInput } from "openapi-merge";
 import { logger } from "../services/logger";
 import { type AuthUser, type AuthConfig } from "@hono/auth-js";
+import { join } from "path";
 // indexer routes
 import status from "./api/status";
 import sse from "./api/sse";
@@ -18,6 +19,7 @@ import auth from "./api/auth";
 import nfts from "./api/nfts";
 import wallets from "./api/wallets";
 import web3 from "./api/web3";
+import utils from "./api/utils";
 import bot from "./api/bot";
 
 const app = new Hono<
@@ -32,46 +34,16 @@ app.route("/sse", sse);
 app.get("/docs.json", async (c) => {
 	const base = new URL(c.req.url).origin;
 
-	const [balances, nfts, pools, prices, tokens] = (await Promise.all([
-		// TODO: include public routes here
-		fetch(`${base}/api/balances/docs.json`).then((a) => a.json()),
-		fetch(`${base}/api/nfts/docs.json`).then((a) => a.json()),
-		fetch(`${base}/api/pools/docs.json`).then((a) => a.json()),
-		fetch(`${base}/api/prices/docs.json`).then((a) => a.json()),
-		fetch(`${base}/api/tokens/docs.json`).then((a) => a.json()),
-	])) as unknown as Swagger.SwaggerV3[];
+	const publicDocs = {
+		Balances: "/api/balances",
+		Nfts: "/api/nfts",
+		Pools: "/api/pools",
+		Prices: "/api/prices",
+		Tokens: "/api/tokens",
+		Utils: "/api/utils",
+	};
 
-	const mergeResult = merge(
-		[
-			{
-				oas: prices,
-				description: { append: true, title: { value: "Prices" } },
-				pathModification: { prepend: "/api/prices" },
-			},
-			{
-				oas: balances,
-				description: { append: true, title: { value: "Balances" } },
-				pathModification: { prepend: "/api/balances" },
-			},
-			{
-				oas: nfts,
-				description: { append: true, title: { value: "Nfts" } },
-				pathModification: { prepend: "/api/nfts" },
-			},
-			{
-				oas: pools,
-				description: { append: true, title: { value: "Pools" } },
-				pathModification: { prepend: "/api/pools" },
-			},
-			{
-				oas: tokens,
-				description: { append: true, title: { value: "Tokens" } },
-				pathModification: { prepend: "/api/tokens" },
-			},
-		].sort((a, b) =>
-			a.pathModification.prepend.localeCompare(b.pathModification.prepend),
-		),
-	);
+	const mergeResult = await loadChildDocuments(base, publicDocs);
 
 	if (isErrorResult(mergeResult)) {
 		logger.error(`${mergeResult.message} (${mergeResult.type})`);
@@ -79,11 +51,17 @@ app.get("/docs.json", async (c) => {
 			info: {
 				title: "Alph.Pro Indexer API",
 				version: "v1",
-				description: "An error occured loading the scemas",
+				description: "An error occurred loading the schemas",
 			},
 			openapi: "3.1.0",
-			components: { schemas: {} },
-			paths: {},
+			paths: Object.fromEntries(
+				Object.entries(publicDocs).map(([key, path]) => [
+					`${path}/docs.json`,
+					{
+						get: { summary: `Failed to load ${key}`, responses: {} },
+					} satisfies Swagger.SwaggerV3["paths"][number],
+				]),
+			),
 		} satisfies Swagger.SwaggerV3);
 	}
 
@@ -92,26 +70,13 @@ app.get("/docs.json", async (c) => {
 app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
 
 const corsOptions = cors({
+	credentials: true,
 	origin: [
 		"http://localhost:5173", // TODO: change to env, this is front end vite
 		"https://alph-pro.on.fleek.co/",
 		"https://alph.pro",
+		"https://www.alph.pro",
 	],
-	// allowHeaders: [
-	// 	"X-Custom-Header",
-	// 	"Upgrade-Insecure-Requests",
-	// 	// "X-Auth-Return-Redirect", // for auth-js
-	// 	// "X-CSRF-Token", // for auth-js
-	// 	// "Access-Control-Allow-Origin",
-	// ],
-	// // allowMethods: ["POST", "GET", "HEAD", "OPTIONS"],
-	// exposeHeaders: [
-	// 	"Content-Length",
-	// 	// "X-Kuma-Revision",
-	// 	// "Access-Control-Allow-Origin",
-	// ],
-	// maxAge: 600,
-	credentials: true,
 });
 
 // User Api
@@ -133,6 +98,9 @@ app.route("/wallets", wallets);
 app.use("/nfts/*", corsOptions);
 app.route("/nfts", nfts);
 
+app.use("/utils/*", corsOptions);
+app.route("/utils", utils);
+
 app.use("/auth/*", corsOptions);
 app.route("/auth", auth);
 
@@ -142,10 +110,52 @@ app.route("/web3", web3);
 app.use("/bot/*", corsOptions);
 app.route("/bot", bot);
 
-// app.use("/api/*", verifyAuth());
-// app.get("/api/protected", (c) => {
-// 	const auth = c.get("authUser");
-// 	return c.json(auth);
-// });
-
 export default app;
+
+async function loadChildDocuments(
+	baseUri: string,
+	publicDocs: Record<string, string>,
+) {
+	const swaggerDocs = await Promise.all(
+		Object.entries(publicDocs).map(([key, path]) =>
+			fetch(`${baseUri}${path}/docs.json`)
+				.then((a) => a.json())
+				.then((docs) => ({ docs, path, key })),
+		),
+	);
+
+	const mergeInput = [
+		{
+			oas: {
+				info: { title: "Alph.Pro Indexer API", version: "v1" },
+				openapi: "3.1.0",
+				paths: {},
+			},
+		},
+	] as MergeInput;
+
+	const success = swaggerDocs.filter((a) => a.docs.openapi);
+	const failure = swaggerDocs.filter((a) => !a.docs.openapi);
+	for (const reason of failure) {
+		logger.warn({
+			msg: `[Swagger] Failed to load ${reason.key} at ${reason.path}`,
+			reason,
+		});
+	}
+
+	return merge(
+		mergeInput.concat(
+			success
+				.map((a) => {
+					return {
+						oas: a.docs,
+						description: { append: false, title: { value: a.key } },
+						pathModification: { prepend: a.path },
+					};
+				})
+				.sort((a, b) =>
+					a.pathModification.prepend.localeCompare(b.pathModification.prepend),
+				),
+		),
+	);
+}

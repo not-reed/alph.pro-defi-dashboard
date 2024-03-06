@@ -29,7 +29,6 @@ export default {
 	contracts: {
 		async fetchState(address: ContractAddress): Promise<NodeState> {
 			const url = `${config.NODE_URL}/contracts/${address}/state`;
-			console.log({ url });
 			return await fetch(url, { headers }).then((a) => a.json());
 		},
 	},
@@ -104,10 +103,8 @@ export default {
 								);
 							}
 
-							const { unsigned, generatedOutputs } = transaction as Record<
-								string,
-								unknown
-							>;
+							const { unsigned, generatedOutputs, contractInputs } =
+								transaction as Record<string, unknown>;
 							if (!unsigned || typeof unsigned !== "object") {
 								throw new Error(
 									"Invalid BlockFlow.blocksAndEvents.block.transactions.transaction.unsigned",
@@ -120,14 +117,20 @@ export default {
 								);
 							}
 
-							const { txId, fixedOutputs } = unsigned as Record<
+							const { txId, fixedOutputs, inputs } = unsigned as Record<
 								string,
 								unknown
 							>;
 
 							if (!fixedOutputs || !Array.isArray(fixedOutputs)) {
 								throw new Error(
-									"Invalid BlockFlow.blocksAndEvents.block.transactions.transaction.generatedOutputs",
+									"Invalid BlockFlow.blocksAndEvents.block.transactions.transaction.fixedOutputs",
+								);
+							}
+
+							if (!inputs || !Array.isArray(inputs)) {
+								throw new Error(
+									"Invalid BlockFlow.blocksAndEvents.block.transactions.transaction.inputs",
 								);
 							}
 
@@ -175,6 +178,7 @@ export default {
 								transactionHash: txId as TransactionHash,
 								gasAmount: BigInt(transaction.unsigned.gasAmount),
 								gasPrice: BigInt(transaction.unsigned.gasPrice),
+								inputs: inputs.map((a) => a.outputRef).concat(contractInputs),
 								outputs,
 								events,
 							} satisfies NodeTransaction;

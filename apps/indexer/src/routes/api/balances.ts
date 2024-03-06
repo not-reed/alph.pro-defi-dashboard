@@ -8,6 +8,14 @@ import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 const app = new OpenAPIHono<Env, Schema, "/api/balances">();
 
+app.doc("/docs.json", {
+	info: {
+		title: "Balances",
+		version: "v1",
+	},
+	openapi: "3.1.0",
+});
+
 async function fetchUserBalances(addresses: string[]) {
 	const balances = await db
 		.selectFrom("Balance")
@@ -138,13 +146,6 @@ app.openapi(route, async (c) => {
 	});
 });
 
-app.doc("/docs.json", {
-	info: {
-		title: "Alph.Pro Indexer API",
-		version: "v1",
-	},
-	openapi: "3.1.0",
-});
 // app.get("/", async (c) => {
 // 	// TODO: verification
 // 	const { address } = c.req.query();

@@ -8,6 +8,7 @@ import type { ContractAddress } from "../services/common/types/brands";
 import { fixBalances } from "./balances";
 import { fillAyinPools } from "./ayin-pools";
 import { getAyinPrices } from "./ayin-prices";
+import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 switch (argv._[0]) {
 	case "help":
@@ -45,7 +46,14 @@ Commands:
 		}
 		break;
 	case "nft":
-		await processCollection(argv._[1] as ContractAddress);
+		await processCollection(argv._[1] as ContractAddress, Boolean(argv.force));
+		break;
+	case "convert":
+		if (argv.address) {
+			console.log(binToHex(contractIdFromAddress(argv.address)));
+		} else if (argv.id) {
+			console.log(contractIdFromAddress(argv.id));
+		}
 		break;
 
 	case "nft:search":
