@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
 import { computed, onMounted, ref } from 'vue';
 const holders = ref([])
 const active = ref(null)
@@ -47,16 +48,23 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                 <div class="flex justify-between">
                     <div class="opacity-75">Holders:</div> {{ active.holderCount }}
                 </div>
+                <div class="flex justify-between">
+
+                    <a :href="`https://deadrare.io/collection/${active.name.toLowerCase().trim().replaceAll(' ', '-')}`"
+                        target="_blank" class="text-calypso-500 cursor-pointer flex items-center justify-center gap-2">
+                        DeadRare
+
+                        <ArrowTopRightOnSquareIcon class="w-4 h-4 mb-1" />
+                    </a>
+                </div>
             </div>
-            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded">
+            <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded max-w-lg">
                 <li v-for="holder in activeHolders" class="flex">
 
-                    <div class="w-56">
-                        <a :href="`https://explorer.alephium.org/addresses/${holder.userAddress}`" target="_blank"
-                            class="text-calypso-500 cursor-pointer">
-                            {{ holder.userAddress.slice(0, 4) }}...{{ holder.userAddress.slice(-4) }}
-                        </a>
-                    </div>
+                    <RouterLink :to="`/portfolio/overview/${holder.userAddress}`"
+                        class="text-calypso-500 cursor-pointer w-56">
+                        {{ holder.userAddress.slice(0, 4) }}...{{ holder.userAddress.slice(-4) }}
+                    </RouterLink>
 
                     <div>
                         {{ holder.balance }} Tokens

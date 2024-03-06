@@ -31,10 +31,15 @@ import type {
 	VerificationToken,
 } from "@auth/core/adapters";
 import type Database from "./database/schemas/Database";
-import type { NewUser, UserId } from "./database/schemas/public/User";
-import type { NewAccount } from "./database/schemas/public/Account";
+import type {
+	NewUser,
+	UserId,
+	UserUpdate,
+} from "./database/schemas/public/User";
+import type { Account, NewAccount } from "./database/schemas/public/Account";
 import type {
 	NewSession,
+	Session,
 	SessionUpdate,
 } from "./database/schemas/public/Session";
 import type { NewVerificationToken } from "./database/schemas/public/VerificationToken";
@@ -254,7 +259,7 @@ export const format = {
  * ### Naming conventions
  * If mixed snake_case and camelCase column names is an issue for you and/or your underlying database system, we recommend using Kysely's `CamelCasePlugin` ([see the documentation here](https://kysely-org.github.io/kysely-apidoc/classes/CamelCasePlugin.html)) feature to change the field names. This won't affect NextAuth.js, but will allow you to have consistent casing when using Kysely.
  */
-export function KyselyAdapter(db: Kysely<Database>): Adapter {
+export function KyselyAdapter(db: Kysely<Database>) {
 	const { adapter } = db.getExecutor();
 	const { supportsReturning } = adapter;
 	const isSqlite = adapter instanceof SqliteAdapter;
@@ -263,8 +268,8 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 	/** If the database is SQLite, turn ISO strings into dates */
 	const from = isSqlite ? format.from : <T>(x: T) => x as T;
 	return {
-		async createUser(data) {
-			const user = { ...data } as NewUser;
+		async createUser(data: NewUser) {
+			const user = { ...data };
 			const created = await db
 				.insertInto("User")
 				.values(to(user))
@@ -272,25 +277,22 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 				.executeTakeFirstOrThrow();
 			return created;
 		},
-		async getUser(id) {
+		async getUser(id: UserId) {
 			const result = await db
 				.selectFrom("User")
 				.selectAll()
-				.where("id", "=", id as UserId)
+				.where("id", "=", id)
 				.executeTakeFirst();
 			if (!result) return null;
 			return from(result);
 		},
-		async getUserByEmail(email) {
-			const result = await db
-				.selectFrom("User")
-				.selectAll()
-				.where("email", "=", email)
-				.executeTakeFirst();
-			if (!result) return null;
-			return from(result);
+		async getUserByEmail(email: string) {
+			return null;
 		},
-		async getUserByAccount({ providerAccountId, provider }) {
+		async getUserByAccount({
+			providerAccountId,
+			provider,
+		}: Pick<AdapterAccount, "providerAccountId" | "provider">) {
 			const result = await db
 				.selectFrom("User")
 				.innerJoin("Account", "User.id", "Account.userId")
@@ -301,7 +303,7 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 			if (!result) return null;
 			return from(result);
 		},
-		async updateUser({ id, ...user }) {
+		async updateUser({ id, ...user }: UserUpdate) {
 			const userData = to(user);
 			const query = db
 				.updateTable("User")
@@ -318,33 +320,33 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 				  );
 			return from(await result);
 		},
-		async deleteUser(userId) {
+		async deleteUser(userId: UserId) {
 			await db
 				.deleteFrom("User")
-				.where("User.id", "=", userId as UserId)
+				.where("User.id", "=", userId)
 				.executeTakeFirst();
 		},
-		async linkAccount(account) {
+		async linkAccount(account: NewAccount) {
 			await db
 				.insertInto("Account")
-				.values(to(account) as NewAccount)
+				.values(to(account))
 				.executeTakeFirstOrThrow();
 		},
-		async unlinkAccount({ providerAccountId, provider }) {
+		async unlinkAccount({
+			providerAccountId,
+			provider,
+		}: Pick<Account, "providerAccountId" | "provider">) {
 			await db
 				.deleteFrom("Account")
 				.where("Account.providerAccountId", "=", providerAccountId)
 				.where("Account.provider", "=", provider)
 				.executeTakeFirstOrThrow();
 		},
-		async createSession(session) {
-			await db
-				.insertInto("Session")
-				.values(to(session) as NewSession)
-				.execute();
+		async createSession(session: NewSession) {
+			await db.insertInto("Session").values(to(session)).execute();
 			return session;
 		},
-		async getSessionAndUser(sessionToken) {
+		async getSessionAndUser(sessionToken: string) {
 			const result = await db
 				.selectFrom("Session")
 				.innerJoin("User", "User.id", "Session.userId")
@@ -357,11 +359,13 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 			const session = { sessionToken, userId, expires };
 			return { user: from(user), session: from(session) };
 		},
-		async updateSession(session) {
+		async updateSession(
+			session: SessionUpdate & Pick<Session, "sessionToken">,
+		) {
 			const sessionData = to(session);
 			const query = db
 				.updateTable("Session")
-				.set(sessionData as SessionUpdate)
+				.set(sessionData)
 				.where("Session.sessionToken", "=", session.sessionToken);
 			const result = supportsReturning
 				? await query.returningAll().executeTakeFirstOrThrow()
@@ -374,20 +378,17 @@ export function KyselyAdapter(db: Kysely<Database>): Adapter {
 				  });
 			return from(result);
 		},
-		async deleteSession(sessionToken) {
+		async deleteSession(sessionToken: string) {
 			await db
 				.deleteFrom("Session")
 				.where("Session.sessionToken", "=", sessionToken)
 				.executeTakeFirstOrThrow();
 		},
-		async createVerificationToken(data) {
-			await db
-				.insertInto("VerificationToken")
-				.values(to(data as NewVerificationToken))
-				.execute();
+		async createVerificationToken(data: NewVerificationToken) {
+			await db.insertInto("VerificationToken").values(to(data)).execute();
 			return data;
 		},
-		async useVerificationToken({ identifier, token }) {
+		async useVerificationToken({ identifier, token }: VerificationToken) {
 			const query = db
 				.deleteFrom("VerificationToken")
 				.where("VerificationToken.token", "=", token)

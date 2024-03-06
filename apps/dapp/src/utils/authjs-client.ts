@@ -53,23 +53,21 @@ export async function signIn<
 	const { callbackUrl = window.location.href, redirect = false } =
 		options ?? {};
 
-	// TODO: Support custom providers
 	const isCredentials = providerId === "credentials";
 	const isEmail = providerId === "email";
 	const isSupportingReturn = isCredentials || isEmail;
-	console.log({ isSupportingReturn, redirect });
+
 	const action = isCredentials ? "callback" : "signin";
 
 	const signInUrl = `${base}/auth/${action}/${providerId}`;
 
 	const _signInUrl = `${signInUrl}?${new URLSearchParams(authorizationParams)}`;
 
-	// TODO: Remove this since Sveltekit offers the CSRF protection via origin check
 	const csrfTokenResponse = await fetch(`${base}/auth/csrf`, {
 		credentials: "include",
 	});
 	const { csrfToken } = await csrfTokenResponse.json();
-	// console.log({ csrfToken });
+
 	const res = await fetch(_signInUrl, {
 		method: "post",
 		headers: {
@@ -89,9 +87,6 @@ export async function signIn<
 	const data = await res.clone().json();
 
 	if (redirect || !isSupportingReturn) {
-		// TODO: Do not redirect for Credentials and Email providers by default in next major
-		// window.location.href = data.url ?? callbackUrl;
-		// console.log(new URL(data.url ?? callbackUrl).pathname);
 		window.open(
 			data.url ?? callbackUrl,
 			"Discord Auth",
@@ -100,7 +95,8 @@ export async function signIn<
 				window.innerHeight,
 			)}`,
 		);
-		// router.push(new URL(data.url ?? callbackUrl).pathname);
+		// do no redirect since vue-router is in use
+		// window.location.href = data.url ?? callbackUrl;
 		// If url contains a hash, the browser does not reload the page. We reload manually
 		// if (data.url.includes("#")) window.location.reload();
 		return;
@@ -112,13 +108,11 @@ export async function signIn<
 /**
  * Signs the user out, by removing the session cookie.
  * Automatically adds the CSRF token to the request.
- *
- * [Documentation](https://authjs.dev/reference/sveltekit/client#signout)
  */
 export async function signOut(options?: SignOutParams) {
 	const { callbackUrl = window.location.href } = options ?? {};
 	const basePath = base ?? "";
-	// TODO: Remove this since Sveltekit offers the CSRF protection via origin check
+
 	const csrfTokenResponse = await fetch(`${basePath}/auth/csrf`, {
 		credentials: "include",
 	});
@@ -138,6 +132,7 @@ export async function signOut(options?: SignOutParams) {
 	const data = await res.json();
 
 	const url = data.url ?? callbackUrl;
+	// do no redirect since vue-router is in use
 	// window.location.href = url;
 	// If url contains a hash, the browser does not reload the page. We reload manually
 	// if (url.includes("#")) window.location.reload();

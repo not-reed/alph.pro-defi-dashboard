@@ -1,13 +1,24 @@
-import { MAX_DURATION } from "../../core/constants";
+import { ALPH_ADDRESS, MAX_DURATION } from "../../core/constants";
 import type { Block } from "./types/block";
 import type { Block as NodeBlock } from "../node/types/blocks";
 import nodeService from "../node";
 import explorerService from "../explorer";
 import DataLoader from "dataloader";
-import type { BlockHash } from "../common/types/brands";
+import type {
+	BlockHash,
+	ContractAddress,
+	FieldType,
+} from "../common/types/brands";
 import type { ExplorerTransaction } from "../explorer/types/transactions";
 import { logger } from "../logger";
 import { chunkArray } from "../../utils/arrays";
+import type { Artifact } from "../common/types/artifact";
+import {
+	parseValue,
+	type Field,
+	type FieldByteVec,
+} from "../common/types/fields";
+import { addressFromTokenId } from "@alephium/web3";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutMap = new Map<BlockHash, number>();
@@ -183,6 +194,138 @@ const basicBlockDataLoader = new DataLoader<
 });
 
 export default {
+	async fetchSubContracts(
+		address: ContractAddress,
+	): Promise<ContractAddress[]> {
+		return await explorerService.contracts.fetchSubContracts(address);
+	},
+
+	async fetchParentContract(
+		address: ContractAddress,
+	): Promise<ContractAddress | null> {
+		return await explorerService.contracts.fetchParentContract(address);
+	},
+
+	async fetchSiblingContracts(
+		address: ContractAddress,
+	): Promise<ContractAddress[]> {
+		const parent = await this.fetchParentContract(address);
+		if (!parent) {
+			return [];
+		}
+		return await this.fetchSubContracts(parent);
+	},
+
+	async fetchState(address: ContractAddress, abi: Artifact) {
+		const rawState = await nodeService.contracts.fetchState(address);
+
+		const immFields: { name: string; type: FieldType }[] = [];
+		const mutFields: { name: string; type: FieldType }[] = [];
+		for (let i = 0; i < abi.fieldsSig.names.length; i++) {
+			if (abi.fieldsSig.isMutable[i]) {
+				mutFields.push({
+					name: abi.fieldsSig.names[i],
+					type: abi.fieldsSig.types[i],
+				});
+			} else {
+				immFields.push({
+					name: abi.fieldsSig.names[i],
+					type: abi.fieldsSig.types[i],
+				});
+			}
+		}
+
+		const fields = rawState.immFields
+			.map((field, idx) => {
+				if (field.type !== immFields[idx].type) {
+					throw new Error("Parsing Error decoding contract state");
+				}
+
+				switch (field.type) {
+					case "Bool":
+						return {
+							name: immFields[idx].name,
+							type: field.type,
+							value: parseValue(field),
+						};
+					case "ByteVec":
+						return {
+							name: immFields[idx].name,
+							type: field.type,
+							value: parseValue(field),
+						};
+					case "Address":
+						return {
+							name: immFields[idx].name,
+							type: field.type,
+							value: parseValue(field),
+						};
+					case "U256":
+						return {
+							name: immFields[idx].name,
+							type: field.type,
+							value: parseValue(field),
+						};
+				}
+			})
+			.concat(
+				rawState.mutFields.map((field, idx) => {
+					if (field.type !== mutFields[idx].type) {
+						throw new Error("Parsing Error decoding contract state");
+					}
+
+					switch (field.type) {
+						case "Bool":
+							return {
+								name: mutFields[idx].name,
+								type: field.type,
+								value: parseValue(field),
+							};
+						case "ByteVec":
+							return {
+								name: mutFields[idx].name,
+								type: field.type,
+								value: parseValue(field),
+							};
+						case "Address":
+							return {
+								name: mutFields[idx].name,
+								type: field.type,
+								value: parseValue(field),
+							};
+						case "U256":
+							return {
+								name: mutFields[idx].name,
+								type: field.type,
+								value: parseValue(field),
+							};
+					}
+				}),
+			);
+
+		const assets = [];
+
+		assets.push({
+			address: ALPH_ADDRESS,
+			amount: BigInt(rawState.asset.attoAlphAmount),
+		});
+
+		if (rawState.asset.tokens?.length) {
+			for (const token of rawState.asset.tokens) {
+				assets.push({
+					address: addressFromTokenId(token.id),
+					amount: BigInt(token.amount),
+				});
+			}
+		}
+
+		return {
+			address,
+			fields,
+			assets,
+		};
+	},
+
 	async getBlocksFromTimestamp(from: number, to = from + 1): Promise<Block[]> {
 		if (to - from > MAX_DURATION) {
 			throw new Error(
@@ -196,7 +339,7 @@ export default {
 		}
 
 		// TODO: improve loader, most plugins are out of time by ~1ms which breaks this cache
-		// should group together
+		// should group together - i.e. one starts at timestamp 1700000000000 and another 1700000000001
 
 		logger.info("block fetching starting");
 		const blocks = await basicBlockDataLoader.load(`${from}-${to}`);
@@ -231,7 +374,7 @@ export default {
 							gasPrice: t.gasPrice,
 							events: t.events,
 							inputs: transactionMap.get(t.transactionHash)?.inputs ?? [],
-							outputs: transactionMap.get(t.transactionHash)?.outputs ?? [],
+							outputs: t.outputs ?? [],
 						};
 					}),
 				};

@@ -8,7 +8,7 @@ import {
 	SignMessageResult,
 	NodeProvider,
 } from "@alephium/web3";
-import { Account } from "../hooks/useAccount";
+import { type Account } from "../../hooks/useAlephiumAccount";
 
 export interface CommonProvider {
 	signer: SignerProvider;

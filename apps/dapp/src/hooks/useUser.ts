@@ -1,4 +1,5 @@
 import { reactive } from "vue";
+import { usePrices } from "./usePrices";
 interface TokenBalance {
 	token: {
 		address: string;
@@ -15,23 +16,45 @@ interface TokenBalance {
 }
 
 const EMPTY_USER = () => ({
-	// TODO: empty wallet by default, this was random picked from richlist
-	// and just here for testing
+	//
 	wallet: "",
-	history: [] as string[],
+	walletLoaded: false,
 	balances: [] as TokenBalance[],
 });
 
 const user = reactive(EMPTY_USER());
 
 function setBalances(balances: TokenBalance[]) {
+	user.walletLoaded = true;
 	user.balances = balances;
 }
 
-function setWallet(wallet: string) {
-	if (user.wallet) {
-		user.history.push(user.wallet);
+async function loadBalances(wallet: string) {
+	if (!wallet) {
+		setBalances([]);
+		return;
 	}
+
+	const { updatePrices } = usePrices();
+	//TODO: if user is logged in with discord, load all saved wallets + connected/requested wallet
+	// if the user is not logged in with discord, only load connected/requested wallet
+
+	// pass array to make multiple wallets easier later
+	const query = new URLSearchParams({ address: [wallet].join(",") });
+	const url = `${import.meta.env.VITE_API_ENDPOINT}/api/balances?${query}`;
+	const data = await fetch(url).then((a) => a.json());
+
+	const tokens = data.balances.reduce(
+		(acc: string[], balance: TokenBalance) =>
+			balance.token ? acc.concat(balance.token.address) : acc,
+		[],
+	);
+	await updatePrices(tokens);
+	setBalances(data.balances);
+}
+
+function setWallet(wallet: string) {
+	user.walletLoaded = false;
 	user.wallet = wallet;
 }
 
@@ -40,5 +63,5 @@ function resetUser() {
 }
 
 export function useUser() {
-	return { user, setWallet, setBalances, resetUser };
+	return { user, setWallet, setBalances, resetUser, loadBalances };
 }

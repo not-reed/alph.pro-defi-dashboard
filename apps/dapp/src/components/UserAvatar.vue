@@ -1,8 +1,8 @@
 <script setup lang=ts>
-import { useDiscord } from '../hooks/useDiscord';
+import { useDiscordAccount } from '../hooks/useDiscordAccount';
 import { useUser } from '../hooks/useUser';
 const { user } = useUser()
-const { session } = useDiscord()
+const { session } = useDiscordAccount()
 </script>
 
 <template>

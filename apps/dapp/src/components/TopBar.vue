@@ -4,13 +4,18 @@ import { useNavLinks } from '../hooks/useNavLinks'
 import { useRoute } from 'vue-router';
 
 import CurrencyDropdown from './CurrencyDropdown.vue'
-import { useDarkMode } from '../hooks/useDarkMode';
+import { useDarkMode } from '../hooks/utils/useDarkMode';
 import { SunIcon, MoonIcon, ComputerDesktopIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
 
 import UserSettingsDropDown from './UserSettingsDropDown.vue';
+import { usePrices } from '../hooks/usePrices';
+import { useCurrency } from '../hooks/useCurrency';
+import { Token } from '../types/token';
 
 const { mode, nextTheme } = useDarkMode()
 const route = useRoute()
+const { prices, tokens } = usePrices()
+const { format } = useCurrency()
 
 const { links } = useNavLinks()
 
@@ -32,9 +37,21 @@ const page = computed(() => {
     return links.find(link => link.path === '/')
 })
 
+const marqueeTokens = computed(() => {
+    if (!Object.values(tokens).length) {
+        return []
+    }
+
+    let tokens_: Token[] = Object.values(tokens)
+    do {
+        tokens_.push(...Object.values(tokens))
+    } while (tokens_.length < 10) // require at least 2x tokens and 10 tokens to fill width
+    return tokens_
+})
 </script>
+
 <template>
-    <div class="flex bg-gray-200 border-b dark:border-calypso-800 dark:bg-calypso-900 w-full sticky top-0">
+    <div class="flex bg-gray-200 border-b dark:border-calypso-800 dark:bg-calypso-900 w-full sticky top-0 z-10">
         <div class="flex items-center justify-between w-full max-w-4xl">
             <div class="" v-if="page?.name">
                 <ul class="inline-flex pt-10 px- w-full -mt-8">
@@ -59,12 +76,27 @@ const page = computed(() => {
                                     {{ child.meta?.title ?? child.name }}</div>
                             </div>
                         </template>
-                    </template> -->
+</template> -->
                 </ul>
 
             </div>
 
-            <div v-else class="">
+            <!-- Spacer Element -->
+            <div v-else />
+
+            <div class="mt-2 overflow-hidden w-full ml-2">
+                <div class="w-full inline-flex items-start justify-start">
+                    <ul class="flex items-start justify-start animate-marquee transition duration-300"
+                        :style="`--marquee-duration: ${marqueeTokens.length}s`">
+                        <li v-for="token in marqueeTokens"
+                            class="text-xs flex gap-2 w-32 min-w-32 max-w-32 text-center items-center justify-center">
+                            <span class="text-gray-500 dark:text-gray-500">{{ token.symbol }}:</span>
+                            <span class="font-bold">
+                                {{ format(prices[token.address]) }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
             </div>
             <div class="mt-2 flex gap-2 -mr-4">
 

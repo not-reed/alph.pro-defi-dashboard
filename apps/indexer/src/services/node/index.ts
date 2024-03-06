@@ -13,6 +13,7 @@ import type { NodeTransaction } from "../node/types/transactions";
 import { mapRawInputToTokenBalance } from "../common/utils/token";
 import type { Field } from "../common/types/fields";
 import { logger } from "../logger";
+import type { NodeState } from "./types/state";
 
 const headers: Record<string, string> = { Accept: "application/json" };
 
@@ -25,6 +26,13 @@ if (config.NODE_API_KEY) {
 }
 
 export default {
+	contracts: {
+		async fetchState(address: ContractAddress): Promise<NodeState> {
+			const url = `${config.NODE_URL}/contracts/${address}/state`;
+			console.log({ url });
+			return await fetch(url, { headers }).then((a) => a.json());
+		},
+	},
 	blockFlow: {
 		blocksWithEvents: async (
 			fromTs: number,
