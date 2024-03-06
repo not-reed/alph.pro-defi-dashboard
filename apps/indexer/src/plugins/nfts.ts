@@ -85,7 +85,7 @@ export class NftPlugin extends Plugin<PluginData> {
 					nftIndex: meta.nftIndex,
 					name: meta.name,
 					image: meta.image,
-					description: meta.description,
+					description: meta.description || "",
 					uri: meta.uri,
 					raw: meta.raw,
 				} satisfies NewNft);

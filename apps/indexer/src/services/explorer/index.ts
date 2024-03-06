@@ -111,6 +111,13 @@ export default {
 		},
 	},
 	block: {
+		async latest() {
+			const { blocks } = await fetch(`${config.EXPLORER_URL}/blocks?limit=1`, {
+				headers,
+			}).then((a) => a.json());
+			const [block] = blocks;
+			return block;
+		},
 		transactions: async (
 			blockHash: BlockHash,
 		): Promise<ExplorerTransaction[]> => {

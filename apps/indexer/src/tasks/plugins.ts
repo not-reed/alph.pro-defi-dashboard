@@ -1,4 +1,5 @@
 import {
+	EVERY_15_SECONDS,
 	EVERY_30_SECONDS,
 	FIVE_MINUTES,
 	GENESIS_TS,
@@ -24,7 +25,7 @@ export async function startPluginTask() {
 		logger.info("Plugin Task Disabled: Skipping");
 		return;
 	}
-	const schedule = EVERY_30_SECONDS;
+	const schedule = EVERY_15_SECONDS;
 
 	logger.info(`Starting Plugin Task: ${parseCron(schedule)}`);
 
@@ -84,10 +85,19 @@ export async function startPluginTask() {
 						timestamp: new Date(GENESIS_TS),
 					})
 					.execute();
-				await plugin.insert(trx, data);
-				// update local cache
-				pluginActive.set(plugin.PLUGIN_NAME, true);
-				latestMap.set(plugin.PLUGIN_NAME, GENESIS_TS);
+				try {
+					await plugin.insert(trx, data);
+					// update local cache
+					pluginActive.set(plugin.PLUGIN_NAME, true);
+					latestMap.set(plugin.PLUGIN_NAME, GENESIS_TS);
+				} catch (err) {
+					logger.error({
+						msg: `Error inserting in time range  ${plugin.PLUGIN_NAME}:${GENESIS_TS}:${GENESIS_TS}`,
+						err,
+						data,
+					});
+					throw err;
+				}
 			});
 		}
 	}
@@ -128,7 +138,10 @@ export async function startPluginTask() {
 						from,
 					).toLocaleString()}`,
 				);
-				const now = Date.now() - FIVE_MINUTES; // five minute delay to allow explorer to keep up
+				// https://backend-v113.mainnet.alephium.org/blocks
+				const targetBlock = await sdk.getLatestBlock();
+
+				const now = targetBlock.timestamp;
 
 				while (from < now) {
 					logger.info(
@@ -139,7 +152,7 @@ export async function startPluginTask() {
 						`${plugin.PLUGIN_NAME} - Fetched Blocks from ${from} to ${to} (COMPLETE - ${blocks.length} Blocks)`,
 					);
 
-					if (!blocks.length) {
+					if (!blocks.length && to < now) {
 						logger.warn(
 							`No blocks found for '${plugin.PLUGIN_NAME}' time span, Skipping => ${from}:${to}`,
 						);
@@ -201,33 +214,52 @@ export async function startPluginTask() {
 					const data = await plugin.process(blocksToProcess);
 
 					await db.transaction().execute(async (trx) => {
-						await plugin.insert(trx, data);
+						try {
+							await plugin.insert(trx, data);
 
-						// only update if above continues successfully, otherwise will retry
+							// only update if above continues successfully, otherwise will retry
 
-						const lastTo = new Date(Math.min(to, now));
+							const lastTo = new Date(Math.min(to, now));
 
-						await trx
-							.updateTable("Plugin")
-							.set({ timestamp: lastTo })
-							.where("name", "=", plugin.PLUGIN_NAME)
-							.execute();
+							await trx
+								.updateTable("Plugin")
+								.set({ timestamp: lastTo })
+								.where("name", "=", plugin.PLUGIN_NAME)
+								.execute();
 
-						latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
+							latestMap.set(plugin.PLUGIN_NAME, lastTo.getTime());
 
-						// use actual 'to' value, not lastTo
-						// since actual 'to' will be far enough in the future
-						// that if no work needs to be done, we will just abort
-						from = to - OVERLAP_WINDOW;
-						to = from + MAX_DURATION;
+							// use actual 'to' value, not lastTo
+							// since actual 'to' will be far enough in the future
+							// that if no work needs to be done, we will just abort
+							from = to - OVERLAP_WINDOW;
+							to = from + MAX_DURATION;
+						} catch (err) {
+							logger.error({
+								msg: `Error inserting in time range  ${plugin.PLUGIN_NAME}:${GENESIS_TS}:${GENESIS_TS}`,
+								err,
+								data,
+							});
+							throw err;
+						}
 					});
 				}
 				logger.debug(`'${plugin.PLUGIN_NAME}' up to date`);
 			} catch (err) {
-				if (lastFrom || lastTo) {
-					logger.error({
-						msg: `Error with in time range  ${plugin.PLUGIN_NAME}:${lastFrom}:${lastTo}`,
-						err,
+				if (
+					err instanceof Error &&
+					err.message.startsWith("Missing transaction inputs details")
+				) {
+					logger.warn(
+						`Explorer missing transactions, retrying... ${plugin.PLUGIN_NAME}:${lastFrom}:${lastTo}`,
+					);
+				} else if ((lastFrom || lastTo) && err instanceof Error) {
+					logger.warn({
+						// msg: `Error with in time range ${plugin.PLUGIN_NAME}:${lastFrom}:${lastTo}`,
+						msg: err.message,
+						from: lastFrom,
+						to: lastTo,
+						plugin: plugin.PLUGIN_NAME,
 					});
 				} else {
 					logger.error({ err });

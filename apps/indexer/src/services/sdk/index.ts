@@ -84,6 +84,7 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 
 		let cachedCounter = 0;
 		const transactions: ExplorerTransaction[][] = [];
+		logger.info(`transaction fetching starting - ${hashes.length} hashes`);
 		for (const hashChunk of chunks) {
 			await Promise.all(
 				hashChunk.map(async (hash) => {
@@ -98,6 +99,7 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
 					}
 
 					const transaction = await explorerService.block.transactions(hash);
+
 					transactions.push(transaction);
 					resetCacheTimer(hash, transaction);
 					return;
@@ -195,7 +197,13 @@ const basicBlockDataLoader = new DataLoader<
 	return results;
 });
 
+// debugging, can remove later
+const missedTransactions = new Set();
+
 export default {
+	async getLatestBlock() {
+		return await explorerService.block.latest();
+	},
 	async fetchHolders(address: ContractAddress): Promise<UserAddress[]> {
 		return await explorerService.contracts.fetchHolders(address);
 	},
@@ -366,7 +374,10 @@ export default {
 		logger.info("block fetching starting");
 		const blocks = await basicBlockDataLoader.load(`${from}-${to}`);
 
-		const hashes = blocks.flat().map((b) => b.blockHash);
+		const hashes = blocks
+			.flat()
+			.filter((b) => b.transactions.some((o) => o.inputs.length)) // only fetch transactions with inputs
+			.map((b) => b.blockHash);
 		logger.info(`block fetching complete - ${hashes.length} blocks found`);
 
 		logger.info("transaction fetching starting");
@@ -384,18 +395,65 @@ export default {
 			transactions.flat().map((t) => [t.transactionHash, t]),
 		);
 
-		return blocks
-			.flat()
+		const flatBlocks = blocks.flat();
+		for (const block of flatBlocks) {
+			for (const tx of block.transactions) {
+				if (tx.inputs.length) {
+					const found = transactionMap.get(tx.transactionHash);
+					if (!found) {
+						missedTransactions.add(tx.transactionHash);
+						throw new Error(
+							`Missing transaction from explorer, must retry ${
+								block.timestamp
+							} (${new Date(block.timestamp).toISOString()}) ${
+								tx.transactionHash
+							}`,
+						);
+					}
+					const alphInputs = found.inputs.filter(
+						(i) => i.tokenAddress === ALPH_ADDRESS,
+					);
+
+					if (tx.inputs.length !== alphInputs.length) {
+						missedTransactions.add(tx.transactionHash);
+						logger.debug(
+							`Missing transaction inputs details, aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`,
+						);
+						throw new Error(
+							"Missing transaction inputs from explorer, must retry",
+						);
+					}
+					if (missedTransactions.has(tx.transactionHash)) {
+						logger.error(
+							`Found previously missed transaction ${tx.transactionHash}`,
+						);
+						missedTransactions.delete(tx.transactionHash);
+					}
+				}
+			}
+		}
+
+		return flatBlocks
 			.map((b) => {
 				return {
 					...b,
 					transactions: b.transactions.map((t) => {
+						const inputs = transactionMap.get(t.transactionHash)?.inputs ?? [];
+						const nodeCount = t.inputs.length;
+						const alphInputs = inputs.filter(
+							(i) => i.tokenAddress === ALPH_ADDRESS,
+						);
+						if (nodeCount !== alphInputs.length) {
+							throw new Error(
+								`Missing transaction inputs details, aborting. ${t.inputs.length} on node, ${inputs.length} on explorer`,
+							);
+						}
 						return {
 							transactionHash: t.transactionHash,
 							gasAmount: t.gasAmount,
 							gasPrice: t.gasPrice,
 							events: t.events,
-							inputs: transactionMap.get(t.transactionHash)?.inputs ?? [],
+							inputs,
 							outputs: t.outputs ?? [],
 						};
 					}),

@@ -2,6 +2,7 @@ import { addressFromContractId } from "@alephium/web3";
 import type { ContractAddress, UserAddress } from "../types/brands";
 import type { TokenBalance } from "../types/token";
 import { logger } from "../../logger";
+import { ALPH_ADDRESS } from "../../../core/constants";
 
 export function mapRawInputToTokenBalance(input: unknown): TokenBalance[] {
 	if (
@@ -21,9 +22,7 @@ export function mapRawInputToTokenBalance(input: unknown): TokenBalance[] {
 	return [
 		{
 			userAddress: input.address as UserAddress,
-			tokenAddress: addressFromContractId(
-				"0000000000000000000000000000000000000000000000000000000000000000",
-			) as ContractAddress,
+			tokenAddress: ALPH_ADDRESS,
 			amount: BigInt(input.attoAlphAmount),
 		},
 	].concat(
