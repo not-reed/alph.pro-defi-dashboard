@@ -96,7 +96,7 @@ async function grab(interaction) {
               remainingSupply[i] == 0 ? "(Sold Out)" : ""
             }`
           )
-          .setValue(`${foods[i][1]}`)
+          .setValue(`${remainingSupply[i] == 0 ? `soldout` + i : foods[i][1]}`)
           .setEmoji(emoji.getUnicode(foods[i][1]) || "😋")
       );
     }
@@ -119,9 +119,18 @@ async function grab(interaction) {
 
 async function menuInteraction(interaction) {
   const selectedFood = interaction.values[0];
+  if (selectedFood.slice(0, 7) == "soldout") {
+    await messageDisplay.notSuccess(
+      interaction,
+      "Not Available",
+      `Food is already sold out, please select another food.`,
+      true
+    );
+    return;
+  }
   let index = foods.findIndex((f) => f[1] === selectedFood);
 
-  await messageDisplay.successUpdate(
+  await messageDisplay.success(
     interaction,
     "Minting",
     `You are minting ${foods[index][0]}`,
