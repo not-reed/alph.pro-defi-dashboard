@@ -8,6 +8,7 @@ import type {
 	BlockHash,
 	ContractAddress,
 	FieldType,
+	UserAddress,
 } from "../common/types/brands";
 import type { ExplorerTransaction } from "../explorer/types/transactions";
 import { logger } from "../logger";
@@ -19,6 +20,7 @@ import {
 	type FieldByteVec,
 } from "../common/types/fields";
 import { addressFromTokenId } from "@alephium/web3";
+import type { NodeState } from "../node/types/state";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutMap = new Map<BlockHash, number>();
@@ -194,6 +196,9 @@ const basicBlockDataLoader = new DataLoader<
 });
 
 export default {
+	async fetchHolders(address: ContractAddress): Promise<UserAddress[]> {
+		return await explorerService.contracts.fetchHolders(address);
+	},
 	async fetchSubContracts(
 		address: ContractAddress,
 	): Promise<ContractAddress[]> {
@@ -216,9 +221,19 @@ export default {
 		return await this.fetchSubContracts(parent);
 	},
 
-	async fetchState(address: ContractAddress, abi: Artifact) {
+	async fetchState(address: ContractAddress, abi?: Artifact) {
 		const rawState = await nodeService.contracts.fetchState(address);
+		if (!abi) {
+			return rawState;
+		}
 
+		return {
+			address,
+			...this.parseState(rawState, abi),
+		};
+	},
+	// fetchState helper => move to utils
+	parseState(rawState: NodeState, abi: Artifact) {
 		const immFields: { name: string; type: FieldType }[] = [];
 		const mutFields: { name: string; type: FieldType }[] = [];
 		for (let i = 0; i < abi.fieldsSig.names.length; i++) {
@@ -320,10 +335,17 @@ export default {
 		}
 
 		return {
-			address,
 			fields,
 			assets,
 		};
+	},
+
+	async fetchNftCollectionMetadata(collections: ContractAddress[]) {
+		return await explorerService.nfts.collectionMetadata(collections);
+	},
+
+	async fetchNonFungibleMetadata(tokens: ContractAddress[]) {
+		return await explorerService.nfts.metadata(tokens);
 	},
 
 	async getBlocksFromTimestamp(from: number, to = from + 1): Promise<Block[]> {

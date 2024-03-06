@@ -25,10 +25,12 @@ export interface ArtifactConstant {
 
 export interface ArtifactEnum {
 	name: string;
-	fields: {
-		name: string;
-		value: Field;
-	}[];
+	fields: { name: string; value: Field }[];
+}
+
+interface Test {
+	name: string;
+	fields: { name: string; value: { type: string; value: string } }[];
 }
 
 export interface Artifact {
@@ -45,5 +47,5 @@ export interface Artifact {
 	functions: ArtifactFunction[];
 	constants: ArtifactConstant[];
 	enums: ArtifactEnum[];
-	stdInterfaceId?: "0001";
+	stdInterfaceId?: `${number}`;
 }
