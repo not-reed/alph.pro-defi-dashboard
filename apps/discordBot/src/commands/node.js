@@ -1,6 +1,8 @@
 //Shows available commands
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const messageDisplay = require("../core/messageDisplay.js");
+const { commaFormat } = require("../core/helpers.js");
+
 
 // Discord data to set command
 const discordData = new SlashCommandBuilder()
@@ -28,8 +30,12 @@ async function node(interaction) {
     "https://wallet-v20.mainnet.alephium.org/infos/current-difficulty"
   ).then((a) => a.json());
 
+
+  let hashRate=getCurrentHashRate.hashrate.split(" ")
+hashRate=hashRate[0]/1_000_000_000
+  
   const messageNode = `Block Height: ${getBlockHeight.currentHeight}
-  Hashrate: ${getCurrentHashRate.hashrate}
-  Difficulty: ${getDifficuilty.difficulty}`;
-  await messageDisplay.success(interaction, "Node Info", messageNode);
+  Hashrate: ${hashRate.toFixed(2)} GH/s
+  Difficulty: ${await commaFormat(getDifficuilty.difficulty)}`;
+  await messageDisplay.success(interaction, "Node Info", messageNode, false);
 }

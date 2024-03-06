@@ -1,35 +1,29 @@
-//Shows token Info and price
+//Shows token Info
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const messageDisplay = require("../core/messageDisplay.js");
+
+const { success, notSuccess } = require("../core/messageDisplay.js");
+const { commaFormat, eighteenDigits } = require("../core/helpers.js");
 
 // Discord data to set command
 const discordData = new SlashCommandBuilder()
   .setName("token")
-  .setDescription("Displays token info and price")
-  .addStringOption((option) =>
-    option
-      .setName("price_info")
-      .setDescription("Provide the option")
-      .setRequired(true)
-      .addChoices(
-        { name: "Price", value: "price" },
-        { name: "Info", value: "info" }
-      )
-  )
+  .setDescription("Displays token info")
   .addStringOption((option) =>
     option
       .setName("symbol_address")
-      .setDescription("Provide the option")
+      .setDescription("Pick either Token Symbol or Token Address")
       .setRequired(true)
       .addChoices(
-        { name: "Address", value: "address" },
-        { name: "Symbol", value: "symbol" }
+        { name: "Symbol", value: "symbol" },
+        { name: "Address", value: "address" }
       )
   )
   .addStringOption((option) =>
     option
       .setName("value")
-      .setDescription("Provide Token Symbol or address")
+      .setDescription(
+        "Provide Token Symbol or address depending on your previous selection"
+      )
       .setRequired(true)
   );
 
@@ -43,87 +37,86 @@ module.exports = { discordData, execute };
 //Command function
 async function token(interaction) {
   const symbolOrAddress = interaction.options.getString("symbol_address");
-  const priceOrInfo = interaction.options.getString("price_info");
   const value = interaction.options.getString("value");
-  if (priceOrInfo == "price") {
-    let messageTokenPrice;
-    if (symbolOrAddress == "symbol") {
-      let tokenSymbol = await fetch(
-        `https://indexer.alph.pro/api/tokens/symbol/${value}`
-      ).then((a) => a.json());
-      tokenSymbol = tokenSymbol.tokens[0].address;
-      const tokenInfo =
-        await fetch(`https://indexer.alph.pro/api/prices?address=${tokenSymbol}
-    `).then((a) => a.json());
 
-      messageTokenPrice = `Price: ${tokenInfo.prices[0].price}`;
-      await messageDisplay.success(
-        interaction,
-        `${tokenInfo.prices[0].token.symbol}`,
-        messageTokenPrice
-      );
-    } else {
-      const tokenInfo =
-        await fetch(`https://indexer.alph.pro/api/prices?address=${value}
-      `).then((a) => a.json());
+  let tokenAddress;
+  let tokenSymbol;
 
-      messageTokenPrice = `Price: ${tokenInfo.prices[0].price}`;
-      await messageDisplay.success(
+  if (symbolOrAddress == "symbol") {
+    let getTokenSymbol = await fetch(
+      `https://indexer.alph.pro/api/tokens/symbol/${value}`
+    ).then((a) => a.json());
+
+    if (getTokenSymbol.tokens.length == 0) {
+      await notSuccess(
         interaction,
-        `${tokenInfo.prices[0].token.symbol}`,
-        messageTokenPrice
+        "No Token",
+        `Token ${value.toUpperCase()} does not exist. `,
+        true
       );
+      return;
     }
-  } else {
-    //Token info
-    if (symbolOrAddress == "symbol") {
-      let tokenSymbol = await fetch(
-        `https://indexer.alph.pro/api/tokens/symbol/${value}`
-      ).then((a) => a.json());
-      tokenSymbol = tokenSymbol.tokens[0].address;
-      let tokenHolder = await fetch(
-        `https://indexer.alph.pro/api/tokens/holders/${tokenSymbol}`
-      ).then((a) => a.json());
-      let tokenInfo = await fetch(
-        `https://indexer.alph.pro/api/tokens/address/${tokenSymbol}`
-      ).then((a) => a.json());
-      tokenInfo = tokenInfo.tokens[0];
-      messageTokenInfo = `Name: ${tokenInfo.name}
-      Symbol: ${tokenInfo.symbol}
-      Decimals: ${tokenInfo.decimals}
-      Holders: ${tokenHolder.holders[0].holderCount}
-      website:
-      discord:
-      twitter:
-      Verified: ${tokenInfo.verified}   
-     `;
-      await messageDisplay.success(
+    tokenSymbol = value;
+    tokenAddress = getTokenSymbol.tokens[0].address;
+  } else if (symbolOrAddress == "address") {
+    if (value.length < 10) {
+      await notSuccess(
         interaction,
-        `${tokenInfo.symbol}`,
-        messageTokenInfo
+        "To Short",
+        `Token address must contain at least 10 characters. `,
+        true
       );
-    } else {
-      let tokenHolder = await fetch(
-        `https://indexer.alph.pro/api/tokens/holders/${value}`
-      ).then((a) => a.json());
-      let tokenInfo = await fetch(
-        `https://indexer.alph.pro/api/tokens/address/${value}`
-      ).then((a) => a.json());
-      tokenInfo = tokenInfo.tokens[0];
-      messageTokenInfo = `Name: ${tokenInfo.name}
-      Symbol: ${tokenInfo.symbol}
-      Decimals: ${tokenInfo.decimals}
-      Holders: ${tokenHolder.holders[0].holderCount}
-      website:
-      discord:
-      twitter:
-      Verified: ${tokenInfo.verified}   
-     `;
-      await messageDisplay.success(
-        interaction,
-        `${tokenInfo.symbol}`,
-        messageTokenInfo
-      );
+      return;
     }
+    const getTokenSymbol =
+      await fetch(`https://indexer.alph.pro/api/prices?address=${value}
+              `).then((a) => a.json());
+    if (getTokenSymbol.prices.length == 0) {
+      await notSuccess(
+        interaction,
+        "Invalid Token",
+        `${value} is not a valid token address. `,
+        true
+      );
+      return;
+    }
+    tokenSymbol = getTokenSymbol.prices[0].token.symbol;
+    tokenAddress = value;
   }
+
+  let tokenInfo =
+    await fetch(`https://indexer.alph.pro/api/prices?address=${tokenAddress}
+`).then((a) => a.json());
+  tokenInfo = tokenInfo.prices[0];
+
+  let tokenHolder = await fetch(
+    `https://indexer.alph.pro/api/tokens/holders/${tokenAddress}`
+  ).then((a) => a.json());
+
+  let circulatingSupply =
+    tokenHolder.holders[0].circulatingSupply / 10 ** tokenInfo.token.decimals;
+
+  let messageTokenInfo = `Name: ${tokenInfo.token.name}
+Symbol: ${tokenInfo.token.symbol}
+Decimals: ${tokenInfo.token.decimals}
+
+Price: $${await commaFormat(await eighteenDigits(tokenInfo.price))}
+LP: $${await commaFormat(await eighteenDigits(tokenInfo.markets[0].liquidity))} 
+MC: $${await commaFormat(await eighteenDigits(circulatingSupply * tokenInfo.price))}
+
+Circulating Supply: ${await commaFormat(circulatingSupply)}
+Holders: ${await commaFormat(tokenHolder.holders[0].holderCount)}
+
+Website:
+Discord:
+Twitter:
+Verified: ${tokenInfo.token.verified}
+     `;
+  await success(
+    interaction,
+    `${tokenInfo.token.symbol}`,
+    messageTokenInfo,
+    false,
+    tokenInfo.token.logo,
+  );
 }
