@@ -17,8 +17,16 @@ module.exports = { discordData, execute };
 //Command function
 async function help(interaction) {
   const messageHelp = `/node : Shows node info
-  /token : Shows token Info/Price>
-  /lp : Shows LP of two tokens, and $ value
-  /tip : Tip token/NFT to user/address`;
-  await messageDisplay.success(interaction, "Available Commands", messageHelp);
+/token : Shows token's Info>
+/tip : Tip token/NFT to user/address
+/give: Give Vending Machine food to user
+/grab: Mint Vending Machine food
+/balance: Displays users balance`
+// /lp : Shows LP of two tokens, and $ value`;
+  await messageDisplay.success(
+    interaction,
+    "Available Commands",
+    messageHelp,
+    false
+  );
 }

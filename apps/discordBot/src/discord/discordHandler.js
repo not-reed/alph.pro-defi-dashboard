@@ -7,7 +7,7 @@ const commandFiles = fs
   .filter((file) => file.endsWith(".js"));
 
 const commands = [];
-const executes = [];
+
 discordClient.commands = new Collection();
 for (const file of commandFiles) {
   const command = require(`${__dirname}/../commands/${file}`);
