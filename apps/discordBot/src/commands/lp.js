@@ -42,13 +42,15 @@ async function lp(interaction) {
     await messageDisplay.success(
       interaction,
       `${first_token} ${second_token} LP`,
-      "Coming Soon"
+      "Coming Soon",
+      false
     );
   } else {
     await messageDisplay.success(
       interaction,
       `${first_token} ${second_token} LP`,
-      "Coming Soon"
+      "Coming Soon",
+      false
     );
   }
 }

@@ -1,18 +1,18 @@
 //Shows available commands
+const { discordClient } = require("../index.js");
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { AttachmentBuilder } = require("discord.js");
-const QRCode = require("qrcode");
+
+const { wrappedConnect } = require("../core/walletConnect.js");
 const {
-  loadDeployments,
-} = require("../../../vendingMachine/artifacts/ts/deployments");
-// import { VendingMachine } from "../../../vendingMachine/artifacts/ts";
-const messageDisplay = require("../core/messageDisplay.js");
-
-const { web3 } = require("@alephium/web3");
+  web3,
+  hexToString,
+  DUST_AMOUNT,
+  stringToHex,
+  ONE_ALPH,
+} = require("@alephium/web3");
 const config = require("../../../vendingMachine/alephium.config");
-const { WalletConnectProvider } = require("@alephium/walletconnect-provider");
 
-const WALLET_CONNECT_PROJECT_ID = "6e2562e43678dd68a9070a62b6d52207";
+const messageDisplay = require("../core/messageDisplay.js");
 
 // Discord data to set command
 const discordData = new SlashCommandBuilder()
@@ -20,16 +20,26 @@ const discordData = new SlashCommandBuilder()
   .setDescription("Tips Token/NFT to user/address")
   .addStringOption((option) =>
     option
-      .setName("send_amount")
-      .setDescription("Provide how much AlPH to send")
+      .setName("token_symbol")
+      .setDescription("Provide the token to send")
       .setRequired(true)
+  )
+  .addNumberOption((option) =>
+    option
+      .setName("send_amount")
+      .setDescription("Provide how much Token to send")
+      .setRequired(true)
+  )
+  .addUserOption((option) =>
+    option.setName("user").setDescription("Tag a user @").setRequired(false)
   )
   .addStringOption((option) =>
     option
-      .setName("receiver_address")
-      .setDescription("Provide receiver address")
-      .setRequired(true)
+      .setName("address")
+      .setDescription("Provide user's address")
+      .setRequired(false)
   );
+
 // Callback for discord
 const execute = async (interaction) => {
   await tip(interaction);
@@ -40,78 +50,133 @@ module.exports = { discordData, execute };
 //Command function
 async function tip(interaction) {
   try {
-    const provider = await WalletConnectProvider.init({
-      addressGroup: 0,
-      networkId: "mainnet",
-      onDisconnected: () => {},
-      projectId: WALLET_CONNECT_PROJECT_ID,
-    });
+    const tokenSymbol = interaction.options.getString("token_symbol");
 
-    provider.on("displayUri", async (uri) => {
-      const qrCodeDataURL = await QRCode.toDataURL(uri);
-      const buffer = Buffer.from(qrCodeDataURL.split(",")[1], "base64");
-      const attachment = new AttachmentBuilder(buffer, "walletconnect-qr.png");
+    let getTokenInfo = await fetch(
+      `https://indexer.alph.pro/api/tokens/symbol/${tokenSymbol}`
+    ).then((a) => a.json());
 
-      const messageHelp = `Scan above barcorde to connect using Alephium mobile wallet, keep your wallet open, you will get a request to apporve the transaction`;
-      await messageDisplay.sendAttachment(
+    if (getTokenInfo.tokens.length == 0) {
+      await messageDisplay.notSuccess(
         interaction,
-        "Barcode",
-        messageHelp,
-        attachment
+        "No Token",
+        `Token ${tokenSymbol} does not exist. `,
+        true
       );
-    });
-
-    await provider.connect();
-
-    //>>>>>Clear code later >> this is for alph network
-    const network = "mainnet";
-
-    const deployments = loadDeployments(network);
-
-    let vendingMachineStates = deployments.contracts.VendingMachine;
-
-    if (!vendingMachineStates) {
-      throw new Error("Vending Machine contract not found");
+      return;
     }
 
+    const tokenId = getTokenInfo.tokens[0].id;
+
+    const multiplier = 10 ** getTokenInfo.tokens[0].decimals;
+
+    let sendAmount = interaction.options.getNumber("send_amount");
+    sendAmount = sendAmount * multiplier;
+
+    const userInfo = interaction.options.getUser("user");
+    const userAddress = interaction.options.getString("address");
+    let receiverAddress;
+
+    if (userInfo) {
+      // let getUserFromIndexer= get user id from the pro.alph indexer
+      console.log("get user", userInfo.id);
+
+      let getUserAddress = await fetch(
+        `https://indexer.alph.pro/api/bot/primary-address?discordId=${userInfo.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.ALPHDOTPRO_AUTH_TOKEN}`,
+          },
+        }
+      ).then((a) => a.json());
+
+      console.log("user address ", getUserAddress.address);
+      if (!getUserAddress.address) {
+        //If user does not have a address send a message to reciever that needs to connect wallet on Alph.Pro
+        discordClient.users.fetch(userInfo.id).then(async (user) => {
+          await messageDisplay.notSuccessDM(
+            user,
+            "No Address",
+            `${interaction.user.username} is trying to tip you, but you don't have an address. Please go to https://alph.pro/ and conect your tip wallet.`
+          );
+        });
+
+        await messageDisplay.notSuccess(
+          interaction,
+          "No Address",
+          `${userInfo.username} does not have an address. Please ask ${userInfo.username} to go to https://alph.pro/ and conect the tip wallet.`,
+          true
+        );
+        return;
+      } else {
+      }
+      receiverAddress = getUserAddress.address;
+    } else if (userAddress) {
+      receiverAddress = userAddress;
+    } else {
+      await messageDisplay.notSuccess(
+        interaction,
+        "Invalid argument",
+        "Either you mention user or provide user address.",
+        true
+      );
+      return;
+    }
+
+    const provider = await wrappedConnect(interaction);
     web3.setCurrentNodeProvider(
-      config.default.networks[network].nodeUrl,
+      config.default.networks[process.env.NETWORK].nodeUrl,
       undefined,
       fetch
     );
 
-    const nftInfo =
-      await vendingMachineStates.contractInstance.methods.nftByIndex({
-        args: { index: 1n },
-      });
-
-    const tokenContractAddress = nftInfo.contracts[0].fields.foodsContractId;
-    const nftOwner = nftInfo.contracts[0].fields;
-    //>>>>>>>>>>>>>>>>>>>>> Clear code above after hack >>>>>>>
-
-    //Get user address/public key
-    const userPublicInfo = provider.account;
-    const userPublicKey = userPublicInfo.publicKey;
-    const userAddress = userPublicInfo.address;
-
-    //
-    const receiverAddress = interaction.options.getString("receiver_address");
-    let sendAmount = interaction.options.getString("send_amount");
-    sendAmount = sendAmount * 10 ** 18;
-    //
+    //Get user address key
+    const senderAddress = provider.account.address;
+    console.log("sender address ", senderAddress);
 
     const sentTX = await provider.signAndSubmitTransferTx({
-      signerAddress: userAddress,
-      destinations: [{ address: receiverAddress, attoAlphAmount: sendAmount }],
+      signerAddress: senderAddress,
+      destinations: [
+        {
+          address: receiverAddress,
+          attoAlphAmount: 0n,
+          tokens: [
+            {
+              id: tokenId,
+              amount: sendAmount,
+            },
+          ],
+        },
+      ],
     });
     if (sentTX) {
-      await messageDisplay.successFollowUp(
+      await messageDisplay.success(
         interaction,
         "Successfully completed TX",
-        sentTX.txId
+        sentTX.txId,
+        true
       );
+      if (userInfo) {
+        await messageDisplay.success(
+          interaction,
+          "Tip sent",
+          `${interaction.user.username} tipped ${
+            sendAmount / multiplier
+          } ${tokenSymbol} to address: ${receiverAddress}`,
+          false
+        );
+      } else {
+        await messageDisplay.success(
+          interaction,
+          "Tip sent",
+          `${interaction.user.username} tipped ${
+            sendAmount / multiplier
+          } ${tokenSymbol} to <@${userInfo.id}>}`,
+          false
+        );
+      }
     }
   } catch (err) {
-    await messageDisplay.notSuccessFollowUp(interaction, "Error", err.message);
+    await messageDisplay.notSuccess(interaction, "Error", err.message, true);
   }
 }
