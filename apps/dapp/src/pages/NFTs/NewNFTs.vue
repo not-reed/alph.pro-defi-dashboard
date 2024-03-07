@@ -10,6 +10,7 @@ function getLink(nft) {
     return `https://deadrare.io/collection/${nft.name.toLowerCase().replace(/ /g, '-')}`
 }
 </script>
+
 <template>
     <div>
         <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full max-w-4xl">
