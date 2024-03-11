@@ -5,6 +5,7 @@ import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useRoute } from 'vue-router';
 import { onBeforeRouteUpdate } from 'vue-router';
+import ProxyImage from '../../components/ProxyImage.vue';
 const holders = ref([])
 const active = ref(null)
 const { prices, markets, updatePrices } = usePrices()
@@ -116,28 +117,34 @@ const liquidity = computed(() => {
         </div>
 
         <div class="flex flex-col flex-grow gap-4" v-if="active">
-            <div class="flex flex-col bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-72">
-                <div class=" flex justify-between">
+            <div class="flex justify-between bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-96">
+                <div class="flex flex-col w-full min-w-72">
+                    <div class=" flex justify-between">
+                        <div class="opacity-75">Name:</div> {{ active.token.name }}
+                    </div>
+                    <div class="flex justify-between">
 
-                    <div class="opacity-75">Name:</div> {{ active.token.name }}
+                        <div class="opacity-75">Symbol:</div> {{ active.token.symbol }}
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="opacity-75">Decimals:</div> {{ active.token.decimals }}
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="opacity-75">Holders:</div> {{ active.holderCount }}
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="opacity-75">Marketcap:</div> {{ formatCurrency(marketCap) }}
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="opacity-75">Ayin Liquidity:</div> {{ formatCurrency(liquidity) }}
+                    </div>
                 </div>
-                <div class="flex justify-between">
-
-                    <div class="opacity-75">Symbol:</div> {{ active.token.symbol }}
-                </div>
-                <div class="flex justify-between">
-                    <div class="opacity-75">Decimals:</div> {{ active.token.decimals }}
-                </div>
-                <div class="flex justify-between">
-                    <div class="opacity-75">Holders:</div> {{ active.holderCount }}
-                </div>
-                <div class="flex justify-between">
-                    <div class="opacity-75">Marketcap:</div> {{ formatCurrency(marketCap) }}
-                </div>
-                <div class="flex justify-between">
-                    <div class="opacity-75">Ayin Liquidity:</div> {{ formatCurrency(liquidity) }}
+                <div class="flex items-center justify-center w-full">
+                    <ProxyImage :src="active.token.logo" :width="64" :height="64"
+                        class="object-contain w-16 h-16 relative left-2" />
                 </div>
             </div>
+
             <ul class="h-96 overflow-y-auto bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-lg">
                 <li v-for="holder in active.holders" class="grid grid-cols-5 gap-4">
                     <div class="col-span-2">

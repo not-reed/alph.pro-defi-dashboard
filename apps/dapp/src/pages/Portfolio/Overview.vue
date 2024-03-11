@@ -4,10 +4,12 @@ import Icon from '../../components/Icon.vue';
 import { useUser } from '../../hooks/useUser';
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
-import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
+
 import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
 import { useRoute } from 'vue-router';
+import ProxyImage from '../../components/ProxyImage.vue';
+
 
 const { user } = useUser()
 const { currency, format } = useCurrency()
@@ -66,6 +68,8 @@ const secondaryCurrencies = computed(() => {
 })
 
 const routeUserAddress = route.params.address as string
+
+
 </script>
 
 <template>
@@ -130,8 +134,7 @@ const routeUserAddress = route.params.address as string
             <li v-for="balance in pricedTokens"
                 class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
                 <div class="flex gap-2">
-                    <img v-if="balance.token.logo"
-                        :src="`https://images.alph.pro/images?width=50&height=50&uri=${balance.token.logo}`"
+                    <ProxyImage v-if="balance.token.logo" :src="balance.token.logo" :width="50" :height="50"
                         class="w-8 h-8 rounded-full dark:bg-zinc-900 bg-zinc-400" />
                     <Icon v-else name="currency" class="text-calypso-400 w-8 h-8 bg-zinc-800 rounded-full" />
                     <div>
@@ -166,18 +169,21 @@ const routeUserAddress = route.params.address as string
         <!-- Only show first 4 or 8 -->
         <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full" v-if="nfts.length">
             <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
-                <img class="w-full h-32 shadow-lg object-cover rounded mb-3"
-                    :src="`https://images.alph.pro/images?width=300&height=300&uri=${balance.nft.image}`" />
+                <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3" :src="balance.nft.image"
+                    :width="300" :height="300" />
+                <div class="truncate">{{ balance.nft.name }}</div>
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Ranked:</div>
                     <div class="font-bold">---</div>
                 </div>
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Floor:</div>
-                    <div class="text-calypso-700 dark:text-calypso-500 font-bold">---</div>
+                    <!-- <div class="text-calypso-700 dark:text-calypso-500 font-bold">---</div> -->
+                    <div class="font-bold">---</div>
                 </div>
                 <div class="text-sm flex items-center justify-between leading-3">
-                    <div class="text-xs opacity-50">Listed:</div> -
+                    <div class="text-xs opacity-50">Listed:</div>
+                    <div class="font-bold">---</div>
                 </div>
 
                 <ExternalLink :href="`https://deadrare.io/nft/${balance.nft.address}`">
