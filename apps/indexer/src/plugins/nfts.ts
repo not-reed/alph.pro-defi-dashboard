@@ -5,7 +5,11 @@ import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 import type { NewToken } from "../database/schemas/public/Token";
 import { db } from "../database/db";
-import { addressFromContractId, hexToString } from "@alephium/web3";
+import {
+  addressFromContractId,
+  hexToString,
+  type NFTMetaData,
+} from "@alephium/web3";
 import type { ContractAddress } from "../services/common/types/brands";
 import { logger } from "../services/logger";
 import explorerService from "../services/explorer";
@@ -16,239 +20,327 @@ import type { NewNftAttribute } from "../database/schemas/public/NftAttribute";
 import sdk from "../services/sdk";
 import type { NodeState } from "../services/node/types/state";
 import type { Artifact } from "../services/common/types/artifact";
-import NFTPublicSaleCollectionSequentialWithRoyaltyArtifact from "../abi/deadrare/NFTPublicSaleCollectionSequentialWithRoyalty.ral.json";
+import DeadRareNFTPublicSaleCollectionSequentialWithRoyaltyArtifact from "../abi/deadrare/NFTPublicSaleCollectionSequentialWithRoyalty.ral.json";
+import GoldCastleClubNFTPublicSaleCollectionRandomWithRoyaltyArtifact from "../abi/gold-castle-club/NFTPublicSaleCollectionRandomWithRoyalty.ral.json";
 import { findCollections } from "../database/services/nftCollection";
 import { findNftOrTokenAddresses } from "../database/services/nft";
 
 interface PluginData {
-	nfts: NewNft[];
-	collections: NewNftCollection[];
-	attributes: Map<string, Omit<NewNftAttribute, "nftId">[]>;
+  nfts: NewNft[];
+  collections: NewNftCollection[];
+  attributes: Map<string, Omit<NewNftAttribute, "nftId">[]>;
 }
 
 const EMPTY = { nfts: [], attributes: new Map(), collections: [] };
 
 export class NftPlugin extends Plugin<PluginData> {
-	PLUGIN_NAME = "nfts";
+  PLUGIN_NAME = "nfts";
 
-	// process data to prepare for inserts
-	// return data to be saved.
-	// whatever is returned here will be passed to the insert function
-	async process(blocks: Block[]): Promise<PluginData> {
-		const tokenAddresses = new Set<ContractAddress>();
-		for (const block of blocks) {
-			for (const transaction of block.transactions) {
-				for (const token of transaction.outputs) {
-					// TODO: not strictly true as erc1155 exist,
-					// however for now, and for this plugin its acceptable
-					if (token.amount === 1n) {
-						tokenAddresses.add(token.tokenAddress);
-					}
-				}
-			}
-		}
+  // process data to prepare for inserts
+  // return data to be saved.
+  // whatever is returned here will be passed to the insert function
+  async process(blocks: Block[]): Promise<PluginData> {
+    const tokenAddresses = new Set<ContractAddress>();
+    for (const block of blocks) {
+      for (const transaction of block.transactions) {
+        for (const token of transaction.outputs) {
+          // TODO: not strictly true as erc1155 exist,
+          // however for now, and for this plugin its acceptable
+          if (token.amount === 1n) {
+            tokenAddresses.add(token.tokenAddress);
+          }
+        }
+      }
+    }
 
-		if (tokenAddresses.size === 0) {
-			return EMPTY;
-		}
+    if (tokenAddresses.size === 0) {
+      return EMPTY;
+    }
 
-		const newNfts = new Map<string, NewNft>();
-		const newCollections = new Map<string, NewNftCollection>();
+    const newNfts = new Map<string, NewNft>();
+    const newCollections = new Map<string, NewNftCollection>();
 
-		const attributes = new Map<string, Omit<NewNftAttribute, "nftId">[]>();
+    const attributes = new Map<string, Omit<NewNftAttribute, "nftId">[]>();
 
-		if (tokenAddresses.size > 0) {
-			// if its found, we can ignore it completely
-			const found = await findNftOrTokenAddresses(Array.from(tokenAddresses));
+    if (tokenAddresses.size > 0) {
+      // if its found, we can ignore it completely
+      const found = await findNftOrTokenAddresses(Array.from(tokenAddresses));
 
-			const foundSet = new Set(found.map((token) => token.address));
+      const foundSet = new Set(found.map((token) => token.address));
 
-			const missingSet = new Set(
-				Array.from(tokenAddresses).filter((a) => !foundSet.has(a)),
-			);
+      const missingSet = new Set(
+        Array.from(tokenAddresses).filter((a) => !foundSet.has(a))
+      );
 
-			// none are missing, abort
-			if (!missingSet.size) {
-				return EMPTY;
-			}
+      // none are missing, abort
+      if (!missingSet.size) {
+        return EMPTY;
+      }
 
-			// TODO: this fails on some, such as 'shades of defi'
-			const nftMetadata = await this.loadNonFungibleMetadata(missingSet);
+      // TODO: this fails on some, such as 'shades of defi'
+      const nftMetadata = await this.loadNonFungibleMetadata(missingSet);
 
-			for (const meta of nftMetadata) {
-				newNfts.set(meta.address as ContractAddress, {
-					collectionAddress: meta.collectionAddress,
-					address: meta.address,
-					tokenId: null,
-					nftIndex: meta.nftIndex,
-					name: meta.name,
-					image: meta.image,
-					description: meta.description || "",
-					uri: meta.uri,
-					raw: meta.raw,
-				} satisfies NewNft);
+      for (const meta of nftMetadata) {
+        newNfts.set(meta.address as ContractAddress, {
+          collectionAddress: meta.collectionAddress,
+          address: meta.address,
+          tokenId: null,
+          nftIndex: meta.nftIndex,
+          name: meta.name,
+          image: meta.image,
+          description: meta.description || "",
+          uri: meta.uri,
+          raw: meta.raw,
+        } satisfies NewNft);
 
-				const newAttributes = this.parseAttributes(meta.raw);
+        const newAttributes = this.parseAttributes(meta.raw);
 
-				if (newAttributes?.length) {
-					attributes.set(
-						meta.address as string,
-						newAttributes.map((attr) => {
-							return {
-								...attr,
-								collectionAddress: meta.collectionAddress,
-							};
-						}),
-					);
-				}
-			}
+        if (newAttributes?.length) {
+          attributes.set(
+            meta.address as string,
+            newAttributes.map((attr) => {
+              return {
+                ...attr,
+                collectionAddress: meta.collectionAddress,
+              };
+            })
+          );
+        }
+      }
 
-			const collectionAddresses: string[] = Array.from(
-				new Set(nftMetadata.map((nft) => nft.collectionAddress)),
-			);
-			const collections = await findCollections(collectionAddresses);
+      const collectionAddresses: string[] = Array.from(
+        new Set(nftMetadata.map((nft) => nft.collectionAddress))
+      );
+      const collections = await findCollections(collectionAddresses);
 
-			const missedCollections = collectionAddresses.filter(
-				(address) => !collections.find((col) => col.address === address),
-			) as ContractAddress[];
+      const missedCollections = collectionAddresses.filter(
+        (address) => !collections.find((col) => col.address === address)
+      ) as ContractAddress[];
 
-			const collectionMetadata =
-				await this.loadCollectionMetadata(missedCollections);
+      const collectionMetadata = await this.loadCollectionMetadata(
+        missedCollections
+      );
 
-			for (const meta of collectionMetadata) {
-				newCollections.set(meta.address, meta);
-			}
-		}
+      for (const meta of collectionMetadata) {
+        newCollections.set(meta.address, meta);
+      }
+    }
 
-		return {
-			nfts: Array.from(newNfts.values()),
-			collections: Array.from(newCollections.values()),
-			attributes: attributes,
-		};
-	}
+    return {
+      nfts: Array.from(newNfts.values()),
+      collections: Array.from(newCollections.values()),
+      attributes: attributes,
+    };
+  }
 
-	// insert data
-	async insert(trx: Transaction<Database>, data: PluginData) {
-		if (data.nfts.length) {
-			const inserted = await trx
-				.insertInto("Nft")
-				.values(data.nfts)
-				.onConflict((col) =>
-					col.columns(["collectionAddress", "nftIndex"]).doUpdateSet((eb) => ({
-						address: eb.ref("excluded.address"),
-						uri: eb.ref("excluded.uri"),
-					})),
-				)
-				.returningAll()
-				.execute();
+  // insert data
+  async insert(trx: Transaction<Database>, data: PluginData) {
+    if (data.nfts.length) {
+      const inserted = await trx
+        .insertInto("Nft")
+        .values(data.nfts)
+        .onConflict((col) =>
+          col.columns(["collectionAddress", "nftIndex"]).doUpdateSet((eb) => ({
+            address: eb.ref("excluded.address"),
+            uri: eb.ref("excluded.uri"),
+          }))
+        )
+        .returningAll()
+        .execute();
 
-			for (const insert of inserted) {
-				const address = insert.address;
-				const attributes = address ? data.attributes.get(address) : [];
-				if (address && attributes?.length) {
-					await trx
-						.insertInto("NftAttribute")
-						.values(
-							attributes.map((attribute) => ({
-								...attribute,
-								nftId: insert.id,
-							})),
-						)
-						.execute();
-				}
-			}
-		}
+      for (const insert of inserted) {
+        const address = insert.address;
+        const attributes = address ? data.attributes.get(address) : [];
+        if (address && attributes?.length) {
+          await trx
+            .insertInto("NftAttribute")
+            .values(
+              attributes.map((attribute) => ({
+                ...attribute,
+                nftId: insert.id,
+              }))
+            )
+            .execute();
+        }
+      }
+    }
 
-		if (data.collections.length) {
-			await trx
-				.insertInto("NftCollection")
-				.values(data.collections)
-				.onConflict((col) => col.doNothing())
-				.execute();
-		}
-	}
+    if (data.collections.length) {
+      await trx
+        .insertInto("NftCollection")
+        .values(data.collections)
+        .onConflict((col) => col.doNothing())
+        .execute();
+    }
+  }
 
-	private parseAttributes(
-		json: unknown,
-	): Omit<NewNftAttribute, "nftId" | "collectionAddress">[] {
-		if (
-			!json ||
-			typeof json !== "object" ||
-			!("attributes" in json) ||
-			!Array.isArray(json.attributes)
-		) {
-			console.log({ json });
-			throw new Error("Unable to parse JSON");
-		}
-		const tokenAttributes = json.attributes.map((a) => {
-			return {
-				key: a.trait_type as string,
-				value: a.value as string,
-				raw: a as unknown,
-			};
-		});
-		return tokenAttributes;
-	}
+  private parseAttributes(
+    json: unknown
+  ): Omit<NewNftAttribute, "nftId" | "collectionAddress">[] {
+    if (!json || typeof json !== "object") {
+      throw new Error("Unable to parse JSON");
+    }
 
-	private async loadCollectionMetadata(
-		collections: ContractAddress[],
-	): Promise<NewNftCollection[]> {
-		if (!collections.length) {
-			return [];
-		}
+    if ("error" in json && json.error === true) {
+      return [];
+    }
 
-		const newCollections: NewNftCollection[] = [];
-		// const metadatas = await sdk.fetchNftCollectionMetadata(collections);
-		//
-		for (const collection of collections) {
-			const rawState = await sdk.fetchState(collection);
-			const state = sdk.parseState(
-				rawState as NodeState,
-				NFTPublicSaleCollectionSequentialWithRoyaltyArtifact as unknown as Artifact,
-			);
-			const rawUri = state.fields.find(
-				(a) => a.name === "collectionUri",
-			)?.value;
+    if (!("attributes" in json) || !Array.isArray(json.attributes)) {
+      return [];
+    }
 
-			const uri = hexToString(rawUri as string);
-			const data = await fetch(uri).then((a) => a.json());
+    return json.attributes.map((a) => {
+      return {
+        key: a.trait_type as string,
+        value: a.value as string,
+        raw: a as unknown,
+      };
+    });
+  }
 
-			newCollections.push({
-				address: collection,
-				uri: uri,
-				image: data.image,
-				name: data.name,
-				description: data.description,
-				raw: data,
-			});
-		}
+  private async loadCollectionMetadata(
+    collections: ContractAddress[]
+  ): Promise<NewNftCollection[]> {
+    if (!collections.length) {
+      return [];
+    }
 
-		return newCollections;
-	}
+    const newCollections: NewNftCollection[] = [];
 
-	private async loadNonFungibleMetadata(
-		tokens: Set<ContractAddress>,
-	): Promise<NewNft[]> {
-		if (!tokens.size) {
-			return [];
-		}
-		const newNfts: NewNft[] = [];
-		const metadatas = await sdk.fetchNonFungibleMetadata(Array.from(tokens));
-		for (const nft of metadatas) {
-			const address = addressFromContractId(nft.id);
-			const json = await fetch(nft.tokenUri).then((a) => a.json());
-			newNfts.push({
-				address: address,
-				collectionAddress: addressFromContractId(nft.collectionId),
-				nftIndex: BigInt(nft.nftIndex),
-				uri: nft.tokenUri,
-				image: json.image,
-				description: json.description,
-				name: json.name,
-				raw: json,
-			});
-		}
+    for (const collection of collections) {
+      const rawState = await sdk.fetchState(collection);
 
-		return newNfts;
-	}
+      const state = this.safelyParseState(rawState as NodeState);
+
+      const rawUri = state.fields.find(
+        (a) => a.name === "collectionUri"
+      )?.value;
+
+      const uri = hexToString(rawUri as string);
+      try {
+        const data = await fetch(uri).then((a) => a.json());
+
+        newCollections.push({
+          address: collection,
+          uri: uri,
+          image: data.image,
+          name: data.name,
+          description: data.description,
+          raw: data,
+        });
+      } catch (err) {
+        logger.error(
+          `Error processing NFT collection ${collection} => uri=${uri}`
+        );
+        throw err;
+      }
+    }
+
+    return newCollections;
+  }
+
+  private safelyParseState(
+    state: NodeState
+  ): ReturnType<typeof sdk.parseState> {
+    try {
+      return sdk.parseState(
+        state as NodeState,
+        DeadRareNFTPublicSaleCollectionSequentialWithRoyaltyArtifact as unknown as Artifact
+      );
+    } catch {
+      // not a deadrare collection
+    }
+
+    try {
+      return sdk.parseState(
+        state as NodeState,
+        GoldCastleClubNFTPublicSaleCollectionRandomWithRoyaltyArtifact as unknown as Artifact
+      );
+    } catch {
+      // not a Old Asia collection
+    }
+
+    throw new Error("Unable to parse state");
+  }
+
+  private async safelyGetJsonData(
+    nft: NFTMetaData,
+    retries = 0
+  ): Promise<{ raw: unknown; json: unknown }> {
+    if (retries > 3) {
+      logger.warn({
+        msg: "Too many retries",
+        nft,
+      });
+      throw new Error("Too many retries");
+    }
+    const response = await fetch(nft.tokenUri);
+    if (response.status === 404) {
+      return {
+        raw: { error: true, reason: "404: not found", raw: "" },
+        json: { image: "", description: "", name: "", attributes: [] },
+      };
+    }
+    if (response.status !== 200) {
+      throw new Error(`Invalid response: ${response.status}`);
+    }
+
+    try {
+      const json = await response.clone().json();
+      return { raw: json, json };
+    } catch (err) {
+      const text = await response.clone().text();
+      if (text === "" && response.url.includes("arweave")) {
+        // arweave or cloudfront returning empty responses sometimes,
+        // only solution is to retry
+        return await this.safelyGetJsonData(nft, retries + 1);
+      }
+
+      return {
+        raw: { error: true, reason: "invalid json", raw: text },
+        json: { image: "", description: "", name: "", attributes: [] },
+      };
+    }
+  }
+
+  private async loadNonFungibleMetadata(
+    tokens: Set<ContractAddress>
+  ): Promise<NewNft[]> {
+    if (!tokens.size) {
+      return [];
+    }
+    const newNfts: NewNft[] = [];
+    const metadatas = await sdk.fetchNonFungibleMetadata(Array.from(tokens));
+    for (const nft of metadatas) {
+      try {
+        const address = addressFromContractId(nft.id);
+
+        const { raw, json } = await this.safelyGetJsonData(nft);
+        if (!json || typeof json !== "object") {
+          throw new Error("Invalid JSON");
+        }
+
+        newNfts.push({
+          address: address,
+          collectionAddress: addressFromContractId(nft.collectionId),
+          nftIndex: BigInt(nft.nftIndex),
+          uri: nft.tokenUri,
+          image:
+            "image" in json && typeof json.image === "string" ? json.image : "",
+          name:
+            "name" in json && typeof json.name === "string" ? json.name : "",
+          description:
+            "description" in json && typeof json.description === "string"
+              ? json.description
+              : "",
+          raw: raw, // TODO: THIS CAN BE INVALID JSON!
+        });
+      } catch (err) {
+        console.log({ nft });
+        throw err;
+      }
+    }
+
+    return newNfts;
+  }
 }

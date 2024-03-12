@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "prod": "bun run src/index.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.2.0",
-    "hono": "^4.0.9",
-    "kysely": "^0.27.2",
+    "hono": "^4.0.10",
+    "kysely": "^0.27.3",
     "kysely-bun-sqlite": "^0.3.2",
     "sharp": "^0.33.2",
     "zod": "^3.22.4"

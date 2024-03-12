@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
 import { computed, onMounted, ref } from 'vue';
+import ProxyImage from '../../components/ProxyImage.vue';
 const holders = ref([])
 const active = ref(null)
 
@@ -35,7 +36,8 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                 <div>
                     {{ holder.holderCount }} Holders
                 </div>
-                <img :src="holder.image" class="w-24 h-full object-cover" />
+
+                <ProxyImage :src="holder.image" :width="300" :height="300" class="w-24 h-full object-cover" />
             </li>
         </ul>
         <div class="flex flex-col flex-grow gap-4" v-if="active">

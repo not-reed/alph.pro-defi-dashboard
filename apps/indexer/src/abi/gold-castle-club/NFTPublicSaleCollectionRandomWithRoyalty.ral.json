@@ -1,0 +1,289 @@
+{
+  "version": "v2.9.0",
+  "name": "NFTPublicSaleCollectionRandomWithRoyalty",
+  "bytecode": "0b1109124027403a404a4055406141ab41b441bd41ce41e341ec421b425543304349010000000102ce0102010000000102a0000201000102010a160040cb17011601c5130d7b16010201000203000816010002170216001602410e7b0100020201061601ce072c1367102d0201030202000316001601a901000202000316001601000a0101000b0140b057405640444e71ce042e170016004017011601cbc5031c4c0aa0010d2ba101a001170016004017014a30160013417e2f4c02130d4a404916001342032f4c02130c4a404316001342302f4c02130b4a403d16000c2f4c02130a4a403716000d2f4c0213094a403116001306314c0213084a402b1600130c314c0213074a402516001318314c0213064a1f16001329314c02114a1916001339314c02104a13160013404b314c020f4a0d1600134076314c020e4a0716001340c4314c020d4a010c17020417030c1704b417051601cb170616067717071600000bb116001602ce061406414c504800031306641605160416041607160416071604160716041603160416041604130d64170917081600ce0431132c7b160513c40de0b6b3a7640000a21601ce00160816090d1605c9170a1605ce05a9a0000d2aa10005160516005f160a02010000000102ce0202010000000102ce0402010202040008b4ce02450d7b16001601a801000101010a1600ce043113377bce031600894402010000000102ce0502010301030016b4170156137a982a170216017a16000da313c3038d7ea4c68000a216011602be16010d0d1600010f18010301170040200c0d1600010c1701160016010003a0000d2ba100b40d0c16000116b416000dbd1601a001334c0516010d2aa1014a02a001a101010102150040770c0d1600010c17021600160200030c0d1600010b1703b417040c0e1600010e170617050c0e16000109170817070c0e16000103170a17090c0d16000107170b0c0d16000108170c0c0d16000106170d0c0d16000105170e0c0d16000104170f0c0d1600010217101602000bb116021603ce061406414c5048000313066416041605160616071608160a1609160b160c160d160e160f1610130d6417121711b20d0c16000116b416000dbd1602401713b21601a21613ce00161116120d1604c91813c40de0b6b3a764000016012b171416041614a801020000000ca0000c2f1342007bb4ce02451342027bce02b0",
+  "codeHash": "5aab5b6b8c5742c923c0c4fd14ceac1c2249b21a18853dd4e932d84b37e092fa",
+  "fieldsSig": {
+    "names": [
+      "nftTemplateId",
+      "collectionUri",
+      "collectionOwner",
+      "nftBaseUri",
+      "maxSupply",
+      "mintPrice",
+      "fealtyId",
+      "royaltyRate",
+      "totalSupply",
+      "maxmaxnumber",
+      "__stdInterfaceId"
+    ],
+    "types": [
+      "ByteVec",
+      "ByteVec",
+      "Address",
+      "ByteVec",
+      "U256",
+      "U256",
+      "ByteVec",
+      "U256",
+      "U256",
+      "U256",
+      "ByteVec"
+    ],
+    "isMutable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "eventsSig": [
+    {
+      "name": "Mint",
+      "fieldNames": ["minter", "index"],
+      "fieldTypes": ["Address", "U256"]
+    }
+  ],
+  "functions": [
+    {
+      "name": "getCollectionUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["ByteVec"]
+    },
+    {
+      "name": "totalSupply",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["U256"]
+    },
+    {
+      "name": "nftByIndex",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["index"],
+      "paramTypes": ["U256"],
+      "paramIsMutable": [false],
+      "returnTypes": ["ByteVec"]
+    },
+    {
+      "name": "validateNFT",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["nftId", "nftIndex"],
+      "paramTypes": ["ByteVec", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": []
+    },
+    {
+      "name": "royaltyAmount",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["tokenId", "salePrice"],
+      "paramTypes": ["ByteVec", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": ["U256"]
+    },
+    {
+      "name": "payRoyalty",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["payer", "amount"],
+      "paramTypes": ["Address", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": []
+    },
+    {
+      "name": "withdrawRoyalty",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["to", "amount"],
+      "paramTypes": ["Address", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": []
+    },
+    {
+      "name": "mint",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["ByteVec"]
+    },
+    {
+      "name": "getCollectionOwner",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["Address"]
+    },
+    {
+      "name": "getMaxSupply",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["U256"]
+    },
+    {
+      "name": "withdraw",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": ["to", "amount"],
+      "paramTypes": ["Address", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": []
+    },
+    {
+      "name": "getNFTUri",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["index"],
+      "paramTypes": ["U256"],
+      "paramIsMutable": [false],
+      "returnTypes": ["ByteVec"]
+    },
+    {
+      "name": "getMintPrice",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": ["U256"]
+    },
+    {
+      "name": "changeOwner",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["nftId"],
+      "paramTypes": ["ByteVec"],
+      "paramIsMutable": [false],
+      "returnTypes": []
+    },
+    {
+      "name": "destroyNft",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": ["nftId"],
+      "paramTypes": ["ByteVec"],
+      "paramIsMutable": [false],
+      "returnTypes": []
+    },
+    {
+      "name": "destroyNftAndReturnIt",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": ["nftId", "lockedasset"],
+      "paramTypes": ["ByteVec", "U256"],
+      "paramIsMutable": [false, false],
+      "returnTypes": []
+    },
+    {
+      "name": "destroyCollection",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": true,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ],
+  "constants": [],
+  "enums": [
+    {
+      "name": "PublicSaleErrorCodes",
+      "fields": [
+        {
+          "name": "IncorrectTokenIndex",
+          "value": {
+            "type": "U256",
+            "value": "55"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ErrorCodes",
+      "fields": [
+        {
+          "name": "IncorrectTokenIndex",
+          "value": {
+            "type": "U256",
+            "value": "44"
+          }
+        },
+        {
+          "name": "NFTNotFound",
+          "value": {
+            "type": "U256",
+            "value": "13"
+          }
+        },
+        {
+          "name": "CollectionOwnerAllowedOnly",
+          "value": {
+            "type": "U256",
+            "value": "1"
+          }
+        },
+        {
+          "name": "NFTNotPartOfCollection",
+          "value": {
+            "type": "U256",
+            "value": "2"
+          }
+        },
+        {
+          "name": "ActiveSupply",
+          "value": {
+            "type": "U256",
+            "value": "512"
+          }
+        },
+        {
+          "name": "NotCollectionOwner",
+          "value": {
+            "type": "U256",
+            "value": "514"
+          }
+        }
+      ]
+    }
+  ],
+  "stdInterfaceId": "000201"
+}

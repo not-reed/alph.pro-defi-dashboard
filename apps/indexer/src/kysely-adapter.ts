@@ -24,23 +24,23 @@
 import { Kysely, SqliteAdapter } from "kysely";
 
 import type {
-	Adapter,
-	AdapterUser,
-	AdapterAccount,
-	AdapterSession,
-	VerificationToken,
+  Adapter,
+  AdapterUser,
+  AdapterAccount,
+  AdapterSession,
+  VerificationToken,
 } from "@auth/core/adapters";
 import type Database from "./database/schemas/Database";
 import type {
-	NewUser,
-	UserId,
-	UserUpdate,
+  NewUser,
+  UserId,
+  UserUpdate,
 } from "./database/schemas/public/User";
 import type { Account, NewAccount } from "./database/schemas/public/Account";
 import type {
-	NewSession,
-	Session,
-	SessionUpdate,
+  NewSession,
+  Session,
+  SessionUpdate,
 } from "./database/schemas/public/Session";
 import type { NewVerificationToken } from "./database/schemas/public/VerificationToken";
 
@@ -53,31 +53,31 @@ import type { NewVerificationToken } from "./database/schemas/public/Verificatio
 
 // https://github.com/honeinc/is-iso-date/blob/master/index.js
 const isoDateRE =
-	/(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/;
+  /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/;
 function isDate(value: unknown): value is string {
-	return Boolean(
-		typeof value === "string" &&
-			isoDateRE.test(value) &&
-			!Number.isNaN(Date.parse(value)),
-	);
+  return Boolean(
+    typeof value === "string" &&
+      isoDateRE.test(value) &&
+      !Number.isNaN(Date.parse(value))
+  );
 }
 
 export const format = {
-	from<T>(object?: Record<string, unknown>): T {
-		const newObject: Record<string, unknown> = {};
-		for (const key in object) {
-			const value = object[key];
-			if (isDate(value)) newObject[key] = new Date(value);
-			else newObject[key] = value;
-		}
-		return newObject as T;
-	},
-	to<T>(object: Record<string, unknown>): T {
-		const newObject: Record<string, unknown> = {};
-		for (const [key, value] of Object.entries(object))
-			newObject[key] = value instanceof Date ? value.toISOString() : value;
-		return newObject as T;
-	},
+  from<T>(object?: Record<string, unknown>): T {
+    const newObject: Record<string, unknown> = {};
+    for (const key in object) {
+      const value = object[key];
+      if (isDate(value)) newObject[key] = new Date(value);
+      else newObject[key] = value;
+    }
+    return newObject as T;
+  },
+  to<T>(object: Record<string, unknown>): T {
+    const newObject: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(object))
+      newObject[key] = value instanceof Date ? value.toISOString() : value;
+    return newObject as T;
+  },
 };
 
 /**
@@ -260,155 +260,158 @@ export const format = {
  * If mixed snake_case and camelCase column names is an issue for you and/or your underlying database system, we recommend using Kysely's `CamelCasePlugin` ([see the documentation here](https://kysely-org.github.io/kysely-apidoc/classes/CamelCasePlugin.html)) feature to change the field names. This won't affect NextAuth.js, but will allow you to have consistent casing when using Kysely.
  */
 export function KyselyAdapter(db: Kysely<Database>) {
-	const { adapter } = db.getExecutor();
-	const { supportsReturning } = adapter;
-	const isSqlite = adapter instanceof SqliteAdapter;
-	/** If the database is SQLite, turn dates into an ISO string  */
-	const to = isSqlite ? format.to : <T>(x: T) => x as T;
-	/** If the database is SQLite, turn ISO strings into dates */
-	const from = isSqlite ? format.from : <T>(x: T) => x as T;
-	return {
-		async createUser(data: NewUser) {
-			const user = { ...data };
-			const created = await db
-				.insertInto("User")
-				.values(to(user))
-				.returningAll()
-				.executeTakeFirstOrThrow();
-			return created;
-		},
-		async getUser(id: UserId) {
-			const result = await db
-				.selectFrom("User")
-				.selectAll()
-				.where("id", "=", id)
-				.executeTakeFirst();
-			if (!result) return null;
-			return from(result);
-		},
-		async getUserByEmail(email: string) {
-			return null;
-		},
-		async getUserByAccount({
-			providerAccountId,
-			provider,
-		}: Pick<AdapterAccount, "providerAccountId" | "provider">) {
-			const result = await db
-				.selectFrom("User")
-				.innerJoin("Account", "User.id", "Account.userId")
-				.selectAll("User")
-				.where("Account.providerAccountId", "=", providerAccountId)
-				.where("Account.provider", "=", provider)
-				.executeTakeFirst();
-			if (!result) return null;
-			return from(result);
-		},
-		async updateUser({ id, ...user }: UserUpdate) {
-			const userData = to(user);
-			const query = db
-				.updateTable("User")
-				.set(userData)
-				.where("id", "=", id as UserId);
-			const result = supportsReturning
-				? query.returningAll().executeTakeFirstOrThrow()
-				: query.executeTakeFirstOrThrow().then(() =>
-						db
-							.selectFrom("User")
-							.selectAll()
-							.where("id", "=", id as UserId)
-							.executeTakeFirstOrThrow(),
-				  );
-			return from(await result);
-		},
-		async deleteUser(userId: UserId) {
-			await db
-				.deleteFrom("User")
-				.where("User.id", "=", userId)
-				.executeTakeFirst();
-		},
-		async linkAccount(account: NewAccount) {
-			await db
-				.insertInto("Account")
-				.values(to(account))
-				.executeTakeFirstOrThrow();
-		},
-		async unlinkAccount({
-			providerAccountId,
-			provider,
-		}: Pick<Account, "providerAccountId" | "provider">) {
-			await db
-				.deleteFrom("Account")
-				.where("Account.providerAccountId", "=", providerAccountId)
-				.where("Account.provider", "=", provider)
-				.executeTakeFirstOrThrow();
-		},
-		async createSession(session: NewSession) {
-			await db.insertInto("Session").values(to(session)).execute();
-			return session;
-		},
-		async getSessionAndUser(sessionToken: string) {
-			const result = await db
-				.selectFrom("Session")
-				.innerJoin("User", "User.id", "Session.userId")
-				.selectAll("User")
-				.select(["Session.expires", "Session.userId"])
-				.where("Session.sessionToken", "=", sessionToken)
-				.executeTakeFirst();
-			if (!result) return null;
-			const { userId, expires, ...user } = result;
-			const session = { sessionToken, userId, expires };
-			return { user: from(user), session: from(session) };
-		},
-		async updateSession(
-			session: SessionUpdate & Pick<Session, "sessionToken">,
-		) {
-			const sessionData = to(session);
-			const query = db
-				.updateTable("Session")
-				.set(sessionData)
-				.where("Session.sessionToken", "=", session.sessionToken);
-			const result = supportsReturning
-				? await query.returningAll().executeTakeFirstOrThrow()
-				: await query.executeTakeFirstOrThrow().then(async () => {
-						return await db
-							.selectFrom("Session")
-							.selectAll()
-							.where("Session.sessionToken", "=", sessionData.sessionToken)
-							.executeTakeFirstOrThrow();
-				  });
-			return from(result);
-		},
-		async deleteSession(sessionToken: string) {
-			await db
-				.deleteFrom("Session")
-				.where("Session.sessionToken", "=", sessionToken)
-				.executeTakeFirstOrThrow();
-		},
-		async createVerificationToken(data: NewVerificationToken) {
-			await db.insertInto("VerificationToken").values(to(data)).execute();
-			return data;
-		},
-		async useVerificationToken({ identifier, token }: VerificationToken) {
-			const query = db
-				.deleteFrom("VerificationToken")
-				.where("VerificationToken.token", "=", token)
-				.where("VerificationToken.identifier", "=", identifier);
+  const { adapter } = db.getExecutor();
+  const { supportsReturning } = adapter;
+  const isSqlite = adapter instanceof SqliteAdapter;
+  /** If the database is SQLite, turn dates into an ISO string  */
+  const to = isSqlite ? format.to : <T>(x: T) => x as T;
+  /** If the database is SQLite, turn ISO strings into dates */
+  const from = isSqlite ? format.from : <T>(x: T) => x as T;
+  return {
+    async createUser(data: NewUser) {
+      console.log({ data });
+      const user = { ...data };
+      const created = await db
+        .insertInto("User")
+        .values(to(user))
+        .returningAll()
+        .executeTakeFirstOrThrow();
+      return created;
+    },
+    async getUser(id: UserId) {
+      const result = await db
+        .selectFrom("User")
+        .selectAll()
+        .where("id", "=", id)
+        .executeTakeFirst();
+      if (!result) return null;
+      return from(result);
+    },
+    async getUserByEmail(email: string) {
+      console.log({ email });
+      return null;
+    },
+    async getUserByAccount({
+      providerAccountId,
+      provider,
+    }: Pick<AdapterAccount, "providerAccountId" | "provider">) {
+      const result = await db
+        .selectFrom("User")
+        .innerJoin("Account", "User.id", "Account.userId")
+        .selectAll("User")
+        .where("Account.providerAccountId", "=", providerAccountId)
+        .where("Account.provider", "=", provider)
+        .executeTakeFirst();
+      if (!result) return null;
+      return from(result);
+    },
+    async updateUser({ id, ...user }: UserUpdate) {
+      console.log({ id, user });
+      const userData = to(user);
+      const query = db
+        .updateTable("User")
+        .set(userData)
+        .where("id", "=", id as UserId);
+      const result = supportsReturning
+        ? query.returningAll().executeTakeFirstOrThrow()
+        : query.executeTakeFirstOrThrow().then(() =>
+            db
+              .selectFrom("User")
+              .selectAll()
+              .where("id", "=", id as UserId)
+              .executeTakeFirstOrThrow()
+          );
+      return from(await result);
+    },
+    async deleteUser(userId: UserId) {
+      await db
+        .deleteFrom("User")
+        .where("User.id", "=", userId)
+        .executeTakeFirst();
+    },
+    async linkAccount(account: NewAccount) {
+      await db
+        .insertInto("Account")
+        .values(to(account))
+        .executeTakeFirstOrThrow();
+    },
+    async unlinkAccount({
+      providerAccountId,
+      provider,
+    }: Pick<Account, "providerAccountId" | "provider">) {
+      await db
+        .deleteFrom("Account")
+        .where("Account.providerAccountId", "=", providerAccountId)
+        .where("Account.provider", "=", provider)
+        .executeTakeFirstOrThrow();
+    },
+    async createSession(session: NewSession) {
+      await db.insertInto("Session").values(to(session)).execute();
+      return session;
+    },
+    async getSessionAndUser(sessionToken: string) {
+      const result = await db
+        .selectFrom("Session")
+        .innerJoin("User", "User.id", "Session.userId")
+        .selectAll("User")
+        .select(["Session.expires", "Session.userId"])
+        .where("Session.sessionToken", "=", sessionToken)
+        .executeTakeFirst();
+      if (!result) return null;
+      const { userId, expires, ...user } = result;
+      const session = { sessionToken, userId, expires };
+      return { user: from(user), session: from(session) };
+    },
+    async updateSession(
+      session: SessionUpdate & Pick<Session, "sessionToken">
+    ) {
+      const sessionData = to(session);
+      const query = db
+        .updateTable("Session")
+        .set(sessionData)
+        .where("Session.sessionToken", "=", session.sessionToken);
+      const result = supportsReturning
+        ? await query.returningAll().executeTakeFirstOrThrow()
+        : await query.executeTakeFirstOrThrow().then(async () => {
+            return await db
+              .selectFrom("Session")
+              .selectAll()
+              .where("Session.sessionToken", "=", sessionData.sessionToken)
+              .executeTakeFirstOrThrow();
+          });
+      return from(result);
+    },
+    async deleteSession(sessionToken: string) {
+      await db
+        .deleteFrom("Session")
+        .where("Session.sessionToken", "=", sessionToken)
+        .executeTakeFirstOrThrow();
+    },
+    async createVerificationToken(data: NewVerificationToken) {
+      await db.insertInto("VerificationToken").values(to(data)).execute();
+      return data;
+    },
+    async useVerificationToken({ identifier, token }: VerificationToken) {
+      const query = db
+        .deleteFrom("VerificationToken")
+        .where("VerificationToken.token", "=", token)
+        .where("VerificationToken.identifier", "=", identifier);
 
-			const result = supportsReturning
-				? await query.returningAll().executeTakeFirst()
-				: await db
-						.selectFrom("VerificationToken")
-						.selectAll()
-						.where("token", "=", token)
-						.executeTakeFirst()
-						.then(async (res) => {
-							await query.executeTakeFirst();
-							return res;
-						});
-			if (!result) return null;
-			return from(result);
-		},
-	};
+      const result = supportsReturning
+        ? await query.returningAll().executeTakeFirst()
+        : await db
+            .selectFrom("VerificationToken")
+            .selectAll()
+            .where("token", "=", token)
+            .executeTakeFirst()
+            .then(async (res) => {
+              await query.executeTakeFirst();
+              return res;
+            });
+      if (!result) return null;
+      return from(result);
+    },
+  };
 }
 
 /**
@@ -422,5 +425,5 @@ export function KyselyAdapter(db: Kysely<Database>) {
 export class KyselyAuth<DB extends T, T = Database> extends Kysely<DB> {}
 
 export type Codegen = {
-	[K in keyof Database]: { [J in keyof Database[K]]: unknown };
+  [K in keyof Database]: { [J in keyof Database[K]]: unknown };
 };
