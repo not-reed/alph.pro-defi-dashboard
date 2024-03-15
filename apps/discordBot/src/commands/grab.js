@@ -172,6 +172,8 @@ async function menuInteraction(interaction) {
     attoAlphAmount: totalAlphNeeded,
   });
 
+  console.log("here ", newNftCreated);
+
   let returnedTransactionId = newNftCreated.txId;
 
   const nodeProvider = web3.getCurrentNodeProvider();

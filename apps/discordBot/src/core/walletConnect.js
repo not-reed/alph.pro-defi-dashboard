@@ -33,7 +33,7 @@ export const wrappedConnect = (interaction) =>
 
       const provider = await WalletConnectProvider.init({
         addressGroup: 0,
-        networkId: "testnet",
+        networkId: process.env.NETWORK,
         onDisconnected: () => {},
         projectId: WALLET_CONNECT_PROJECT_ID,
       });

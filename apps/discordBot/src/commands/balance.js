@@ -62,8 +62,17 @@ async function balance(interaction) {
     await fetch(`https://indexer.alph.pro/api/balances?address=${userAddress}
   `).then((a) => a.json());
 
+  if (userBalances.balances.length < 1) {
+    await messageDisplay.notSuccess(
+      interaction,
+      "No Balance",
+      `You do not have any balance on address ${userAddress}`,
+      true
+    );
+    return;
+  }
   let tokenOrNft;
-  let messageBalances = ``;
+  let messageBalances = "";
   if (tokenSymbol) {
     const tokenFound = userBalances.balances.find(
       (t) => t.token && t.token.symbol === tokenSymbol.toUpperCase()
@@ -99,5 +108,5 @@ async function balance(interaction) {
     }
   }
 
-  await messageDisplay.success(interaction, `Balances`, messageBalances, true);
+  await messageDisplay.success(interaction, "Balances", messageBalances, true);
 }

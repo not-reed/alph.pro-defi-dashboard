@@ -15,19 +15,19 @@ module.exports = {
       try {
         console.log("Started refreshing application (/) commands.");
         //Run globally
-        // await rest.put(
-        //   Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-        //   { body: commands }
-        // );
-
-        //Run locally (only on guild)
         await rest.put(
-          Routes.applicationGuildCommands(
-            process.env.DISCORD_CLIENT_ID,
-            process.env.GUILD_ID
-          ),
+          Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
           { body: commands }
         );
+
+        // //Run locally (only on guild)
+        // await rest.put(
+        //   Routes.applicationGuildCommands(
+        //     process.env.DISCORD_CLIENT_ID,
+        //     process.env.GUILD_ID
+        //   ),
+        //   { body: commands }
+        // );
         //  //***** Don't uncomment if you don't know what you are doing *****
         // //****** Delete slash commands ******
         // // for guild-based commands

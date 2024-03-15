@@ -50,6 +50,7 @@ module.exports = { discordData, execute };
 //Command function
 async function tip(interaction) {
   try {
+    await interaction.deferReply({ ephemeral: true });
     const tokenSymbol = interaction.options.getString("token_symbol");
 
     let getTokenInfo = await fetch(
@@ -78,9 +79,6 @@ async function tip(interaction) {
     let receiverAddress;
 
     if (userInfo) {
-      // let getUserFromIndexer= get user id from the pro.alph indexer
-      console.log("get user", userInfo.id);
-
       let getUserAddress = await fetch(
         `https://indexer.alph.pro/api/bot/primary-address?discordId=${userInfo.id}`,
         {
@@ -90,7 +88,6 @@ async function tip(interaction) {
         }
       ).then((a) => a.json());
 
-      console.log("user address ", getUserAddress.address);
       if (!getUserAddress.address) {
         //If user does not have a address send a message to reciever that needs to connect wallet on Alph.Pro
         discordClient.users.fetch(userInfo.id).then(async (user) => {
@@ -132,7 +129,6 @@ async function tip(interaction) {
 
     //Get user address key
     const senderAddress = provider.account.address;
-    console.log("sender address ", senderAddress);
 
     const sentTX = await provider.signAndSubmitTransferTx({
       signerAddress: senderAddress,
