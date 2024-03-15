@@ -231,7 +231,7 @@ export default {
 
   async fetchState(address: ContractAddress, abi?: Artifact) {
     const rawState = await nodeService.contracts.fetchState(address);
-    logger.error(`Failed addresss: ${address}`);
+    logger.error(`Failed to fetch state for address: ${address}`);
     if (!abi) {
       return rawState;
     }
