@@ -42,12 +42,12 @@ async function token(interaction) {
   let tokenAddress;
   let tokenSymbol;
 
-  if (symbolOrAddress == "symbol") {
-    let getTokenSymbol = await fetch(
+  if (symbolOrAddress === "symbol") {
+    const getTokenSymbol = await fetch(
       `https://indexer.alph.pro/api/tokens/symbol/${value}`
     ).then((a) => a.json());
 
-    if (getTokenSymbol.tokens.length == 0) {
+    if (getTokenSymbol.tokens.length === 0) {
       await notSuccess(
         interaction,
         "No Token",
@@ -58,12 +58,12 @@ async function token(interaction) {
     }
     tokenSymbol = value;
     tokenAddress = getTokenSymbol.tokens[0].address;
-  } else if (symbolOrAddress == "address") {
+  } else if (symbolOrAddress === "address") {
     if (value.length < 10) {
       await notSuccess(
         interaction,
         "To Short",
-        `Token address must contain at least 10 characters. `,
+        "Token address must contain at least 10 characters.",
         true
       );
       return;
@@ -71,7 +71,7 @@ async function token(interaction) {
     const getTokenSymbol =
       await fetch(`https://indexer.alph.pro/api/prices?address=${value}
               `).then((a) => a.json());
-    if (getTokenSymbol.prices.length == 0) {
+    if (getTokenSymbol.prices.length === 0) {
       await notSuccess(
         interaction,
         "Invalid Token",
@@ -87,22 +87,37 @@ async function token(interaction) {
   let tokenInfo =
     await fetch(`https://indexer.alph.pro/api/prices?address=${tokenAddress}
 `).then((a) => a.json());
+
   tokenInfo = tokenInfo.prices[0];
 
-  let tokenHolder = await fetch(
+  const tokenHolder = await fetch(
     `https://indexer.alph.pro/api/tokens/holders/${tokenAddress}`
   ).then((a) => a.json());
 
-  let circulatingSupply =
+  const circulatingSupply =
     tokenHolder.holders[0].circulatingSupply / 10 ** tokenInfo.token.decimals;
 
-  let messageTokenInfo = `Name: ${tokenInfo.token.name}
+  const messageTokenInfo = `Name: ${tokenInfo.token.name}
 Symbol: ${tokenInfo.token.symbol}
 Decimals: ${tokenInfo.token.decimals}
 
-Price: $${await commaFormat(await eighteenDigits(tokenInfo.price))}
-LP: $${await commaFormat(await eighteenDigits(tokenInfo.markets[0].liquidity))} 
-MC: $${await commaFormat(await eighteenDigits(circulatingSupply * tokenInfo.price))}
+Price: $${
+    tokenInfo.markets.length > 1
+      ? await commaFormat(await eighteenDigits(tokenInfo.price))
+      : "Not Available"
+  }
+LP: $${
+    tokenInfo.markets.length > 1
+      ? await commaFormat(await eighteenDigits(tokenInfo.markets[0].liquidity))
+      : "Not Available"
+  } 
+MC: $${
+    tokenInfo.markets.length > 1
+      ? await commaFormat(
+          await eighteenDigits(circulatingSupply * tokenInfo.price)
+        )
+      : "Not Available"
+  }
 
 Circulating Supply: ${await commaFormat(circulatingSupply)}
 Holders: ${await commaFormat(tokenHolder.holders[0].holderCount)}
@@ -117,6 +132,6 @@ Verified: ${tokenInfo.token.verified}
     `${tokenInfo.token.symbol}`,
     messageTokenInfo,
     false,
-    tokenInfo.token.logo,
+    tokenInfo.token.logo
   );
 }
