@@ -22,7 +22,7 @@ const messageDisplay = require("../core/messageDisplay.js");
 
 const receiverAddressMap = new Map();
 
-let foods = [
+const foods = [
   ["Popcorn", "popcorn"],
   ["Banana", "banana"],
   ["Beer", "beer"],
@@ -68,7 +68,7 @@ async function give(interaction) {
   try {
     const userInfo = interaction.options.getUser("user");
 
-    let getUserAddress = await fetch(
+    const getUserAddress = await fetch(
       `https://indexer.alph.pro/api/bot/primary-address?discordId=${userInfo.id}`,
       {
         headers: {
@@ -110,7 +110,7 @@ async function give(interaction) {
     //Get user address key
     const senderAddress = provider.account.address;
 
-    if (senderAddress == getUserAddress.address) {
+    if (senderAddress === getUserAddress.address) {
       await messageDisplay.notSuccess(
         interaction,
         "Self Give",
@@ -127,10 +127,8 @@ async function give(interaction) {
     //Find Vending Machine balances
     const tokenFound = userBalances.balances.filter(
       (t) =>
-        t.nft &&
-        t.nft.collection &&
-        t.nft.collection.address ===
-          "22vxm543X8aEkqu31spuRGkaiNyN5hsmWaSP4o3c46tVd"
+        t.nft?.collection?.address ===
+        "22vxm543X8aEkqu31spuRGkaiNyN5hsmWaSP4o3c46tVd"
     );
     if (tokenFound.length < 1) {
       await messageDisplay.notSuccess(
@@ -142,12 +140,12 @@ async function give(interaction) {
       return;
     }
 
-    let options = [];
+    const options = [];
 
     for (const element of tokenFound) {
-      let foodName = await getFoodRange(element.nft.nftIndex);
-      let foodLabel = foodName[0];
-      let emojiName = foodName[1];
+      const foodName = await getFoodRange(element.nft.nftIndex);
+      const foodLabel = foodName[0];
+      const emojiName = foodName[1];
       options.push(
         new StringSelectMenuOptionBuilder()
           .setLabel(foodLabel)
@@ -191,9 +189,9 @@ async function menuInteraction(interaction) {
   );
   //Get user address key
   const senderAddress = provider.account.address;
-  let userInfo = receiverAddressMap.get(interaction.user.id);
-  let user = userInfo.user;
-  let receiverAddress = userInfo.receiverAddress;
+  const userInfo = receiverAddressMap.get(interaction.user.id);
+  const user = userInfo.user;
+  const receiverAddress = userInfo.receiverAddress;
   const sentTX = await provider.signAndSubmitTransferTx({
     signerAddress: senderAddress,
     destinations: [
@@ -213,7 +211,7 @@ async function menuInteraction(interaction) {
   await messageDisplay.success(
     interaction,
     "In process...",
-    `Waiting on TX to be success`,
+    "Waiting on TX to be success",
     true
   );
 
@@ -238,8 +236,7 @@ async function menuInteraction(interaction) {
 async function getFoodRange(index) {
   if (index < 51) {
     return foods[0];
-  } else {
-    index = parseInt(index / 50) - 1;
-    return foods[index];
   }
+  const newIndex = Number.parseInt(index / 50, 10) - 1;
+  return foods[newIndex];
 }

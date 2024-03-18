@@ -38,7 +38,7 @@ async function lp(interaction) {
 
   const lp_amount = interaction.options.getNumber("lp_amount") ?? "NoLpAmount";
 
-  if (lp_amount == "NoLpAmount") {
+  if (lp_amount === "NoLpAmount") {
     await messageDisplay.success(
       interaction,
       `${first_token} ${second_token} LP`,

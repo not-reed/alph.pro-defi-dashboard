@@ -33,10 +33,10 @@ module.exports = { discordData, execute };
 //Command function
 async function balance(interaction) {
   let userAddress = interaction.options.getString("address");
-  let tokenSymbol = interaction.options.getString("symbol");
+  const tokenSymbol = interaction.options.getString("symbol");
   if (!userAddress) {
     //Pull address from Indexer
-    let getUserAddress = await fetch(
+    const getUserAddress = await fetch(
       `https://indexer.alph.pro/api/bot/primary-address?discordId=${interaction.user.id}`,
       {
         headers: {
@@ -53,9 +53,8 @@ async function balance(interaction) {
         true
       );
       return;
-    } else {
-      userAddress = getUserAddress.address;
     }
+    userAddress = getUserAddress.address;
   }
 
   const userBalances =

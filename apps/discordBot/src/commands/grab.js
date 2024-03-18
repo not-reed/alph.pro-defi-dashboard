@@ -20,7 +20,7 @@ const config = require("../../../vendingMachine/alephium.config");
 
 const messageDisplay = require("../core/messageDisplay.js");
 
-let foods = [
+const foods = [
   ["Popcorn", "popcorn"],
   ["Banana", "banana"],
   ["Beer", "beer"],
@@ -63,13 +63,13 @@ async function grab(interaction) {
 
     const deployments = loadDeployments(process.env.NETWORK);
 
-    let vendingMachineStates = deployments.contracts.VendingMachine;
+    const vendingMachineStates = deployments.contracts.VendingMachine;
 
     if (!vendingMachineStates) {
       throw new Error("Vending Machine contract not found");
     }
 
-    let vendingMachineFetch =
+    const vendingMachineFetch =
       await vendingMachineStates.contractInstance.fetchState();
 
     const remainingSupply = [];
@@ -87,16 +87,18 @@ async function grab(interaction) {
       }
     }
 
-    let options = [];
+    const options = [];
     for (let i = 0; i < 20; i++) {
       options.push(
         new StringSelectMenuOptionBuilder()
           .setLabel(
             `${foods[i][0]} : ${remainingSupply[i]}/50 ${
-              remainingSupply[i] == 0 ? "(Sold Out)" : ""
+              remainingSupply[i] === 0 ? "(Sold Out)" : ""
             }`
           )
-          .setValue(`${remainingSupply[i] == 0 ? `soldout` + i : foods[i][1]}`)
+          .setValue(
+            `${remainingSupply[i] === 0 ? `soldout ${i}` : foods[i][1]}`
+          )
           .setEmoji(emoji.getUnicode(foods[i][1]) || "😋")
       );
     }
@@ -119,16 +121,16 @@ async function grab(interaction) {
 
 async function menuInteraction(interaction) {
   const selectedFood = interaction.values[0];
-  if (selectedFood.slice(0, 7) == "soldout") {
+  if (selectedFood.slice(0, 7) === "soldout") {
     await messageDisplay.notSuccess(
       interaction,
       "Not Available",
-      `Food is already sold out, please select another food.`,
+      "Food is already sold out, please select another food.",
       true
     );
     return;
   }
-  let index = foods.findIndex((f) => f[1] === selectedFood);
+  const index = foods.findIndex((f) => f[1] === selectedFood);
 
   await messageDisplay.success(
     interaction,
@@ -145,25 +147,25 @@ async function menuInteraction(interaction) {
 
   const deployments = loadDeployments(process.env.NETWORK);
 
-  let vendingMachineStates = deployments.contracts.VendingMachine;
+  const vendingMachineStates = deployments.contracts.VendingMachine;
 
   if (!vendingMachineStates) {
     throw new Error("Vending Machine contract not found");
   }
 
-  let mintPrice = (
+  const mintPrice = (
     await vendingMachineStates.contractInstance.methods.getMintPrice()
   ).returns;
-  let mintAmount = 1n;
+  const mintAmount = 1n;
 
-  let alphNeededForMint = mintPrice * mintAmount;
-  let alphNeededForSubcontract =
+  const alphNeededForMint = mintPrice * mintAmount;
+  const alphNeededForSubcontract =
     mintAmount * ONE_ALPH + mintAmount * DUST_AMOUNT;
-  let totalAlphNeeded = alphNeededForMint + alphNeededForSubcontract;
+  const totalAlphNeeded = alphNeededForMint + alphNeededForSubcontract;
 
   const provider = await wrappedConnect(interaction);
 
-  let newNftCreated = await MintNft.execute(provider, {
+  const newNftCreated = await MintNft.execute(provider, {
     initialFields: {
       vendingMachine: vendingMachineStates.contractInstance.contractId,
       foodTypeId: BigInt(index),
@@ -174,13 +176,13 @@ async function menuInteraction(interaction) {
 
   console.log("here ", newNftCreated);
 
-  let returnedTransactionId = newNftCreated.txId;
+  const returnedTransactionId = newNftCreated.txId;
 
   const nodeProvider = web3.getCurrentNodeProvider();
   await messageDisplay.success(
     interaction,
     "Minting in process...",
-    `Waiting on TX to be success`,
+    "Waiting on TX to be success",
     true
   );
 

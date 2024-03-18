@@ -53,11 +53,11 @@ async function tip(interaction) {
     await interaction.deferReply({ ephemeral: true });
     const tokenSymbol = interaction.options.getString("token_symbol");
 
-    let getTokenInfo = await fetch(
+    const getTokenInfo = await fetch(
       `https://indexer.alph.pro/api/tokens/symbol/${tokenSymbol}`
     ).then((a) => a.json());
 
-    if (getTokenInfo.tokens.length == 0) {
+    if (getTokenInfo.tokens.length === 0) {
       await messageDisplay.notSuccess(
         interaction,
         "No Token",
@@ -79,7 +79,7 @@ async function tip(interaction) {
     let receiverAddress;
 
     if (userInfo) {
-      let getUserAddress = await fetch(
+      const getUserAddress = await fetch(
         `https://indexer.alph.pro/api/bot/primary-address?discordId=${userInfo.id}`,
         {
           headers: {
@@ -105,7 +105,6 @@ async function tip(interaction) {
           true
         );
         return;
-      } else {
       }
       receiverAddress = getUserAddress.address;
     } else if (userAddress) {
@@ -129,6 +128,8 @@ async function tip(interaction) {
 
     //Get user address key
     const senderAddress = provider.account.address;
+
+    console.log("user");
 
     const sentTX = await provider.signAndSubmitTransferTx({
       signerAddress: senderAddress,
