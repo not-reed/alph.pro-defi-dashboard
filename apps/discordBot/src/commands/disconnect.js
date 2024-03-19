@@ -25,7 +25,7 @@ async function disconnect(interaction) {
     await messageDisplay.success(
       interaction,
       "Disconnect",
-      `Successfully disconnected from active WalletConnect connection.`,
+      "Successfully disconnected from active WalletConnect connection.",
       true
     );
   } else {
