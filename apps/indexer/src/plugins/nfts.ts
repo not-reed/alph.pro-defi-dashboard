@@ -24,7 +24,11 @@ import DeadRareNFTPublicSaleCollectionSequentialWithRoyaltyArtifact from "../abi
 import GoldCastleClubNFTPublicSaleCollectionRandomWithRoyaltyArtifact from "../abi/gold-castle-club/NFTPublicSaleCollectionRandomWithRoyalty.ral.json";
 import { findCollections } from "../database/services/nftCollection";
 import { findNftOrTokenAddresses } from "../database/services/nft";
+import { cache } from "../cache";
 
+const METADATA_CACHE_TIME = 60 * 15; // 15 minutes
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 interface PluginData {
   nfts: NewNft[];
   collections: NewNftCollection[];
@@ -157,6 +161,7 @@ export class NftPlugin extends Plugin<PluginData> {
             .values(
               attributes.map((attribute) => ({
                 ...attribute,
+                value: attribute.value || "", // its not null :shrug:
                 nftId: insert.id,
               }))
             )
@@ -198,6 +203,38 @@ export class NftPlugin extends Plugin<PluginData> {
     });
   }
 
+  private async fetchCollectionUri(
+    collection: ContractAddress
+  ): Promise<string> {
+    try {
+      // attempt to parse from node state directly
+      const rawState = await sdk.fetchState(collection);
+
+      const state = this.safelyParseState(rawState as NodeState);
+
+      const rawUri = state.fields.find(
+        (a) => a.name === "collectionUri"
+      )?.value;
+
+      return hexToString(rawUri as string);
+    } catch {}
+
+    try {
+      const [metadata] = await sdk.fetchNftCollectionMetadata([collection]);
+      if (
+        metadata &&
+        typeof metadata === "object" &&
+        "collectionUri" in metadata &&
+        typeof metadata.collectionUri === "string"
+      ) {
+        return metadata.collectionUri;
+      }
+    } catch {}
+    throw new Error(
+      `Unable to fetch collection uri for contract ${collection}`
+    );
+  }
+
   private async loadCollectionMetadata(
     collections: ContractAddress[]
   ): Promise<NewNftCollection[]> {
@@ -208,15 +245,8 @@ export class NftPlugin extends Plugin<PluginData> {
     const newCollections: NewNftCollection[] = [];
 
     for (const collection of collections) {
-      const rawState = await sdk.fetchState(collection);
+      const uri = await this.fetchCollectionUri(collection);
 
-      const state = this.safelyParseState(rawState as NodeState);
-
-      const rawUri = state.fields.find(
-        (a) => a.name === "collectionUri"
-      )?.value;
-
-      const uri = hexToString(rawUri as string);
       try {
         const data = await fetch(uri).then((a) => a.json());
 
@@ -267,13 +297,22 @@ export class NftPlugin extends Plugin<PluginData> {
     nft: NFTMetaData,
     retries = 0
   ): Promise<{ raw: unknown; json: unknown }> {
-    if (retries > 3) {
+    const cache_ = await cache.get(nft.tokenUri);
+
+    if (cache_) {
+      logger.info(`CACHE HIT ${nft.tokenUri}`);
+      const json = JSON.parse(cache_);
+      return { raw: json, json };
+    }
+    if (retries > 1) {
       logger.warn({
         msg: "Too many retries",
         nft,
       });
+      await wait(5000);
       throw new Error("Too many retries");
     }
+    console.log(`Fetching: "${nft.tokenUri}"`);
     const response = await fetch(nft.tokenUri);
     if (response.status === 404) {
       return {
@@ -282,17 +321,51 @@ export class NftPlugin extends Plugin<PluginData> {
       };
     }
     if (response.status !== 200) {
-      throw new Error(`Invalid response: ${response.status}`);
+      throw new Error(
+        `Invalid response: ${response.status} => ${nft.tokenUri}`
+      );
     }
 
+    let json: unknown = {};
     try {
-      const json = await response.clone().json();
+      json = await response.clone().json();
+      if (json) {
+        await cache.set(
+          nft.tokenUri,
+          JSON.stringify(json),
+          "EX",
+          METADATA_CACHE_TIME
+        ); // 24 hours, MUCH to long for prod
+      }
+
       return { raw: json, json };
     } catch (err) {
       const text = await response.clone().text();
+      if (text) {
+        await cache.set(
+          nft.tokenUri,
+          JSON.stringify(text),
+          "EX",
+          METADATA_CACHE_TIME
+        ); // 24 hours, MUCH to long for prod
+      }
+
       if (text === "" && response.url.includes("arweave")) {
+        if (response.redirected && response.url !== nft.tokenUri) {
+          return await this.safelyGetJsonData(
+            { ...nft, tokenUri: response.url },
+            retries // don't increase retries
+          );
+        }
         // arweave or cloudfront returning empty responses sometimes,
         // only solution is to retry
+        logger.warn({
+          msg: "Empty response - retrying...",
+          data: { err, nft, text, json, response },
+        });
+
+        await wait(1000);
+
         return await this.safelyGetJsonData(nft, retries + 1);
       }
 
@@ -336,6 +409,7 @@ export class NftPlugin extends Plugin<PluginData> {
           raw: raw, // TODO: THIS CAN BE INVALID JSON!
         });
       } catch (err) {
+        await wait(30_000);
         console.log({ nft });
         throw err;
       }
