@@ -1,5 +1,11 @@
 const { EmbedBuilder } = require("discord.js");
 
+const footer = {
+  text: "Brought to you by AlPro",
+  iconURL:
+    "https://images.alph.pro/images?width=128&height=128&uri=https://www.alph.pro/logo-bg.svg",
+};
+
 //Send message to user in channel when command is successful
 async function success(interaction, title, desc, ephemeral, logo) {
   let messageEmbed;
@@ -8,12 +14,14 @@ async function success(interaction, title, desc, ephemeral, logo) {
       .setColor(0x00ff000)
       .setTitle(title)
       .setDescription(desc)
-      .setThumbnail(logo);
+      .setThumbnail(logo)
+      .setFooter(footer);
   } else {
     messageEmbed = new EmbedBuilder()
       .setColor(0x00ff000)
       .setTitle(title)
-      .setDescription(desc);
+      .setDescription(desc)
+      .setFooter(footer);
   }
 
   if (interaction.deferred || interaction.replied) {
@@ -34,7 +42,8 @@ async function notSuccess(interaction, title, desc, ephemeral) {
   const messageEmbed = new EmbedBuilder()
     .setColor(0xff0000)
     .setTitle(title)
-    .setDescription(desc);
+    .setDescription(desc)
+    .setFooter(footer);
   if (interaction.deferred || interaction.replied) {
     interaction.followUp({
       embeds: [messageEmbed],
@@ -52,7 +61,8 @@ async function successUpdate(interaction, title, desc, ephemeral) {
   const messageEmbed = new EmbedBuilder()
     .setColor(0x00ff000)
     .setTitle(title)
-    .setDescription(desc);
+    .setDescription(desc)
+    .setFooter(footer);
 
   interaction.update({
     embeds: [messageEmbed],
@@ -66,7 +76,8 @@ async function notSuccessUpdate(interaction, title, desc, ephemeral) {
   const messageEmbed = new EmbedBuilder()
     .setColor(0xff0000)
     .setTitle(title)
-    .setDescription(desc);
+    .setDescription(desc)
+    .setFooter(footer);
 
   interaction.update({
     embeds: [messageEmbed],
@@ -81,6 +92,7 @@ async function sendAttachment(interaction, title, desc, attachment, fileName) {
     .setColor(0x00ff00)
     .setTitle(title)
     .setDescription(desc)
+    .setFooter(footer)
     .setImage(`attachment://${fileName}`);
 
   interaction.reply({
@@ -94,7 +106,8 @@ async function successDM(user, title, desc) {
   const messageEmbed = new EmbedBuilder()
     .setColor(0x00ff000)
     .setTitle(title)
-    .setDescription(desc);
+    .setDescription(desc)
+    .setFooter(footer);
   user.send({
     embeds: [messageEmbed],
   });
@@ -105,7 +118,8 @@ async function notSuccessDM(user, title, desc) {
   const messageEmbed = new EmbedBuilder()
     .setColor(0xff0000)
     .setTitle(title)
-    .setDescription(desc);
+    .setDescription(desc)
+    .setFooter(footer);
   user.send({
     embeds: [messageEmbed],
   });
