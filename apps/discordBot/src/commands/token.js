@@ -97,36 +97,31 @@ async function token(interaction) {
   const circulatingSupply =
     tokenHolder.holders[0].circulatingSupply / 10 ** tokenInfo.token.decimals;
 
-  const messageTokenInfo = `Name: ${tokenInfo.token.name}
-Symbol: ${tokenInfo.token.symbol}
-Decimals: ${tokenInfo.token.decimals}
-
-Price: $${
+  const messageTokenInfo = `\`\`\`${"Name".padEnd(9)}: ${tokenInfo.token.name}
+${"Symbol".padEnd(9)}: ${tokenInfo.token.symbol}
+${"Decimals".padEnd(9)}: ${
+    tokenInfo.token.decimals
+  }\`\`\`\`\`\`${"Price".padEnd(9)}: $${
     tokenInfo.markets.length > 1
       ? await commaFormat(await eighteenDigits(tokenInfo.price))
       : "Not Available"
   }
-LP: $${
+${"LP".padEnd(9)}: $${
     tokenInfo.markets.length > 1
       ? await commaFormat(await eighteenDigits(tokenInfo.markets[0].liquidity))
       : "Not Available"
   } 
-MC: $${
+${"MC".padEnd(9)}: $${
     tokenInfo.markets.length > 1
       ? await commaFormat(
           await eighteenDigits(circulatingSupply * tokenInfo.price)
         )
       : "Not Available"
-  }
-
-Circulating Supply: ${await commaFormat(circulatingSupply)}
-Holders: ${await commaFormat(tokenHolder.holders[0].holderCount)}
-
-Website:
-Discord:
-Twitter:
-Verified: ${tokenInfo.token.verified}
-     `;
+  }\`\`\`\`\`\`${"Supply".padEnd(9)}: ${await commaFormat(circulatingSupply)}
+${"Holders".padEnd(9)}: ${await commaFormat(
+    tokenHolder.holders[0].holderCount
+  )}\`\`\`\nWebsite | Discord | Twitter`;
+  // Listed : ${tokenInfo.token.verified}`;
   await success(
     interaction,
     `${tokenInfo.token.symbol}`,

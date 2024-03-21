@@ -14,15 +14,19 @@ const execute = async (interaction) => {
 
 module.exports = { discordData, execute };
 
+const maxLengthForPadding = 8
+
 //Command function
 async function help(interaction) {
-  const messageHelp = `/node : Shows node info
-/token : Shows token's Info>
-/tip : Tip token/NFT to user/address
-/give: Give Vending Machine food to user
-/grab: Mint Vending Machine food
-/balance: Displays users balance`
-// /lp : Shows LP of two tokens, and $ value`;
+  const messageHelp = `\`\`\`/${"node".padEnd(maxLengthForPadding)}: Shows node info
+/${"token".padEnd(maxLengthForPadding)}: Shows token's Info
+/${"nft".padEnd(maxLengthForPadding)}: Shows NFT/Collection Info
+/${"top".padEnd(maxLengthForPadding)}: Shows top list
+/${"tip".padEnd(maxLengthForPadding)}: Tip token/NFT to user/address
+/${"give".padEnd(maxLengthForPadding)}: Give Vending Machine food to user
+/${"grab".padEnd(maxLengthForPadding)}: Mint Vending Machine food
+/${"balance".padEnd(maxLengthForPadding)}: Displays users balance\`\`\``;
+  // /lp : Shows LP of two tokens, and $ value`;
   await messageDisplay.success(
     interaction,
     "Available Commands",

@@ -3,7 +3,6 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const messageDisplay = require("../core/messageDisplay.js");
 const { commaFormat } = require("../core/helpers.js");
 
-
 // Discord data to set command
 const discordData = new SlashCommandBuilder()
   .setName("node")
@@ -15,6 +14,8 @@ const execute = async (interaction) => {
 };
 
 module.exports = { discordData, execute };
+
+const maxLengthForPadding = 13;
 
 //Command function
 async function node(interaction) {
@@ -30,12 +31,17 @@ async function node(interaction) {
     "https://wallet-v20.mainnet.alephium.org/infos/current-difficulty"
   ).then((a) => a.json());
 
+  let hashRate = getCurrentHashRate.hashrate.split(" ");
+  hashRate = hashRate[0] / 1_000_000_000;
 
-  let hashRate=getCurrentHashRate.hashrate.split(" ")
-hashRate=hashRate[0]/1_000_000_000
-  
-  const messageNode = `Block Height: ${getBlockHeight.currentHeight}
-  Hashrate: ${hashRate.toFixed(2)} GH/s
-  Difficulty: ${await commaFormat(getDifficuilty.difficulty)}`;
+  const messageNode = `\`\`\`${"Block Height".padEnd(maxLengthForPadding)}: ${
+    getBlockHeight.currentHeight
+  }
+${"Hashrate".padEnd(maxLengthForPadding)}: ${hashRate.toFixed(2)} GH/s
+${"Difficulty".padEnd(maxLengthForPadding)}: ${await commaFormat(
+    getDifficuilty.difficulty
+  )}
+\`\`\``;
+
   await messageDisplay.success(interaction, "Node Info", messageNode, false);
 }
