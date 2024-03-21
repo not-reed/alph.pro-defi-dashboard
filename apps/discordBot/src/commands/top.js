@@ -28,7 +28,7 @@ const maxLengthForPadding = 6;
 
 //Command function
 async function top(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply();
   if (interaction.options.getSubcommand() === "token") {
     const getTokensHolder = await fetch(
       "https://indexer.alph.pro/api/tokens/holders"
@@ -95,7 +95,6 @@ async function top(interaction) {
       "```NFT price comming soon```",
       false
     );
-    console.log("nft");
   } else if (interaction.options.getSubcommand() === "holders") {
     const getHolders = await fetch(
       " https://indexer.alph.pro/api/tokens/holders"
