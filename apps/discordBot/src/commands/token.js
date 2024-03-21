@@ -121,7 +121,6 @@ ${"MC".padEnd(9)}: $${
 ${"Holders".padEnd(9)}: ${await commaFormat(
     tokenHolder.holders[0].holderCount
   )}\`\`\`\nWebsite | Discord | Twitter`;
-  // Listed : ${tokenInfo.token.verified}`;
   await success(
     interaction,
     `${tokenInfo.token.symbol}`,

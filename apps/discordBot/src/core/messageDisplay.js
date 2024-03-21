@@ -23,16 +23,15 @@ async function success(interaction, title, desc, ephemeral, logo) {
       .setDescription(desc)
       .setFooter(footer);
   }
-
   if (interaction.deferred || interaction.replied) {
     interaction.followUp({
       embeds: [messageEmbed],
-      ephemeral: ephemeral,
+      ephemeral: false,
     });
   } else {
     interaction.reply({
       embeds: [messageEmbed],
-      ephemeral: ephemeral,
+      ephemeral: false,
     });
   }
 }
