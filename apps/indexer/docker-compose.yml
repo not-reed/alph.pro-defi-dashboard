@@ -28,7 +28,13 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS:-postgres}
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_DB=${DB_NAME:-postgres}
-  # sign up and connect to docker at local ip 192.168.x.x
+  # pghero:
+  #   image: ankane/pghero
+  #   ports:
+  #     - "127.0.0.1:${PGHERO_PORT:-8080}:8080"
+  #   environment:
+  #     - DATABASE_URL=postgres://postgres:postgres@postgres:5432/hackathon
+
   # pgadmin:
   #   image: dpage/pgadmin4
   #   ports:
