@@ -105,7 +105,7 @@ app.openapi(holdersRoute, async (c) => {
             "holderCount"
           ),
         ])
-        .where("Balance.balance", "=", 0n)
+        .where("Balance.balance", "<>", 0n)
         .whereRef("Nft.collectionAddress", "=", "NftCollection.address")
         .as("holderCount"),
     ])
