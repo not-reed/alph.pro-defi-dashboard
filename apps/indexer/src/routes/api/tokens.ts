@@ -26,8 +26,8 @@ const route = createRoute({
   path: "",
   request: {
     query: z.object({
-      verified: z.coerce.boolean().openapi({
-        param: { name: "verified", in: "query" },
+      listed: z.coerce.boolean().openapi({
+        param: { name: "listed", in: "query" },
         example: true,
       }),
     }),
@@ -47,12 +47,12 @@ const route = createRoute({
 });
 
 app.openapi(route, async (c) => {
-  const { verified } = c.req.valid("query");
+  const { listed } = c.req.valid("query");
 
   const tokens = await db
     .selectFrom("Token")
     .selectAll()
-    .where("verified", "in", verified ? [true] : [true, false])
+    .where("listed", "in", listed ? [true] : [true, false])
     .execute();
 
   return c.json({
@@ -140,7 +140,7 @@ app.openapi(symbolRoute, async (c) => {
     .selectFrom("Token")
     .selectAll()
     .where("symbol", "ilike", symbol)
-    .orderBy("verified", "desc")
+    .orderBy("listed", "desc")
     .execute();
 
   return c.json({

@@ -9,70 +9,70 @@ import { config } from "../config";
 import { findTokensByAddress, updateToken } from "../database/services/token";
 
 const GITHUB_URL =
-	"https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json";
+  "https://raw.githubusercontent.com/alephium/token-list/master/tokens/mainnet.json";
 
 /**
- * Fetches the official verified token list from @alephium github
+ * Fetches the official listed token list from @alephium github
  * and updates any missing/changed metadata every 30 minutes
  */
 export async function startTokensTask() {
-	if (config.INDEXING_DISABLED) {
-		logger.info("Tokens Task Disabled: Skipping");
-		return;
-	}
+  if (config.INDEXING_DISABLED) {
+    logger.info("Tokens Task Disabled: Skipping");
+    return;
+  }
 
-	const schedule = EVERY_30_MINUTES;
+  const schedule = EVERY_30_MINUTES;
 
-	logger.info(`Starting Tokens Task: ${parseCron(schedule)}`);
+  logger.info(`Starting Tokens Task: ${parseCron(schedule)}`);
 
-	cron.schedule(
-		schedule,
-		async () => {
-			const results: unknown = await fetch(GITHUB_URL).then((a) => a.json());
+  cron.schedule(
+    schedule,
+    async () => {
+      const results: unknown = await fetch(GITHUB_URL).then((a) => a.json());
 
-			if (
-				!results ||
-				typeof results !== "object" ||
-				!("tokens" in results) ||
-				!Array.isArray(results.tokens)
-			) {
-				logger.error("Invalid token list from github");
-				return;
-			}
+      if (
+        !results ||
+        typeof results !== "object" ||
+        !("tokens" in results) ||
+        !Array.isArray(results.tokens)
+      ) {
+        logger.error("Invalid token list from github");
+        return;
+      }
 
-			const tokenListIds = Array.from(
-				new Set<string>(results.tokens.map((token) => token.id)),
-			);
-			const tokenListAddresses = tokenListIds.map(addressFromContractId);
-			const tokens = await findTokensByAddress(tokenListAddresses);
+      const tokenListIds = Array.from(
+        new Set<string>(results.tokens.map((token) => token.id))
+      );
+      const tokenListAddresses = tokenListIds.map(addressFromContractId);
+      const tokens = await findTokensByAddress(tokenListAddresses);
 
-			if (tokens.length !== tokenListIds.length) {
-				logger.warn(
-					`Github Token List Count Mismatch. Github: ${tokenListIds.length}, Local: ${tokens.length}`,
-				);
-			}
+      if (tokens.length !== tokenListIds.length) {
+        logger.warn(
+          `Github Token List Count Mismatch. Github: ${tokenListIds.length}, Local: ${tokens.length}`
+        );
+      }
 
-			for (const token of tokens) {
-				const meta = results.tokens.find(
-					(t) => addressFromContractId(t.id) === token.address,
-				);
+      for (const token of tokens) {
+        const meta = results.tokens.find(
+          (t) => addressFromContractId(t.id) === token.address
+        );
 
-				if (!meta) {
-					continue;
-				}
-				token.verified = true;
-				token.description = meta.description;
-				token.logo = meta.logoURI;
-			}
+        if (!meta) {
+          continue;
+        }
+        token.listed = true;
+        token.description = meta.description;
+        token.logo = meta.logoURI;
+      }
 
-			await db.transaction().execute(async (trx) => {
-				for (const token of tokens) {
-					await updateToken(token, trx);
-				}
-			});
+      await db.transaction().execute(async (trx) => {
+        for (const token of tokens) {
+          await updateToken(token, trx);
+        }
+      });
 
-			logger.info("Github Token List Updated");
-		},
-		{ runOnInit: false }, // handy flag once to initialize
-	);
+      logger.info("Github Token List Updated");
+    },
+    { runOnInit: false } // handy flag once to initialize
+  );
 }

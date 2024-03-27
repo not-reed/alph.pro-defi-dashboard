@@ -18,6 +18,8 @@ const route = useRoute()
 const { prices } = usePrices()
 
 
+const alphPrice = computed(() => prices.tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq)
+
 interface PartialToken {
     token: {
         address: string
@@ -30,7 +32,7 @@ interface PartialToken {
 }
 
 const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
-    if (!balance.token?.verified) {
+    if (!balance.token?.listed) {
         return acc;
     }
 
@@ -178,8 +180,10 @@ const routeUserAddress = route.params.address as string
                 </div>
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Floor:</div>
-                    <!-- <div class="text-calypso-700 dark:text-calypso-500 font-bold">---</div> -->
-                    <div class="font-bold">---</div>
+                    <div class="text-calypso-700 dark:text-calypso-500 font-bold"> {{
+                        format(Number(balance.nft.collection.floor) / 1e18 * alphPrice) }}
+                    </div>
+                    <!-- <div class="font-bold">---</div> -->
                 </div>
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Listed:</div>

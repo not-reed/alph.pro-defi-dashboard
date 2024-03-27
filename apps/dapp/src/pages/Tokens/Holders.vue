@@ -31,8 +31,8 @@ async function loadActive(address = route.params.address) {
     active.value = results2.holders[0]
 }
 
-const verified = computed(() => holders.value.filter((holder: any) => holder.token?.verified))
-const unverified = computed(() => holders.value.filter((holder: any) => holder.token && !holder.token?.verified))
+const verified = computed(() => holders.value.filter((holder: any) => holder.token?.listed))
+const unverified = computed(() => holders.value.filter((holder: any) => holder.token && !holder.token?.listed))
 
 const marketCap = computed(() => {
     if (!active.value || !prices[active.value.token.address] || !active.value.circulatingSupply) {
@@ -62,7 +62,7 @@ const liquidity = computed(() => {
                             ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
                             : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
                     ]">
-                            Verified
+                            Listed
                         </button>
                     </Tab>
                     <Tab as="template" v-slot="{ selected }">
@@ -73,7 +73,7 @@ const liquidity = computed(() => {
                             ? 'bg-white dark:bg-calypso-700 dark:text-zinc-300 text-blue-700 shadow'
                             : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
                     ]">
-                            Unverified
+                            Unlisted
                         </button>
                     </Tab>
                 </TabList>

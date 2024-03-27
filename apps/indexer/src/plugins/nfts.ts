@@ -10,7 +10,10 @@ import {
   hexToString,
   type NFTMetaData,
 } from "@alephium/web3";
-import type { ContractAddress } from "../services/common/types/brands";
+import type {
+  ContractAddress,
+  TransactionHash,
+} from "../services/common/types/brands";
 import { logger } from "../services/logger";
 import explorerService from "../services/explorer";
 import { ALPH_ADDRESS } from "../core/constants";
@@ -25,6 +28,7 @@ import GoldCastleClubNFTPublicSaleCollectionRandomWithRoyaltyArtifact from "../a
 import { findCollections } from "../database/services/nftCollection";
 import { findNftOrTokenAddresses } from "../database/services/nft";
 import { cache } from "../cache";
+import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 
 const METADATA_CACHE_TIME = 60 * 15; // 15 minutes
 
@@ -33,9 +37,15 @@ interface PluginData {
   nfts: NewNft[];
   collections: NewNftCollection[];
   attributes: Map<string, Omit<NewNftAttribute, "nftId">[]>;
+  transactions: NewPluginBlock[];
 }
 
-const EMPTY = { nfts: [], attributes: new Map(), collections: [] };
+const EMPTY = {
+  nfts: [],
+  attributes: new Map(),
+  collections: [],
+  transactions: [],
+};
 
 export class NftPlugin extends Plugin<PluginData> {
   PLUGIN_NAME = "nfts";
@@ -45,6 +55,8 @@ export class NftPlugin extends Plugin<PluginData> {
   // whatever is returned here will be passed to the insert function
   async process(blocks: Block[]): Promise<PluginData> {
     const tokenAddresses = new Set<ContractAddress>();
+    const txHashMapByAddress = new Map<string, string>();
+
     for (const block of blocks) {
       for (const transaction of block.transactions) {
         for (const token of transaction.outputs) {
@@ -52,6 +64,13 @@ export class NftPlugin extends Plugin<PluginData> {
           // however for now, and for this plugin its acceptable
           if (token.amount === 1n) {
             tokenAddresses.add(token.tokenAddress);
+
+            // this will get one transaction, essentially at random
+            // every hash would be too much, and for this plugin its not needed
+            txHashMapByAddress.set(
+              token.tokenAddress,
+              transaction.transactionHash
+            );
           }
         }
       }
@@ -63,8 +82,8 @@ export class NftPlugin extends Plugin<PluginData> {
 
     const newNfts = new Map<string, NewNft>();
     const newCollections = new Map<string, NewNftCollection>();
-
     const attributes = new Map<string, Omit<NewNftAttribute, "nftId">[]>();
+    const processedTransactions = new Set<TransactionHash>();
 
     if (tokenAddresses.size > 0) {
       // if its found, we can ignore it completely
@@ -81,10 +100,12 @@ export class NftPlugin extends Plugin<PluginData> {
         return EMPTY;
       }
 
-      // TODO: this fails on some, such as 'shades of defi'
       const nftMetadata = await this.loadNonFungibleMetadata(missingSet);
 
       for (const meta of nftMetadata) {
+        processedTransactions.add(
+          txHashMapByAddress.get(meta.address as string) as TransactionHash
+        );
         newNfts.set(meta.address as ContractAddress, {
           collectionAddress: meta.collectionAddress,
           address: meta.address,
@@ -134,11 +155,21 @@ export class NftPlugin extends Plugin<PluginData> {
       nfts: Array.from(newNfts.values()),
       collections: Array.from(newCollections.values()),
       attributes: attributes,
+      transactions: Array.from(processedTransactions).map((hash) => ({
+        blockHash: hash,
+        pluginName: this.PLUGIN_NAME,
+      })),
     };
   }
 
   // insert data
   async insert(trx: Transaction<Database>, data: PluginData) {
+    // TODO: don't need to save this, too much data
+    // await trx
+    //   .insertInto("PluginBlock")
+    //   .values(data.transactions) // throw on conflict
+    //   .execute();
+
     if (data.nfts.length) {
       const inserted = await trx
         .insertInto("Nft")
@@ -410,7 +441,11 @@ export class NftPlugin extends Plugin<PluginData> {
         });
       } catch (err) {
         await wait(30_000);
-        console.log({ nft });
+        logger.error({
+          msg: "Error processing NFT",
+          err,
+          nft,
+        });
         throw err;
       }
     }

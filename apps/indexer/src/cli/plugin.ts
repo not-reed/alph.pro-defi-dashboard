@@ -13,6 +13,21 @@ const plugins = rawPlugins.map((plugin) => {
     state: pluginState.find((state) => state.name === plugin.PLUGIN_NAME),
   };
 });
+
+function getPlugin(pluginName: string) {
+  const _plugin = plugins.find((p) => p.plugin.PLUGIN_NAME === pluginName);
+  if (!_plugin) {
+    console.error(`Plugin ${pluginName} not found`);
+    process.exit(1);
+  }
+
+  if (!_plugin.state) {
+    console.warn(
+      chalk.yellow(`\nPlugin State ${pluginName} not found in database\n`)
+    );
+  }
+  return _plugin;
+}
 export async function listPlugins() {
   console.log(`
 ${chalk.bold(chalk.green("Plugins"))}
@@ -37,18 +52,7 @@ export async function processPlugin(
   end: number,
   save: boolean
 ) {
-  const _plugin = plugins.find((p) => p.plugin.PLUGIN_NAME === pluginName);
-
-  if (!_plugin) {
-    console.error(`Plugin ${pluginName} not found`);
-    process.exit(1);
-  }
-
-  if (!_plugin.state) {
-    console.warn(
-      chalk.yellow(`\nPlugin State ${pluginName} not found in database\n`)
-    );
-  }
+  const _plugin = getPlugin(pluginName);
 
   if (save) {
     console.warn(
@@ -83,4 +87,24 @@ export async function processPlugin(
       // as it will be updated by indexer, and this is a one-off
     });
   }
+}
+
+export async function processBlocks(
+  pluginName: string,
+  blocks: Awaited<ReturnType<typeof sdk.getBlocksFromTimestamp>>,
+  save: boolean
+) {
+  const _plugin = getPlugin(pluginName);
+
+  const data = await _plugin.plugin.process(blocks);
+
+  if (save) {
+    await db.transaction().execute(async (trx) => {
+      await _plugin.plugin.insert(trx, data);
+      // don't update plugin checkpoint here
+      // as it will be updated by indexer, and this is a one-off
+    });
+  }
+
+  return data;
 }

@@ -30,7 +30,7 @@ async function fetchUserBalances(addresses: string[]) {
             "symbol",
             "decimals",
             "totalSupply",
-            "verified",
+            "listed",
             "description",
             "logo",
           ])
@@ -46,6 +46,15 @@ async function fetchUserBalances(addresses: string[]) {
             "Nft.description",
             "Nft.uri",
             "Nft.nftIndex",
+            eb
+              .selectFrom("DeadRareListing")
+              .whereRef("DeadRareListing.tokenAddress", "=", "Nft.address")
+              .select("price")
+              .where("soldAt", "is", null)
+              .where("unlistedAt", "is", null)
+              .orderBy("price", "asc")
+              .limit(1)
+              .as("listedPrice"),
             jsonObjectFrom(
               eb
                 .selectFrom("NftCollection")
@@ -55,6 +64,19 @@ async function fetchUserBalances(addresses: string[]) {
                   "NftCollection.image",
                   "NftCollection.name",
                   "NftCollection.description",
+                  eb
+                    .selectFrom("DeadRareListing")
+                    .whereRef(
+                      "DeadRareListing.collectionAddress",
+                      "=",
+                      "Nft.collectionAddress"
+                    )
+                    .select("price")
+                    .where("soldAt", "is", null)
+                    .where("unlistedAt", "is", null)
+                    .orderBy("price", "asc")
+                    .limit(1)
+                    .as("floor"),
                 ])
                 .whereRef("NftCollection.address", "=", "collectionAddress")
             ).as("collection"),
@@ -69,7 +91,7 @@ async function fetchUserBalances(addresses: string[]) {
         eb
           .selectFrom("Token")
           .whereRef("Token.address", "=", "Balance.tokenAddress")
-          .select("verified"),
+          .select("listed"),
         eb.exists(
           eb
             .selectFrom("Nft")

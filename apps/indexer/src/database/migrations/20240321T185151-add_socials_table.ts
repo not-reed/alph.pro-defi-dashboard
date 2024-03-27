@@ -1,6 +1,6 @@
 import { type Kysely, sql } from "kysely";
 
-const tableName = "PluginBlock";
+const tableName = "Social";
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -8,17 +8,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("id", "uuid", (col) =>
       col.primaryKey().defaultTo(sql`gen_random_uuid()`)
     )
-    .addColumn("pluginName", "text", (col) =>
-      col.references("Plugin.name").onDelete("cascade").notNull()
-    )
-    .addColumn("blockHash", "text", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("plugin_block_unique_index")
-    .on(tableName)
-    .unique()
-    .columns(["pluginName", "blockHash"])
+    .addColumn("name", "text")
+    .addColumn("github", "text")
+    .addColumn("website", "text")
+    .addColumn("twitter", "text")
+    .addColumn("telegram", "text")
+    .addColumn("medium", "text")
+    .addColumn("discord", "text")
     .execute();
 }
 
