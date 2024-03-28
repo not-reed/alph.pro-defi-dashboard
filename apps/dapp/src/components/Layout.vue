@@ -18,7 +18,7 @@ import TopBar from './TopBar.vue';
     </div>
     <div
         class="fixed -bottom-1 bg-zinc-100 dark:bg-calypso-700 left-0 right-0 md:hidden h-8 border-t border-calypso-900">
-        <ul class="flex justify-around text-calypso-800">
+        <ul class="flex justify-around text-calypso-800 dark:text-calypso-400">
             <li>
                 <RouterLink to="/">
                     <div

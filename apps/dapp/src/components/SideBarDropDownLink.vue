@@ -12,7 +12,7 @@ const { user } = useUser()
 const withParams = computed(() => {
     return {
         '/portfolio/overview/:address?': `/portfolio/overview/${user.wallet}`,
-        '/tokens/holders/:address?': `/tokens/holders`,
+        '/tokens/holders/:address?': "/tokens/holders",
     } as Record<string, string>
 })
 
