@@ -25,7 +25,7 @@ interface PartialToken {
         address: string
         symbol: string
         logo: string
-        verified: boolean
+        listed: boolean
     }
     balance: number
     price: number
@@ -51,7 +51,7 @@ const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
 }))
 
 
-const nfts = computed(() => user.balances.filter(a => Boolean(a.nft?.image)).sort((a, b) => a.nft?.name.localeCompare(b.nft?.name)))
+const nfts = computed(() => user.balances.filter(a => Boolean(a.nft?.image)).sort((a, b) => a.nft?.name.localeCompare(b.nft?.name)).sort((a, b) => b.nft.collection.floor - a.nft.collection.floor))
 
 const tokenWorth = computed(() => {
     return pricedTokens.value.reduce((acc: number, balance: PartialToken) => {
@@ -77,9 +77,9 @@ const routeUserAddress = route.params.address as string
 <template>
     <div class="flex flex-col w-full max-w-2xl">
 
-        <div class="grid grid-cols-4 gap-2 m-4 w-full">
+        <div class="grid md:grid-cols-4 gap-2 p-4 w-full">
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl col-span-2 row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl md:col-span-2 md:row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
                 <span class="text-calypso-800 dark:text-calypso-300 text-sm opacity-75">Net Worth</span>
                 <span class="text-2xl font-bold  text-calypso-700 dark:text-calypso-500">
                     {{ format(netWorth, currency) }}
@@ -89,32 +89,36 @@ const routeUserAddress = route.params.address as string
                 </span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Wallet</span>
                 <span class="text-lg font-bold">{{ format(tokenWorth) }}</span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Staked</span>
                 <span class="text-lg font-bold">{{ format(stakedWorth) }}</span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">NFTs</span>
                 <span class="text-lg font-bold">{{ format(nftWorth) }}</span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Claimable</span>
                 <span class="text-lg font-bold">{{ format(claimableWorth) }}</span>
             </div>
         </div>
 
-        <div class="flex gap-2 m-4 w-full">
+        <div class="flex gap-2 p-4 w-full">
             <div
-                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex items-center justify-between border-b border-b-calypso-800 w-full">
+                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex flex-col md:flex-row md:items-center justify-between border-b border-b-calypso-800 w-full">
 
-                <div>
+                <div class="md:hidden">
+                    {{ truncateAddress(routeUserAddress, 24) }}
+                </div>
+
+                <div class="hidden md:inline-block">
                     {{ truncateAddress(routeUserAddress, 50) }}
                 </div>
 
@@ -132,7 +136,7 @@ const routeUserAddress = route.params.address as string
         </div>
 
         <!-- TODO: only show i.e. top 10 tokens here? -->
-        <ul class="grid gap-2 m-4 w-full">
+        <ul class="grid gap-2 p-4 w-full">
             <li v-for="balance in pricedTokens"
                 class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
                 <div class="flex gap-2">
@@ -145,10 +149,12 @@ const routeUserAddress = route.params.address as string
                     </div>
                 </div>
 
-                <div v-if="balance.price" class="opacity-50">{{ format(balance.price) }}</div>
+                <div v-if="balance.price" class="text-clip overflow-auto opacity-50">
+                    {{ format(balance.price) }}</div>
 
 
-                <div v-if="balance.price" class="font-bold text-calypso-700 dark:text-calypso-500">
+                <div v-if="balance.price"
+                    class="text-clip overflow-auto font-bold text-calypso-700 dark:text-calypso-500">
                     {{ format(balance.price * balance.balance) }}
                 </div>
 
@@ -169,7 +175,7 @@ const routeUserAddress = route.params.address as string
 
         <!-- TODO: Ranked by Rarest+Highest Floor -->
         <!-- Only show first 4 or 8 -->
-        <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full" v-if="nfts.length">
+        <ul class="grid grid-cols-2 md:grid-cols-4 flex-wrap gap-2 px-4 pt-4 w-full" v-if="nfts.length">
             <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
                 <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3" :src="balance.nft.image"
                     :width="300" :height="300" />

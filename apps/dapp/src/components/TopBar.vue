@@ -1,4 +1,4 @@
-<script setup lang=ts>
+<script setup lang="ts">
 import { computed } from 'vue';
 import { useNavLinks } from '../hooks/useNavLinks'
 import { useRoute } from 'vue-router';
@@ -10,7 +10,7 @@ import { SunIcon, MoonIcon, ComputerDesktopIcon, Cog6ToothIcon } from '@heroicon
 import UserSettingsDropDown from './UserSettingsDropDown.vue';
 import { usePrices } from '../hooks/usePrices';
 import { useCurrency } from '../hooks/useCurrency';
-import { Token } from '../types/token';
+import type { Token } from '../types/token';
 
 const { mode, nextTheme } = useDarkMode()
 const route = useRoute()
@@ -42,7 +42,7 @@ const marqueeTokens = computed(() => {
         return []
     }
 
-    let tokens_: Token[] = Object.values(tokens)
+    const tokens_: Token[] = Object.values(tokens)
     do {
         tokens_.push(...Object.values(tokens))
     } while (tokens_.length < 10) // require at least 2x tokens and 10 tokens to fill width
@@ -52,9 +52,9 @@ const marqueeTokens = computed(() => {
 
 <template>
     <div class="flex bg-gray-200 border-b dark:border-calypso-800 dark:bg-calypso-900 w-full sticky top-0 z-10">
-        <div class="flex items-center justify-between w-full max-w-4xl">
-            <div class="" v-if="page?.name">
-                <ul class="inline-flex pt-10 px- w-full -mt-8">
+        <div class="flex items-center justify-between w-full max-w-2xl">
+            <div class="flex" v-if="page?.name">
+                <ul class="flex-1 inline-flex pt-10 px- w-full -mt-8">
                     <li
                         class="dark:bg-calypso-950 bg-white dark:text-emerald-200 dark:border-calypso-800 px-2 h-8 pt-1 rounded-t border-t border-r border-l -mb-px">
                         {{ page.name }}
@@ -84,6 +84,7 @@ const marqueeTokens = computed(() => {
             <!-- Spacer Element -->
             <div v-else />
 
+
             <div class="mt-2 overflow-hidden w-full ml-2">
                 <div class="w-full inline-flex items-start justify-start">
                     <ul class="flex items-start justify-start animate-marquee transition duration-300"
@@ -98,7 +99,8 @@ const marqueeTokens = computed(() => {
                     </ul>
                 </div>
             </div>
-            <div class="mt-2 flex gap-2 -mr-4">
+
+            <div class="pt-2 flex gap-2 pr-4">
 
                 <CurrencyDropdown />
 

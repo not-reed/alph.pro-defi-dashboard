@@ -2,6 +2,7 @@ import {
   type RouteRecordRaw,
   createRouter,
   createWebHistory,
+  RouteRecordName,
 } from "vue-router";
 import NProgress from "nprogress";
 import Home from "./pages/Home.vue";
@@ -29,7 +30,7 @@ import UnverifiedTokens from "./pages/Tokens/UnverifiedTokens.vue";
 import ListedNFTs from "./pages/NFTs/ListedNFTs.vue";
 import UnlistedNFTs from "./pages/NFTs/UnlistedNFTs.vue";
 
-const { loadBalances } = useUser();
+const { loadBalances, user } = useUser();
 declare module "vue-router" {
   interface RouteMeta {
     title?: string;
@@ -49,7 +50,7 @@ export const routes = [
     meta: { title: "Portfolio", defaultOpen: true },
     children: [
       {
-        path: "/portfolio/overview/:address",
+        path: "/portfolio/overview/:address?",
         name: "PortfolioOverview",
         component: PortfolioOverviewVue,
         meta: {
@@ -251,21 +252,32 @@ export const router = createRouter({
 // used for guards & prefetching data
 const { session, loadSession, setLoaded } = useDiscordAccount();
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, _from) => {
   NProgress.start();
 
-  if (to.meta.needsWallet && to.params.address) {
-    const address = Array.isArray(to.params.address)
+  if (to.meta.needsWallet) {
+    const addressParam = Array.isArray(to.params.address)
       ? to.params.address[0]
       : to.params.address;
-    if (address === ":address") {
-      return next("/");
-    }
-    await loadBalances(address);
-  }
 
-  if (to.meta.needsWallet && !to.params.address) {
-    return next("/");
+    console.log({ wallet: user.wallet });
+    if (!addressParam && !user.wallet) {
+      // no usable wallet in link
+      return "/";
+    }
+
+    if (!addressParam && user.wallet) {
+      // redirect to default wallet
+      await loadBalances(user.wallet);
+      return {
+        name: to.name as RouteRecordName,
+        params: { address: user.wallet },
+      };
+    }
+
+    await loadBalances(addressParam);
+
+    // redirect to use users default wallet
   }
 
   if (to.meta.needsDiscord && !session?.loaded) {
@@ -277,9 +289,8 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.needsDiscord && !session?.user?.name) {
-    return next("/");
+    return "/";
   }
-  return next();
 });
 
 router.afterEach(() => {

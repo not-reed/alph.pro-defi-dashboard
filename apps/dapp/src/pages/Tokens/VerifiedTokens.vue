@@ -134,7 +134,7 @@ function sortByField(sort: SortBy) {
                     <TableRow>
                         <TableHeader @click="sortByField(SortBy.Name)">&nbsp;</TableHeader>
                         <TableHeader @click="sortByField(SortBy.Name)">&nbsp;</TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Name)" class="cursor-pointer">
+                        <TableHeader @click="sortByField(SortBy.Name)" class="cursor-pointer hidden md:table-cell">
                             <span class="flex items-center gap-2">
                                 Name
                                 <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Name"
@@ -218,8 +218,11 @@ function sortByField(sort: SortBy) {
                             {{ token.token.symbol }}
                         </TableCell>
                         <TableCell class="px-2 py-1 table-cell md:hidden">
-                            <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.token.address}`">
-                                {{ token.token.symbol }}
+                            <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.token.address}`"
+                                class="">
+                                <span class="w-14 text-ellipsis overflow-hidden">
+                                    {{ token.token.symbol }}
+                                </span>
                             </ExternalLink>
                         </TableCell>
                         <TableCell class="px-2 py-1 hidden md:table-cell">{{ token.token.decimals }}</TableCell>

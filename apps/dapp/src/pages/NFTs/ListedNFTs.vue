@@ -85,7 +85,7 @@ const nfts = computed(() => nftResults.value.map(nft => ({
                 </div>
             </div>
         </div>
-        <ul class="grid grid-cols-4 flex-wrap gap-2 mx-4 pt-4 w-full max-w-4xl">
+        <ul class="grid grid-cols-2 md:grid-cols-4 flex-wrap gap-2 px-4 pt-4 w-full max-w-4xl">
             <li v-for="nft in nfts" class="flex flex-col gap-4 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow">
                 <div class="w-full h-32">
                     <ProxyImage :src="nft.image" :width="300" :height="300"
