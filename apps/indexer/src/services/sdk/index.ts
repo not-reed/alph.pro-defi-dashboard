@@ -83,26 +83,11 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
     for (const hashChunk of chunks) {
       await Promise.all(
         hashChunk.map(async (hash) => {
-          if (
-            hash ===
-            "000000000001941a40052289f0c2920a4d443b0e7cdfb0191c6498cb329b8740"
-          ) {
-            logger.info(
-              "******************************************* OK THIS IS THE ONE *************************************************"
-            );
-          }
-
           timeoutMap.set(hash, Date.now() + 10_000);
 
           const cached = transactionMap.get(hash);
 
           if (cached) {
-            if (
-              hash ===
-              "000000000001941a40052289f0c2920a4d443b0e7cdfb0191c6498cb329b8740"
-            ) {
-              console.log({ cached });
-            }
             cachedCounter++;
             transactions.push(cached);
             resetCacheTimer(hash);
@@ -110,12 +95,6 @@ const transactionLoader = new DataLoader<BlockHash, ExplorerTransaction[]>(
           }
 
           const transaction = await explorerService.block.transactions(hash);
-          if (
-            hash ===
-            "000000000001941a40052289f0c2920a4d443b0e7cdfb0191c6498cb329b8740"
-          ) {
-            console.log({ transaction });
-          }
           transactions.push(transaction);
           resetCacheTimer(hash, transaction);
           return;
@@ -404,6 +383,8 @@ export default {
       for (const tx of block.transactions) {
         if (
           [
+            // manually skip orphaned blocks. This should be safe to remove now
+            // but needs to be verified
             "4fff51665e47336c941f3941ce71510609b70d8992a3d9fe253b05a15de5c6e6",
             "0d28f5e2ee99f9e5d69bf392fc64c95bdbbed356e8babb83ce2103be1c8f75b9",
             "b8d5506149aab96ef0b2e3641e51a4a30c4472e8eafefa0d6efeb65a9d7b5ed0",
