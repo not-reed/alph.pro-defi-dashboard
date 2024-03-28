@@ -100,7 +100,9 @@ export async function processBlocks(
 
   if (save) {
     await db.transaction().execute(async (trx) => {
-      await _plugin.plugin.insert(trx, data);
+      if (data.transactions.length) {
+        await _plugin.plugin.insert(trx, data);
+      }
       // don't update plugin checkpoint here
       // as it will be updated by indexer, and this is a one-off
     });
