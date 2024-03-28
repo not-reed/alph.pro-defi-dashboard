@@ -27,7 +27,7 @@ const nftRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            holders: z.array(
+            nfts: z.array(
               z.object({
                 id: z.string(),
                 address: z.string(),

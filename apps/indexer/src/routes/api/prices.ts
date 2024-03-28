@@ -1,4 +1,4 @@
-import { type Env, type Schema } from "hono";
+import type { Env, Schema } from "hono";
 import { db } from "../../database/db";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";

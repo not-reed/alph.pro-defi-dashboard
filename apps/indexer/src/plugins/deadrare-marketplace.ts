@@ -1,19 +1,14 @@
-// NGU: '21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu
-// http://10.11.12.13:9090/contracts/21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu/parent
-// http://10.11.12.13:9090/contract-events/contract-address/21nj6sBTtQfTwCErYAHF3CNBaDRAc1E1Q3aUCcbsuG8mu?page=1&limit=100
-// Ayin Factory: 'vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R'
-// http://10.11.12.13:9090/contracts/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R/sub-contracts?page=1&limit=100
-// http://10.11.12.13:9090/contract-events/contract-address/vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R?page=1&limit=100
-import type { Block } from "../services/sdk/types/block";
-
 import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
-import type { Transaction } from "kysely";
+import type { Transaction as KyselyTransaction } from "kysely";
 import type { NewDeadRareListing } from "../database/schemas/public/DeadRareListing";
 import { addressFromContractId } from "@alephium/web3";
 import { db } from "../database/db";
 import type { TransactionHash } from "../services/common/types/brands";
 import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
+import type { Event } from "../services/sdk/types/event";
+import type { Transaction } from "../services/sdk/types/transaction";
+import type { Block } from "../services/sdk/types/block";
 
 const DEADRARE_MARKETPLACE = "xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF";
 
@@ -40,36 +35,16 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
           }
 
           if (event.eventIndex === 0) {
-            const [
-              _price,
-              _listingId,
-              _tokenId,
-              _collectionId,
-              _tokenOwner,
-              _listingContractId,
-            ] = event.fields.map((field) => field.value);
-            return [BigInt(_listingId as string)];
+            return getListingIdFromNftListedEvent(event);
           }
           if (event.eventIndex === 1) {
-            const [
-              _price,
-              _listingId,
-              _tokenId,
-              _collectionId,
-              _previousOwner,
-              _newOwner,
-            ] = event.fields.map((field) => field.value);
-            return [BigInt(_listingId as string)];
+            return getListingIdFromNftSoldEvent(event);
           }
           if (event.eventIndex === 2) {
-            const [_listingId, _tokenId, _collectionId, _tokenOwner] =
-              event.fields.map((field) => field.value);
-            return [BigInt(_listingId as string)];
+            return getListingIdFromNftListingCancelledEvent(event);
           }
           if (event.eventIndex === 3) {
-            const [_listingId, _tokenId, _collectionId, _oldPrice, _newPrice] =
-              event.fields.map((field) => field.value);
-            return [BigInt(_listingId as string)];
+            return getListingIdFromNftListingPriceUpdatedEvent(event);
           }
 
           return [];
@@ -100,83 +75,74 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
           }
 
           if (event.eventIndex === 0) {
-            const [
-              _price,
-              _listingId,
-              _tokenId,
-              _collectionId,
-              _tokenOwner,
-              _listingContractId,
-            ] = event.fields.map((field) => field.value);
-
+            const newListing = getNewListingFromNftListedEvent(
+              block,
+              transaction,
+              event
+            );
+            listings.set(
+              newListing.listingId,
+              newListing satisfies NewDeadRareListing
+            );
             processedTransactions.add(transaction.transactionHash);
-            listings.set(BigInt(_listingId as string), {
-              price: BigInt(_price),
-              listingId: BigInt(_listingId),
-              collectionAddress: addressFromContractId(_collectionId as string),
-              tokenAddress: addressFromContractId(_tokenId as string),
-              seller: _tokenOwner as string,
-              buyer: null,
-              listingAddress: addressFromContractId(
-                _listingContractId as string
-              ),
-              listedAt: new Date(block.timestamp),
-              listedTransaction: transaction.transactionHash,
-              soldAt: null,
-              soldTransaction: null,
-              unlistedAt: null,
-              unlistedTransaction: null,
-            } satisfies NewDeadRareListing);
           } else if (event.eventIndex === 1) {
-            const [
-              _price,
-              _listingId,
-              _tokenId,
-              _collectionId,
-              _previousOwner,
-              _newOwner,
-            ] = event.fields.map((field) => field.value);
-            const prev = listings.get(BigInt(_listingId as string));
+            const partialListing = getPartialListingFromNftSoldEvent(
+              block,
+              transaction,
+              event
+            );
+
+            const prev = listings.get(partialListing.listingId);
             if (!prev) {
               throw new Error("NFTSoldNotFound");
             }
 
-            processedTransactions.add(transaction.transactionHash);
-            listings.set(BigInt(_listingId as string), {
+            listings.set(partialListing.listingId, {
               ...prev,
-              price: BigInt(_price),
-              buyer: _newOwner as string,
-              soldAt: new Date(block.timestamp),
-              soldTransaction: transaction.transactionHash,
+              price: partialListing.price,
+              buyer: partialListing.buyer,
+              soldAt: partialListing.soldAt,
+              soldTransaction: partialListing.soldTransaction,
             });
+            processedTransactions.add(transaction.transactionHash);
           } else if (event.eventIndex === 2) {
-            const [_listingId, _tokenId, _collectionId, _tokenOwner] =
-              event.fields.map((field) => field.value);
-            const prev = listings.get(BigInt(_listingId as string));
+            const partial = getPartialListingFromNftListingCancelledEvent(
+              block,
+              transaction,
+              event
+            );
+
+            const prev = listings.get(partial.listingId);
             if (!prev) {
               throw new Error("NFTListingCancelledNotFound");
             }
 
-            processedTransactions.add(transaction.transactionHash);
-            listings.set(BigInt(_listingId as string), {
+            listings.set(partial.listingId, {
               ...prev,
-              unlistedAt: new Date(block.timestamp),
-              unlistedTransaction: transaction.transactionHash,
+              unlistedAt: partial.unlistedAt,
+              unlistedTransaction: partial.unlistedTransaction,
             });
+            processedTransactions.add(transaction.transactionHash);
           } else if (event.eventIndex === 3) {
             const [_listingId, _tokenId, _collectionId, _oldPrice, _newPrice] =
               event.fields.map((field) => field.value);
 
-            const prev = listings.get(BigInt(_listingId as string));
+            const partial = getPartialListingFromNftListingPriceUpdatedEvent(
+              block,
+              transaction,
+              event
+            );
+
+            const prev = listings.get(partial.listingId);
             if (!prev) {
               throw new Error("NFTListingPriceUpdatedNotFound");
             }
 
-            processedTransactions.add(transaction.transactionHash);
-            listings.set(BigInt(_listingId as string), {
+            listings.set(partial.listingId, {
               ...prev,
-              price: BigInt(_newPrice),
+              price: partial.price,
             });
+            processedTransactions.add(transaction.transactionHash);
           }
         }
       }
@@ -193,7 +159,7 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
   }
 
   // insert data
-  async insert(trx: Transaction<Database>, data: PluginData) {
+  async insert(trx: KyselyTransaction<Database>, data: PluginData) {
     await trx
       .insertInto("PluginBlock")
       .values(data.transactions) // throw on conflict
@@ -215,4 +181,126 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
       .execute();
     return;
   }
+}
+
+function getListingIdFromNftListedEvent(event: Event) {
+  const [
+    _price,
+    _listingId,
+    _tokenId,
+    _collectionId,
+    _tokenOwner,
+    _listingContractId,
+  ] = event.fields.map((field) => field.value);
+  return [BigInt(_listingId as string)];
+}
+function getNewListingFromNftListedEvent(
+  block: Block,
+  transaction: Transaction,
+  event: Event
+) {
+  const [
+    _price,
+    _listingId,
+    _tokenId,
+    _collectionId,
+    _tokenOwner,
+    _listingContractId,
+  ] = event.fields.map((field) => field.value);
+
+  return {
+    price: BigInt(_price),
+    listingId: BigInt(_listingId),
+    collectionAddress: addressFromContractId(_collectionId as string),
+    tokenAddress: addressFromContractId(_tokenId as string),
+    seller: _tokenOwner as string,
+    buyer: null,
+    listingAddress: addressFromContractId(_listingContractId as string),
+    listedAt: new Date(block.timestamp),
+    listedTransaction: transaction.transactionHash,
+    soldAt: null,
+    soldTransaction: null,
+    unlistedAt: null,
+    unlistedTransaction: null,
+  } satisfies NewDeadRareListing;
+}
+function getListingIdFromNftSoldEvent(event: Event) {
+  const [
+    _price,
+    _listingId,
+    _tokenId,
+    _collectionId,
+    _previousOwner,
+    _newOwner,
+  ] = event.fields.map((field) => field.value);
+  return [BigInt(_listingId as string)];
+}
+
+function getPartialListingFromNftSoldEvent(
+  block: Block,
+  transaction: Transaction,
+  event: Event
+) {
+  const [
+    _price,
+    _listingId,
+    _tokenId,
+    _collectionId,
+    _previousOwner,
+    _newOwner,
+  ] = event.fields.map((field) => field.value);
+
+  return {
+    listingId: BigInt(_listingId as string),
+    price: BigInt(_price),
+    buyer: _newOwner as string,
+    soldAt: new Date(block.timestamp),
+    soldTransaction: transaction.transactionHash,
+  } satisfies Pick<
+    NewDeadRareListing,
+    "listingId" | "price" | "buyer" | "soldAt" | "soldTransaction"
+  >;
+}
+function getListingIdFromNftListingCancelledEvent(event: Event) {
+  const [_listingId, _tokenId, _collectionId, _tokenOwner] = event.fields.map(
+    (field) => field.value
+  );
+  return [BigInt(_listingId as string)];
+}
+
+function getPartialListingFromNftListingCancelledEvent(
+  block: Block,
+  transaction: Transaction,
+  event: Event
+) {
+  const [_listingId, _tokenId, _collectionId, _tokenOwner] = event.fields.map(
+    (field) => field.value
+  );
+
+  return {
+    listingId: BigInt(_listingId as string),
+    unlistedAt: new Date(block.timestamp),
+    unlistedTransaction: transaction.transactionHash,
+  } satisfies Pick<
+    NewDeadRareListing,
+    "listingId" | "unlistedAt" | "unlistedTransaction"
+  >;
+}
+function getListingIdFromNftListingPriceUpdatedEvent(event: Event) {
+  const [_listingId, _tokenId, _collectionId, _oldPrice, _newPrice] =
+    event.fields.map((field) => field.value);
+  return [BigInt(_listingId as string)];
+}
+function getPartialListingFromNftListingPriceUpdatedEvent(
+  block: Block,
+  transaction: Transaction,
+  event: Event
+) {
+  const [_listingId, _tokenId, _collectionId, _oldPrice, _newPrice] =
+    event.fields.map((field) => field.value);
+
+  return {
+    listingId: BigInt(_listingId as string),
+    price: BigInt(_newPrice),
+  } satisfies Pick<NewDeadRareListing, "listingId" | "price">;
 }
