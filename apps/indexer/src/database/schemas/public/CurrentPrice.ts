@@ -12,8 +12,6 @@ export default interface CurrentPriceTable {
 
   address: ColumnType<string, string, string>;
 
-  price: ColumnType<bigint, bigint, bigint>;
-
   liquidity: ColumnType<bigint | null, bigint | null, bigint | null>;
 
   source: ColumnType<string, string, string>;
@@ -21,6 +19,8 @@ export default interface CurrentPriceTable {
   sourceKey: ColumnType<string, string, string>;
 
   timestamp: ColumnType<Date, Date | string, Date | string>;
+
+  price: ColumnType<bigint | null, bigint | null, bigint | null>;
 }
 
 export type CurrentPrice = Selectable<CurrentPriceTable>;

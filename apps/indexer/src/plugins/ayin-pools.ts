@@ -11,53 +11,72 @@ import type Database from "../database/schemas/Database";
 import type { Transaction } from "kysely";
 import type { NewPool } from "../database/schemas/public/Pool";
 import { addressFromContractId } from "@alephium/web3";
-import type { ContractAddress } from "../services/common/types/brands";
+import type {
+  ContractAddress,
+  TransactionHash,
+} from "../services/common/types/brands";
+import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 
 const AYIN_FACTORY = "vyrkJHG49TXss6pGAz2dVxq5o7mBXNNXAV18nAeqVT1R";
 
-export class AyinPoolsPlugin extends Plugin<NewPool[]> {
-	PLUGIN_NAME = "ayin-pools";
+interface PluginData {
+  pools: NewPool[];
+  transactions: NewPluginBlock[];
+}
 
-	async process(blocks: Block[]) {
-		const pools = new Map<string, NewPool>();
+export class AyinPoolsPlugin extends Plugin<PluginData> {
+  PLUGIN_NAME = "ayin-pools";
 
-		for (const block of blocks) {
-			for (const transaction of block.transactions) {
-				for (const event of transaction.events) {
-					if (
-						event.contractAddress === AYIN_FACTORY &&
-						event.eventIndex === 0
-					) {
-						const [token0, token1, pair] = event.fields.map(
-							(field) => field.value,
-						);
-						const pool = {
-							token0: addressFromContractId(token0 as string),
-							token1: addressFromContractId(token1 as string),
-							pair: addressFromContractId(pair as string),
-							factory: event.contractAddress,
-						} satisfies NewPool;
+  async process(blocks: Block[]) {
+    const pools = new Map<string, NewPool>();
+    const processedTransactions = new Set<TransactionHash>();
 
-						pools.set(pool.pair, pool);
-					}
-				}
-			}
-		}
+    for (const block of blocks) {
+      for (const transaction of block.transactions) {
+        for (const event of transaction.events) {
+          if (
+            event.contractAddress === AYIN_FACTORY &&
+            event.eventIndex === 0
+          ) {
+            processedTransactions.add(transaction.transactionHash);
+            const [token0, token1, pair] = event.fields.map(
+              (field) => field.value
+            );
+            const pool = {
+              token0: addressFromContractId(token0 as string),
+              token1: addressFromContractId(token1 as string),
+              pair: addressFromContractId(pair as string),
+              factory: event.contractAddress,
+            } satisfies NewPool;
 
-		// // on LP create, load token0, token1, pair, factory
-		return Array.from(pools.values());
-	}
+            pools.set(pool.pair, pool);
+          }
+        }
+      }
+    }
 
-	// insert data
-	async insert(trx: Transaction<Database>, pools: NewPool[]) {
-		if (!pools?.length) {
-			return;
-		}
-		await trx
-			.insertInto("Pool")
-			.values(pools)
-			.onConflict((col) => col.doNothing())
-			.execute();
-		return;
-	}
+    // // on LP create, load token0, token1, pair, factory
+    return {
+      pools: Array.from(pools.values()),
+      transactions: Array.from(processedTransactions).map((hash) => ({
+        blockHash: hash,
+        pluginName: this.PLUGIN_NAME,
+      })),
+    };
+  }
+
+  // insert data
+  async insert(trx: Transaction<Database>, data: PluginData) {
+    await trx
+      .insertInto("PluginBlock")
+      .values(data.transactions) // throw on conflict
+      .execute();
+
+    await trx
+      .insertInto("Pool")
+      .values(data.pools)
+      .onConflict((col) => col.doNothing())
+      .execute();
+    return;
+  }
 }

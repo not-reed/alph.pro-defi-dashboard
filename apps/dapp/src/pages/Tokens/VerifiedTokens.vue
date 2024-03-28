@@ -25,25 +25,25 @@ interface TokenHolder {
         name: string,
         decimals: number,
         totalSupply: number,
-        verified: boolean,
+        listed: boolean,
         description: string | null,
         logo: string | null
     }
 }
 
 enum SortBy {
-    Name,
-    Symbol,
-    Price,
-    Decimals,
-    Explorer,
-    Holders,
-    MarketCap,
-    Liquidity
+    Name = 'Name',
+    Symbol = 'Symbol',
+    Price = 'Price',
+    Decimals = 'Decimals',
+    Explorer = 'Explorer',
+    Holders = 'Holders',
+    MarketCap = 'MarketCap',
+    Liquidity = 'Liquidity'
 }
 enum SortDirection {
-    Asc,
-    Desc
+    Asc = 'Asc',
+    Desc = 'Desc'
 }
 
 const { format: formatCurrency } = useCurrency()
@@ -52,7 +52,7 @@ const { prices, markets, updatePrices } = usePrices()
 const rawTokens = ref<Omit<TokenHolder, 'marketCap' | 'liquidity'>[]>([])
 onMounted(async () => {
     const results: { holders: TokenHolder[] } = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/tokens/holders`, { credentials: 'include' }).then(a => a.json())
-    updatePrices(results.holders.filter(a => a.token.verified).map(a => a.token.address))
+    updatePrices(results.holders.filter(a => a.token.listed).map(a => a.token.address))
     rawTokens.value = results.holders
 })
 
@@ -99,7 +99,7 @@ const tokens = computed(() => rawTokens.value.map((holder) => {
         circulatingSupply,
         token: holder.token
     }
-}).filter(a => a.token.verified).sort((a, b) => {
+}).filter(a => a.token.listed).sort((a, b) => {
     const aSort = getSortValue(a)
     const bSort = getSortValue(b)
     if (aSort === bSort) {
@@ -126,7 +126,7 @@ function sortByField(sort: SortBy) {
         <div>
 
             <div class="text-xl font-bold">
-                Verified Tokens
+                Listed Tokens
             </div>
             <Table>
 

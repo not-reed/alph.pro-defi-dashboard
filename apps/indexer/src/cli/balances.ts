@@ -20,8 +20,11 @@ if (config.NODE_API_KEY) {
 
 export async function fixBalances(opts: {
   user: string;
+  token: string;
   min: number;
   max: number;
+  minBalance: bigint;
+  maxBalance: bigint;
   force: boolean;
 }) {
   let query = db
@@ -31,6 +34,11 @@ export async function fixBalances(opts: {
   if (opts.user) {
     query = query.where("Balance.userAddress", "=", opts.user);
   }
+
+  if (opts.token) {
+    query = query.where("Balance.tokenAddress", "=", opts.token);
+  }
+
   query = query.groupBy("userAddress");
 
   if (opts.min) {
@@ -39,6 +47,14 @@ export async function fixBalances(opts: {
 
   if (opts.max) {
     query = query.having(sql`count(distinct "tokenAddress")`, "<=", opts.max);
+  }
+
+  if (opts.minBalance) {
+    query = query.where("balance", ">=", opts.minBalance);
+  }
+
+  if (opts.maxBalance) {
+    query = query.where("balance", "<=", opts.maxBalance);
   }
 
   const users = await query

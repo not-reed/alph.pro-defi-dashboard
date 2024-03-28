@@ -1,4 +1,8 @@
-import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
+import {
+  type RouteRecordRaw,
+  createRouter,
+  createWebHistory,
+} from "vue-router";
 import NProgress from "nprogress";
 import Home from "./pages/Home.vue";
 import PortfolioOverviewVue from "./pages/Portfolio/Overview.vue";
@@ -6,7 +10,7 @@ import PortfolioWalletVue from "./pages/Portfolio/Wallet.vue";
 import PortfolioDeFiVue from "./pages/Portfolio/DeFi.vue";
 import MintingVue from "./pages/NFTs/Minting.vue";
 import HotNFTsVue from "./pages/NFTs/HotNFTs.vue";
-import NewNFTsVue from "./pages/NFTs/NewNFTs.vue";
+
 import FreshLiquidityVue from "./pages/Tokens/FreshLiquidity.vue";
 import HotTokensVue from "./pages/Tokens/HotTokens.vue";
 import LiquidityPoolsVue from "./pages/DeFi/LiquidityPools.vue";
@@ -14,7 +18,7 @@ import SwapsVue from "./pages/DeFi/Swaps.vue";
 import OpportunitiesVue from "./pages/DeFi/Opportunities.vue";
 import UserSettingsVue from "./pages/UserSettings.vue";
 
-import { icons } from "./utils/icons";
+import type { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
 import { useDiscordAccount } from "./hooks/useDiscordAccount";
 import HoldersVue from "./pages/Tokens/Holders.vue";
@@ -22,6 +26,8 @@ import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
 import PageShellVue from "./pages/PageShell.vue";
 import VerifiedTokens from "./pages/Tokens/VerifiedTokens.vue";
 import UnverifiedTokens from "./pages/Tokens/UnverifiedTokens.vue";
+import ListedNFTs from "./pages/NFTs/ListedNFTs.vue";
+import UnlistedNFTs from "./pages/NFTs/UnlistedNFTs.vue";
 
 const { loadBalances } = useUser();
 declare module "vue-router" {
@@ -109,15 +115,28 @@ export const routes = [
     children: [
       {
         path: "/tokens/verified",
-        name: "Verified Tokens",
+        name: "Listed Tokens",
         component: VerifiedTokens,
-        meta: { title: "Verified Tokens" },
+        meta: { title: "Listed Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
       },
       {
         path: "/tokens/unverified",
-        name: "Unverified Tokens",
+        name: "Unlisted Tokens",
         component: UnverifiedTokens,
-        meta: { title: "Unverified Tokens" },
+        meta: { title: "Unlisted Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
+      },
+
+      {
+        path: "/tokens/listed",
+        name: "Listed Tokens",
+        component: VerifiedTokens,
+        meta: { title: "Listed Tokens" },
+      },
+      {
+        path: "/tokens/unlisted",
+        name: "Unlisted Tokens",
+        component: UnverifiedTokens,
+        meta: { title: "Unlisted Tokens" },
       },
       {
         path: "/tokens/holders/:address?",
@@ -148,8 +167,20 @@ export const routes = [
       {
         path: "/nfts/new",
         name: "New NFTs",
-        component: NewNFTsVue,
-        meta: { title: "New NFTs" },
+        component: ListedNFTs,
+        meta: { title: "nfts NFTs", hide: true },
+      },
+      {
+        path: "/nfts/listed",
+        name: "Listed NFTs",
+        component: ListedNFTs,
+        meta: { title: "Listed NFTs" },
+      },
+      {
+        path: "/nfts/unlisted",
+        name: "Unlisted NFTs",
+        component: UnlistedNFTs,
+        meta: { title: "Unlisted NFTs" },
       },
       {
         path: "/nfts/holders",

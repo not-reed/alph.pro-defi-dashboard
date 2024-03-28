@@ -1,10 +1,11 @@
-import { type Env, type Schema } from "hono";
+import type { Env, Schema } from "hono";
 
 import { db } from "../../database/db";
 import { binToHex, contractIdFromAddress } from "@alephium/web3";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { sql } from "kysely";
+import type { NewSocial } from "../../database/schemas/public/Social";
 
 const app = new OpenAPIHono<Env, Schema, "/api/nfts">();
 
@@ -33,6 +34,15 @@ const nftRoute = createRoute({
                 name: z.string(),
                 description: z.string(),
                 image: z.string(),
+                uri: z.string(),
+                stats: z.object({
+                  floor: z.string(),
+                  volume: z.string(),
+                  holderCount: z.string(),
+                  mintedCount: z.string(),
+                  listedCount: z.string(),
+                }),
+                // token: TokenSchema,
               })
             ),
           }),
@@ -44,16 +54,97 @@ const nftRoute = createRoute({
 });
 
 app.openapi(nftRoute, async (c) => {
-  const nfts = await db.selectFrom("NftCollection").selectAll().execute();
+  const holders = await db
+    .selectFrom("NftCollection")
+    .select([
+      "NftCollection.address",
+      "NftCollection.description",
+      "NftCollection.image",
+      "NftCollection.uri",
+      "NftCollection.listed",
+      "NftCollection.name",
+    ])
+    .leftJoin(
+      (eb) =>
+        eb
+          .selectFrom("Nft")
+          .select([
+            sql<string>`count(distinct coalesce("seller", "Balance"."userAddress"))`.as(
+              "holderCount"
+            ),
+            sql<string>`count(seller)`.as("listedCount"),
+            sql<string>`count(distinct address)`.as("mintedCount"),
+            "Nft.collectionAddress",
+          ])
+          .leftJoin("Balance", (join) =>
+            join.onRef("Nft.address", "=", "Balance.tokenAddress")
+          )
+          .leftJoin("DeadRareListing", (join) =>
+            join
+              .onRef(
+                "DeadRareListing.tokenAddress",
+                "=",
+                "Balance.tokenAddress"
+              )
+              .on("soldAt", "is", null)
+              .on("unlistedAt", "is", null)
+          )
+          .where("balance", "<>", 0n)
+          .groupBy("Nft.collectionAddress")
+          .as("Nft"),
+      (join) =>
+        join.onRef("NftCollection.address", "=", "Nft.collectionAddress")
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom("DeadRareListing")
+          .select(({ fn }) => fn.min("price").as("floor"))
+          .whereRef(
+            "DeadRareListing.collectionAddress",
+            "=",
+            "NftCollection.address"
+          )
+          .where("soldAt", "is", null)
+          .where("unlistedAt", "is", null)
+          .as("floor"),
+      (join) => join.onTrue()
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom("DeadRareListing")
+          .select(({ fn }) => fn.sum("price").as("volume"))
+          .whereRef(
+            "DeadRareListing.collectionAddress",
+            "=",
+            "NftCollection.address"
+          )
+          .where("buyer", "is not", null)
+          .as("volume"),
+      (join) => join.onTrue()
+    )
+    .select(["holderCount", "mintedCount", "listedCount", "floor", "volume"])
+    .orderBy("holderCount", "desc")
+    .execute();
 
   return c.json({
-    nfts: nfts.map((a) => {
+    nfts: holders.map((h) => {
       return {
-        id: binToHex(contractIdFromAddress(a.address)),
-        address: a.address,
-        image: a.image,
-        name: a.name,
-        description: a.description,
+        id: binToHex(contractIdFromAddress(h.address)),
+        address: h.address,
+        name: h.name,
+        description: h.description,
+        image: h.image,
+        uri: h.uri,
+        listed: h.listed,
+        stats: {
+          holderCount: h.holderCount?.toString() || "0",
+          mintedCount: h.mintedCount?.toString() || "0",
+          listedCount: h.listedCount?.toString() || "0",
+          floor: h.floor?.toString() || "0",
+          volume: h.volume?.toString() || "0",
+        },
       };
     }),
   });
@@ -76,9 +167,14 @@ const holdersRoute = createRoute({
                 name: z.string(),
                 description: z.string(),
                 image: z.string(),
-                holderCount: z.string(),
                 uri: z.string(),
-                // token: TokenSchema,
+                stats: z.object({
+                  floor: z.string(),
+                  volume: z.string(),
+                  holderCount: z.string(),
+                  mintedCount: z.string(),
+                  listedCount: z.string(),
+                }),
               })
             ),
           }),
@@ -90,25 +186,76 @@ const holdersRoute = createRoute({
 });
 
 app.openapi(holdersRoute, async (c) => {
-  // const { address } = c.req.param();
   const holders = await db
     .selectFrom("NftCollection")
-    .selectAll()
-    .select((eb) => [
-      eb
-        .selectFrom("Nft")
-        .leftJoin("Balance", (join) =>
-          join.onRef("Nft.address", "=", "Balance.tokenAddress")
-        )
-        .select([
-          sql<string>`count(distinct "Balance"."userAddress")`.as(
-            "holderCount"
-          ),
-        ])
-        .where("Balance.balance", "<>", 0n)
-        .whereRef("Nft.collectionAddress", "=", "NftCollection.address")
-        .as("holderCount"),
+    .select([
+      "NftCollection.address",
+      "NftCollection.description",
+      "NftCollection.image",
+      "NftCollection.uri",
+      "NftCollection.name",
     ])
+    .leftJoin(
+      (eb) =>
+        eb
+          .selectFrom("Nft")
+          .select([
+            sql<string>`count(distinct coalesce("seller", "Balance"."userAddress"))`.as(
+              "holderCount"
+            ),
+            sql<string>`count(seller)`.as("listedCount"),
+            sql<string>`count(distinct address)`.as("mintedCount"),
+            "Nft.collectionAddress",
+          ])
+          .leftJoin("Balance", (join) =>
+            join.onRef("Nft.address", "=", "Balance.tokenAddress")
+          )
+          .leftJoin("DeadRareListing", (join) =>
+            join
+              .onRef(
+                "DeadRareListing.tokenAddress",
+                "=",
+                "Balance.tokenAddress"
+              )
+              .on("soldAt", "is", null)
+              .on("unlistedAt", "is", null)
+          )
+          .where("balance", "<>", 0n)
+          .groupBy("Nft.collectionAddress")
+          .as("Nft"),
+      (join) =>
+        join.onRef("NftCollection.address", "=", "Nft.collectionAddress")
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom("DeadRareListing")
+          .select(({ fn }) => fn.min("price").as("floor"))
+          .whereRef(
+            "DeadRareListing.collectionAddress",
+            "=",
+            "NftCollection.address"
+          )
+          .where("soldAt", "is", null)
+          .where("unlistedAt", "is", null)
+          .as("floor"),
+      (join) => join.onTrue()
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom("DeadRareListing")
+          .select(({ fn }) => fn.sum("price").as("volume"))
+          .whereRef(
+            "DeadRareListing.collectionAddress",
+            "=",
+            "NftCollection.address"
+          )
+          .where("buyer", "is not", null)
+          .as("volume"),
+      (join) => join.onTrue()
+    )
+    .select(["holderCount", "mintedCount", "listedCount", "floor", "volume"])
     .orderBy("holderCount", "desc")
     .execute();
 
@@ -120,8 +267,16 @@ app.openapi(holdersRoute, async (c) => {
         name: h.name,
         description: h.description,
         image: h.image,
-        holderCount: h.holderCount || "0",
         uri: h.uri,
+        /** @deprecated */
+        holderCount: h.holderCount || "0",
+        stats: {
+          holderCount: h.holderCount?.toString() || "0",
+          mintedCount: h.mintedCount?.toString() || "0",
+          listedCount: h.listedCount?.toString() || "0",
+          floor: h.floor?.toString() || "0",
+          volume: h.volume?.toString() || "0",
+        },
       };
     }),
   });
@@ -146,8 +301,8 @@ const holdersAddressRoute = createRoute({
           schema: z.object({
             holders: z.array(
               z.object({
-                holderCount: z.number().openapi({ example: 10000 }),
-                circulatingSupply: z.number().openapi({ example: 1000000 }),
+                holderCount: z.string().openapi({ example: "10000" }),
+                circulatingSupply: z.string().openapi({ example: "1000000" }),
                 holders: z.array(
                   z
                     .object({
@@ -189,6 +344,28 @@ app.openapi(holdersAddressRoute, async (c) => {
         .whereRef("Nft.collectionAddress", "=", "NftCollection.address")
         .as("holderCount"),
 
+      eb
+        .selectFrom("Nft")
+        .leftJoin("Balance", (join) =>
+          join.onRef("Nft.address", "=", "Balance.tokenAddress")
+        )
+        .select([
+          sql<string>`count(distinct "Balance"."tokenAddress")`.as(
+            "circulatingSupply"
+          ),
+        ])
+        .where("Balance.balance", "<>", 0n)
+        .whereRef("Nft.collectionAddress", "=", "NftCollection.address")
+        .as("circulatingSupply"),
+
+      jsonObjectFrom(
+        eb
+          .selectFrom("Social")
+          .selectAll()
+          .whereRef("Social.id", "=", "NftCollection.socialId")
+          .limit(1)
+      ).as("social"),
+
       jsonArrayFrom(
         eb
           .selectFrom("Nft")
@@ -222,6 +399,18 @@ app.openapi(holdersAddressRoute, async (c) => {
         image: h.image,
         uri: h.uri,
         holderCount: h.holderCount || "0",
+        circulatingSupply: h.circulatingSupply || "0",
+        social:
+          h.social ??
+          ({
+            name: null,
+            github: null,
+            twitter: null,
+            discord: null,
+            website: null,
+            telegram: null,
+            medium: null,
+          } satisfies NewSocial),
         holders: h.holders.reduce((acc, h) => {
           if (!h.userAddress || !h.address) {
             return acc;

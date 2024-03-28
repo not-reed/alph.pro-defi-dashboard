@@ -51,7 +51,7 @@ const { prices, markets, updatePrices } = usePrices()
 const rawTokens = ref<Omit<TokenHolder, 'marketCap' | 'liquidity'>[]>([])
 onMounted(async () => {
     const results: { holders: TokenHolder[] } = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/tokens/holders`, { credentials: 'include' }).then(a => a.json())
-    updatePrices(results.holders.filter(a => a.token.verified).map(a => a.token.address))
+    updatePrices(results.holders.filter(a => a.token.listed).map(a => a.token.address))
     rawTokens.value = results.holders
 })
 
@@ -98,7 +98,7 @@ const tokens = computed(() => rawTokens.value.map((holder) => {
         circulatingSupply,
         token: holder.token
     }
-}).filter(a => !a.token.verified).sort((a, b) => {
+}).filter(a => !a.token.listed).sort((a, b) => {
     const aSort = getSortValue(a)
     const bSort = getSortValue(b)
     if (aSort === bSort) {

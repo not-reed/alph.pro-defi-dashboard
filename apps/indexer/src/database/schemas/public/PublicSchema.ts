@@ -22,6 +22,8 @@ import { type default as UserTable } from './User';
 import { type default as UserWalletTable } from './UserWallet';
 import { type default as VerificationTokenTable } from './VerificationToken';
 import { type default as NonceTable } from './Nonce';
+import { type default as SocialTable } from './Social';
+import { type default as DeadRareListingTable } from './DeadRareListing';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -65,4 +67,8 @@ export default interface PublicSchema {
   VerificationToken: VerificationTokenTable;
 
   Nonce: NonceTable;
+
+  Social: SocialTable;
+
+  DeadRareListing: DeadRareListingTable;
 }

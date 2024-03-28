@@ -2,6 +2,7 @@
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline';
 import { computed, onMounted, ref } from 'vue';
 import ProxyImage from '../../components/ProxyImage.vue';
+import ExternalLink from '../../components/ExternalLink.vue';
 const holders = ref([])
 const active = ref(null)
 
@@ -34,7 +35,9 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                     {{ holder.name }}
                 </div>
                 <div>
-                    {{ holder.holderCount }} Holders
+                    {{ holder.stats.holderCount }} Holders
+                    {{ holder.stats.listedCount }} Listed
+                    {{ holder.stats.mintedCount }} Minted
                 </div>
 
                 <ProxyImage :src="holder.image" :width="300" :height="300" class="w-24 h-full object-cover" />
@@ -50,14 +53,14 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                 <div class="flex justify-between">
                     <div class="opacity-75">Holders:</div> {{ active.holderCount }}
                 </div>
-                <div class="flex justify-between">
+                <div class="flex flex-col items-start">
+                    <ExternalLink :href="`https://explorer.alephium.org/addresses/${active.address}`" class="">
+                        Explorer
+                    </ExternalLink>
 
-                    <a :href="`https://deadrare.io/collection/${active.name.toLowerCase().trim().replaceAll(' ', '-')}`"
-                        target="_blank" class="text-calypso-500 cursor-pointer flex items-center justify-center gap-2">
+                    <ExternalLink :href="`https://deadrare.io/collection-from-contract/${active.address}`" class="">
                         DeadRare
-
-                        <ArrowTopRightOnSquareIcon class="w-4 h-4 mb-1" />
-                    </a>
+                    </ExternalLink>
                 </div>
             </div>
             <ul class="h-96 overflow-y-auto dark:bg-calypso-900 p-4 rounded max-w-lg">
