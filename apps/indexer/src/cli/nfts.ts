@@ -26,6 +26,7 @@ import type { NodeState } from "../services/node/types/state";
 import { updateNftBalances } from "../database/services/balance";
 import { bulkUpdateNft } from "../database/services/nft";
 import { processBlocks } from "./plugin";
+import { filterUnprocessedBlocks } from "../core/utils";
 
 const CACHE_TIME =
   process.env.NODE_ENV === "production" ? 15 * 60 : 60 * 60 * 6; // 15 minutes in prod, 6 hours in dev
@@ -90,7 +91,7 @@ export async function backfillDeadRare() {
       }
     );
 
-    const blocks = await fetchOrCallback(
+    const allBlocks = await fetchOrCallback(
       `blocks=>/events/contract/xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF?start=${start}&limit=${limit}`,
       CACHE_TIME,
       async () => {
@@ -98,6 +99,11 @@ export async function backfillDeadRare() {
         console.log({ prevStart: start, nextStart: results.nextStart });
         return await sdk.getBlocksFromHash(hashes);
       }
+    );
+
+    const blocks = await filterUnprocessedBlocks(
+      "deadrare-marketplace",
+      allBlocks
     );
 
     start = results.nextStart;
