@@ -72,7 +72,7 @@ export async function backfillDeadRare() {
 
   //   const blocks = await sdk.getBlocksFromHash([LIST_BLOCK, SALE_BLOCK]);
 
-  let start = 6800; // 6865 or 6800
+  let start = 0; // 6865 or 6800
   const limit = 100;
   let more = limit;
   while (more === limit) {
