@@ -71,7 +71,6 @@ export async function fixBalances(opts: {
 
     const wallet = []
       .concat(balances.tokenBalances ?? [])
-      .concat(balances.lockedTokenBalances ?? [])
       .reduce(
         (
           acc: Map<string, bigint>,
