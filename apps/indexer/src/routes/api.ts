@@ -23,60 +23,62 @@ import utils from "./api/utils";
 import bot from "./api/bot";
 
 const app = new Hono<
-	{ Variables: { authUser: AuthUser; authConfig: AuthConfig } },
-	Schema,
-	"/api"
+  { Variables: { authUser: AuthUser; authConfig: AuthConfig } },
+  Schema,
+  "/api"
 >();
 
 app.route("/status", status);
 app.route("/sse", sse);
 
 app.get("/docs.json", async (c) => {
-	const base = new URL(c.req.url).origin;
+  const base = new URL(c.req.url).origin;
 
-	const publicDocs = {
-		Balances: "/api/balances",
-		Nfts: "/api/nfts",
-		Pools: "/api/pools",
-		Prices: "/api/prices",
-		Tokens: "/api/tokens",
-		Utils: "/api/utils",
-	};
+  const publicDocs = {
+    Balances: "/api/balances",
+    Nfts: "/api/nfts",
+    Pools: "/api/pools",
+    Prices: "/api/prices",
+    Tokens: "/api/tokens",
+    Utils: "/api/utils",
+  };
 
-	const mergeResult = await loadChildDocuments(base, publicDocs);
+  const mergeResult = await loadChildDocuments(base, publicDocs);
 
-	if (isErrorResult(mergeResult)) {
-		logger.error(`${mergeResult.message} (${mergeResult.type})`);
-		return c.json({
-			info: {
-				title: "Alph.Pro Indexer API",
-				version: "v1",
-				description: "An error occurred loading the schemas",
-			},
-			openapi: "3.1.0",
-			paths: Object.fromEntries(
-				Object.entries(publicDocs).map(([key, path]) => [
-					`${path}/docs.json`,
-					{
-						get: { summary: `Failed to load ${key}`, responses: {} },
-					} satisfies Swagger.SwaggerV3["paths"][number],
-				]),
-			),
-		} satisfies Swagger.SwaggerV3);
-	}
+  if (isErrorResult(mergeResult)) {
+    logger.error(`${mergeResult.message} (${mergeResult.type})`);
+    return c.json({
+      info: {
+        title: "Alph.Pro Indexer API",
+        version: "v1",
+        description: "An error occurred loading the schemas",
+      },
+      openapi: "3.1.0",
+      paths: Object.fromEntries(
+        Object.entries(publicDocs).map(([key, path]) => [
+          `${path}/docs.json`,
+          {
+            get: { summary: `Failed to load ${key}`, responses: {} },
+          } satisfies Swagger.SwaggerV3["paths"][number],
+        ])
+      ),
+    } satisfies Swagger.SwaggerV3);
+  }
 
-	return c.json(mergeResult.output);
+  return c.json(mergeResult.output);
 });
 app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
 
 const corsOptions = cors({
-	credentials: true,
-	origin: [
-		"http://localhost:5173", // TODO: change to env, this is front end vite
-		"https://alph-pro.on.fleek.co/",
-		"https://alph.pro",
-		"https://www.alph.pro",
-	],
+  credentials: true,
+  origin: [
+    "http://localhost:5173", // TODO: change to env, this is front end vite
+    "http://localhost:5174", // TODO: change to env, this is front end vite
+    "https://alph-pro.on.fleek.co",
+    "https://alph.pro",
+    "https://www.alph.pro",
+    "https://breadtoken.theducklounge.com",
+  ],
 });
 
 // User Api
@@ -113,49 +115,49 @@ app.route("/bot", bot);
 export default app;
 
 async function loadChildDocuments(
-	baseUri: string,
-	publicDocs: Record<string, string>,
+  baseUri: string,
+  publicDocs: Record<string, string>
 ) {
-	const swaggerDocs = await Promise.all(
-		Object.entries(publicDocs).map(([key, path]) =>
-			fetch(`${baseUri}${path}/docs.json`)
-				.then((a) => a.json())
-				.then((docs) => ({ docs, path, key })),
-		),
-	);
+  const swaggerDocs = await Promise.all(
+    Object.entries(publicDocs).map(([key, path]) =>
+      fetch(`${baseUri}${path}/docs.json`)
+        .then((a) => a.json())
+        .then((docs) => ({ docs, path, key }))
+    )
+  );
 
-	const mergeInput = [
-		{
-			oas: {
-				info: { title: "Alph.Pro Indexer API", version: "v1" },
-				openapi: "3.1.0",
-				paths: {},
-			},
-		},
-	] as MergeInput;
+  const mergeInput = [
+    {
+      oas: {
+        info: { title: "Alph.Pro Indexer API", version: "v1" },
+        openapi: "3.1.0",
+        paths: {},
+      },
+    },
+  ] as MergeInput;
 
-	const success = swaggerDocs.filter((a) => a.docs.openapi);
-	const failure = swaggerDocs.filter((a) => !a.docs.openapi);
-	for (const reason of failure) {
-		logger.warn({
-			msg: `[Swagger] Failed to load ${reason.key} at ${reason.path}`,
-			reason,
-		});
-	}
+  const success = swaggerDocs.filter((a) => a.docs.openapi);
+  const failure = swaggerDocs.filter((a) => !a.docs.openapi);
+  for (const reason of failure) {
+    logger.warn({
+      msg: `[Swagger] Failed to load ${reason.key} at ${reason.path}`,
+      reason,
+    });
+  }
 
-	return merge(
-		mergeInput.concat(
-			success
-				.map((a) => {
-					return {
-						oas: a.docs,
-						description: { append: false, title: { value: a.key } },
-						pathModification: { prepend: a.path },
-					};
-				})
-				.sort((a, b) =>
-					a.pathModification.prepend.localeCompare(b.pathModification.prepend),
-				),
-		),
-	);
+  return merge(
+    mergeInput.concat(
+      success
+        .map((a) => {
+          return {
+            oas: a.docs,
+            description: { append: false, title: { value: a.key } },
+            pathModification: { prepend: a.path },
+          };
+        })
+        .sort((a, b) =>
+          a.pathModification.prepend.localeCompare(b.pathModification.prepend)
+        )
+    )
+  );
 }
