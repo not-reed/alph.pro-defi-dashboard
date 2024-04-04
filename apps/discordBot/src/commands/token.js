@@ -102,17 +102,17 @@ ${"Symbol".padEnd(9)}: ${tokenInfo.token.symbol}
 ${"Decimals".padEnd(9)}: ${
     tokenInfo.token.decimals
   }\`\`\`\`\`\`${"Price".padEnd(9)}: $${
-    tokenInfo.markets.length > 1
+    tokenInfo.markets.length > 0
       ? await commaFormat(await eighteenDigits(tokenInfo.price))
       : "Not Available"
   }
 ${"LP".padEnd(9)}: $${
-    tokenInfo.markets.length > 1
+    tokenInfo.markets.length > 0
       ? await commaFormat(await eighteenDigits(tokenInfo.markets[0].liquidity))
       : "Not Available"
   } 
 ${"MC".padEnd(9)}: $${
-    tokenInfo.markets.length > 1
+    tokenInfo.markets.length > 0
       ? await commaFormat(
           await eighteenDigits(circulatingSupply * tokenInfo.price)
         )
