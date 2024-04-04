@@ -34,7 +34,7 @@ async function nft(interaction) {
   if (nftIndex) {
     const getSingleNftInfo = await fetch(
       `https://indexer.alph.pro/api/nfts/by-index/${collectionAddress}/${nftIndex}`
-    ).then((a) => a.json());
+    );
 
     const getUri = await fetch(getSingleNftInfo.nft.uri).then((a) => a.json());
 
