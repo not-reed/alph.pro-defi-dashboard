@@ -26,12 +26,12 @@ async function success(interaction, title, desc, ephemeral, logo) {
   if (interaction.deferred || interaction.replied) {
     interaction.followUp({
       embeds: [messageEmbed],
-      ephemeral: false,
+      ephemeral: ephemeral,
     });
   } else {
     interaction.reply({
       embeds: [messageEmbed],
-      ephemeral: false,
+      ephemeral: ephemeral,
     });
   }
 }
