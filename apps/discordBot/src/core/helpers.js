@@ -55,7 +55,7 @@ function commaFormat(rawNumber) {
   if (decimalPart) {
     // Limit the decimal part to 2 digits for non-zero integer part
     decimalPart = Number.parseFloat(`0.${decimalPart}`)
-      .toFixed(2)
+      .toFixed(5)
       .split(".")[1];
   }
 
