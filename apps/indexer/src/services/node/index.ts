@@ -14,6 +14,13 @@ import { mapRawInputToTokenBalance } from "../common/utils/token";
 import type { Field } from "../common/types/fields";
 import { logger } from "../logger";
 import type { NodeState } from "./types/state";
+import { RateLimiter } from "limiter";
+
+const publicLimiter = new RateLimiter({
+  tokensPerInterval: 2,
+  interval: "second",
+});
+const limiter = new RateLimiter({ tokensPerInterval: 50, interval: "second" });
 
 const headers: Record<string, string> = { Accept: "application/json" };
 
@@ -29,6 +36,7 @@ export default {
   contracts: {
     async fetchState(address: ContractAddress): Promise<NodeState> {
       const url = `${config.NODE_URL}/contracts/${address}/state`;
+      const remainingRequests = await limiter.removeTokens(1);
       return await fetch(url, { headers }).then((a) => a.json());
     },
   },
@@ -37,6 +45,7 @@ export default {
       // has to use this URL for backfill...
       const url = `https://wallet-v20.mainnet.alephium.org/blockflow/blocks-with-events/${hash}`;
       //   const url = `${config.NODE_URL}/blockflow/blocks-with-events/${hash}`;
+      const remainingRequests = await publicLimiter.removeTokens(1);
       const result = await fetch(url).then((a) => a.json());
       //   const result = await fetch(url, { headers }).then((a) => a.json());
       if (
@@ -53,8 +62,16 @@ export default {
         chainFrom: result.block.chainFrom as ChainId,
         chainTo: result.block.chainTo as ChainId,
         height: result.block.height as number,
-        transactions: result.block.transactions.map((transaction: any) => {
-          if (!transaction || typeof transaction !== "object") {
+        transactions: result.block.transactions.map((transaction: unknown) => {
+          if (
+            !transaction ||
+            typeof transaction !== "object" ||
+            !("unsigned" in transaction) ||
+            typeof transaction.unsigned !== "object" ||
+            !transaction.unsigned ||
+            !("gasAmount" in transaction.unsigned) ||
+            !("gasPrice" in transaction.unsigned)
+          ) {
             throw new Error(
               "Invalid BlockFlow.blocksAndEvents.block.transactions.transaction"
             );
@@ -129,8 +146,8 @@ export default {
 
           return {
             transactionHash: txId as TransactionHash,
-            gasAmount: BigInt(transaction.unsigned.gasAmount),
-            gasPrice: BigInt(transaction.unsigned.gasPrice),
+            gasAmount: BigInt(transaction.unsigned.gasAmount as string),
+            gasPrice: BigInt(transaction.unsigned.gasPrice as string),
             inputs: inputs.map((a) => a.outputRef).concat(contractInputs),
             outputs,
             events,
@@ -146,6 +163,7 @@ export default {
 
       // fetch all blocks with events
       logger.debug(`Fetching blocks with events from ${fromTs} to ${toTs}`);
+      const remainingRequests = await limiter.removeTokens(1);
       const result = await fetch(url, { headers }).then((a) => a.json());
 
       if (!result || typeof result !== "object") {

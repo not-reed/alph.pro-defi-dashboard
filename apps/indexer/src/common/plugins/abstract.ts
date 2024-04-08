@@ -12,6 +12,7 @@ export abstract class Plugin<T extends BasePluginData = BasePluginData>
   implements PluginInterface<T>
 {
   abstract PLUGIN_NAME: string;
+  startDate?: Date;
   abstract process(blocks: Block[]): Promise<T>;
   abstract insert(trx: Transaction<Database>, blocks: T): Promise<void>;
 }

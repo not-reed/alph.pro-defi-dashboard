@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { Token } from "../types/token";
+import type { Token } from "../types/token";
 
 interface TokenPrice {
 	token: Token;

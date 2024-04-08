@@ -6,6 +6,7 @@ import { useCurrency } from '../../hooks/useCurrency';
 import { useRoute } from 'vue-router';
 import { onBeforeRouteUpdate } from 'vue-router';
 import ProxyImage from '../../components/ProxyImage.vue';
+import { bs58 } from '@alephium/web3';
 const holders = ref([])
 const active = ref(null)
 const { prices, markets, updatePrices } = usePrices()
@@ -28,7 +29,16 @@ onBeforeRouteUpdate(async (to, from) => {
 async function loadActive(address = route.params.address) {
     const results2 = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/tokens/holders/${address}`, { credentials: 'include' }).then(a => a.json())
     updatePrices([results2.holders[0].token.address])
-    active.value = results2.holders[0]
+    console.log({ results2 })
+    active.value = {
+        holderCount: results2.holders[0].holderCount,
+        circulatingSupply: results2.holders[0].circulatingSupply,
+        token: results2.holders[0].token,
+        holders: results2.holders[0].holders.map(h => ({
+            ...h,
+            isContract: bs58.decode(h.userAddress)[0] === 0x03
+        })),
+    }
 }
 
 const verified = computed(() => holders.value.filter((holder: any) => holder.token?.listed))
@@ -47,6 +57,8 @@ const liquidity = computed(() => {
     }
     return markets[active.value.token.address].reduce((acc, cur) => acc + (cur.liquidity / 1e18), 0)
 })
+
+
 </script>
 
 <template>
@@ -145,28 +157,33 @@ const liquidity = computed(() => {
                 </div>
             </div>
 
-            <ul class="h-96 overflow-y-auto bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-lg">
-                <li v-for="holder in active.holders" class="grid grid-cols-5 gap-4">
-                    <div class="col-span-2">
-                        {{ Math.round(Number(holder.balance) / 10 ** Number(active.token.decimals)) }}
-                    </div>
+            <table class="h-96 overflow-y-auto bg-zinc-200 dark:bg-calypso-900 p-4 rounded max-w-lg">
+                <tbody>
+                    <tr v-for="holder in active.holders">
+                        <td class="">
+                            {{ Math.round(Number(holder.balance) / 10 ** Number(active.token.decimals) * 1000) / 1000 }}
+                        </td>
 
-                    <div>
-                        {{ Math.round(holder.balance / active.circulatingSupply * 10000) / 100 }}%
-                    </div>
+                        <td>
+                            {{ Math.round(holder.balance / active.circulatingSupply * 10000) / 100 }}%
+                        </td>
 
-                    <div class="col-span-2">
-                        <RouterLink :to="`/portfolio/overview/${holder.userAddress}`"
-                            class="text-calypso-500 cursor-pointer">
-                            {{ holder.userAddress.slice(0, 4) }}...{{ holder.userAddress.slice(-4) }}
-                        </RouterLink>
-                        <!-- <a :href="`https://explorer.alephium.org/addresses/${holder.userAddress}`" target="_blank"
+                        <td class="">
+                            <RouterLink :to="`/portfolio/overview/${holder.userAddress}`"
+                                class="text-calypso-500 cursor-pointer flex items-center justify-start">
+                                <span class="w-28">{{ holder.userAddress.slice(0, 4) }}...{{
+                        holder.userAddress.slice(-4) }}</span>
+                                <span v-if="holder.isContract"
+                                    class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span>
+                            </RouterLink>
+                            <!-- <a :href="`https://explorer.alephium.org/addresses/${holder.userAddress}`" target="_blank"
                             class="text-calypso-500 cursor-pointer">
                             {{ holder.userAddress.slice(0, 4) }}...{{ holder.userAddress.slice(-4) }}
                         </a> -->
-                    </div>
-                </li>
-            </ul>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </template>
