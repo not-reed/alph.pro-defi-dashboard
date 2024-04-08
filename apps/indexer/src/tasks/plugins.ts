@@ -64,6 +64,16 @@ export async function startPluginTask() {
         pluginActive.get(plugin.PLUGIN_NAME) ?? true
       })`
     );
+
+    if (!latestMap.has(plugin.PLUGIN_NAME) && plugin.startDate) {
+      const date = plugin.startDate;
+      latestMap.set(plugin.PLUGIN_NAME, date.getTime());
+      console.log("Setting start date", date.getTime());
+
+      await db.transaction().execute(async (trx) => {
+        await insertPluginTimestamp(plugin.PLUGIN_NAME, date, trx);
+      });
+    }
     // one at a time, initialize and load plugin state.
     // if brand new, initialize with TRIBUTE_TS block
 
@@ -228,7 +238,7 @@ export async function startPluginTask() {
               to = from + MAX_DURATION;
             } catch (err) {
               logger.error({
-                msg: `Error inserting in time range  ${plugin.PLUGIN_NAME}:${GENESIS_TS}:${GENESIS_TS}`,
+                msg: `Error inserting in time range  ${plugin.PLUGIN_NAME}:${from}:${to}`,
                 err,
                 data,
               });
@@ -242,6 +252,7 @@ export async function startPluginTask() {
           err instanceof Error &&
           err.message.startsWith("Missing transaction inputs details")
         ) {
+          console.log({ err });
           logger.warn(
             `Explorer missing transactions, retrying... ${plugin.PLUGIN_NAME}:${lastFrom}:${lastTo}`
           );

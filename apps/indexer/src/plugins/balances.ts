@@ -83,10 +83,10 @@ export class BalancesPlugin extends Plugin<PluginData> {
       balanceMap.set(key, balance);
     }
 
-    for (const input of outputsArr) {
-      const key = `${input.userAddress}-${input.tokenAddress}`;
-      const balance: NewBalance = balanceMap.get(key) ?? createBalance(input);
-      balance.balance += input.amount;
+    for (const output of outputsArr) {
+      const key = `${output.userAddress}-${output.tokenAddress}`;
+      const balance: NewBalance = balanceMap.get(key) ?? createBalance(output);
+      balance.balance += output.amount;
       balanceMap.set(key, balance);
     }
 
@@ -115,7 +115,7 @@ export class BalancesPlugin extends Plugin<PluginData> {
     await trx
       .insertInto("Balance")
       .values(data.balances)
-      .onConflict((col) => col.doNothing())
+      .onConflict((col) => col.doNothing()) // TODO: only provide delta, and on conflict increment
       .execute();
 
     return;

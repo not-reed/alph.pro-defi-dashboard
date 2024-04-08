@@ -14,6 +14,7 @@ import sse from "./api/sse";
 import tokens from "./api/tokens";
 import pools from "./api/pools";
 import balances from "./api/balances";
+import V2Balances from "./api/v2/balances";
 import prices from "./api/prices";
 import auth from "./api/auth";
 import nfts from "./api/nfts";
@@ -36,6 +37,7 @@ app.get("/docs.json", async (c) => {
 
   const publicDocs = {
     Balances: "/api/balances",
+    V2Balances: "/api/v2/balances",
     Nfts: "/api/nfts",
     Pools: "/api/pools",
     Prices: "/api/prices",
@@ -90,6 +92,9 @@ app.route("/pools", pools);
 
 app.use("/balances/*", corsOptions);
 app.route("/balances", balances);
+
+app.use("/v2/balances/*", corsOptions);
+app.route("/v2/balances", V2Balances);
 
 app.use("/prices/*", corsOptions);
 app.route("/prices", prices);

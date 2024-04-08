@@ -1,75 +1,72 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import Icon from '../../components/Icon.vue';
-import { useUser } from '../../hooks/useUser';
+import { computed, ref } from 'vue';
+import { type TokenBalance, useUser, type PoolBalance, type FarmBalance, type NftBalance } from '../../hooks/useUser';
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 
+import { bs58 } from '@alephium/web3';
 import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
 import { useRoute } from 'vue-router';
 import ProxyImage from '../../components/ProxyImage.vue';
 
+import { ArrowPathIcon, ChevronDownIcon} from '@heroicons/vue/24/outline';
+import UserTokens from '../../components/UserPanels/UserTokens.vue';
+import UserPools from '../../components/UserPanels/UserPools.vue';
+import UserFarms from '../../components/UserPanels/UserFarms.vue';
+import UserNfts from '../../components/UserPanels/UserNfts.vue';
+import { getPoolBreakdown } from '../../utils/pools';
 
-const { user } = useUser()
+const { user, refreshWallet } = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 
 const { prices } = usePrices()
 
-
-const alphPrice = computed(() => prices.tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq)
-
-interface PartialToken {
-    token: {
-        address: string
-        symbol: string
-        logo: string
-        listed: boolean
-    }
-    balance: number
-    price: number
-}
-
-const pricedTokens = computed(() => user.balances.reduce((acc, balance) => {
-    if (!balance.token?.listed) {
-        return acc;
-    }
-
-    return acc.concat({
-        ...balance,
-        balance: balance.balance / 10 ** balance.token.decimals,
-        price: prices[balance.token.address],
-    })
-}, [] as PartialToken[]).sort((a: PartialToken, b: PartialToken) => {
-    const aWorth = a.balance * a.price
-    const bWorth = b.balance * b.price
-    if (!aWorth && bWorth) return 1
-    if (aWorth && !bWorth) return -1
-    if (aWorth && bWorth) return bWorth - aWorth
-    return a.token.symbol.localeCompare(b.token.symbol)
-}))
-
-
-const nfts = computed(() => user.balances.filter(a => Boolean(a.nft?.image)).sort((a, b) => a.nft?.name.localeCompare(b.nft?.name)).sort((a, b) => b.nft.collection.floor - a.nft.collection.floor))
-
 const tokenWorth = computed(() => {
-    return pricedTokens.value.reduce((acc: number, balance: PartialToken) => {
-        return acc + balance.balance * (balance.price || 0)
+    return user.tokens.reduce((acc: number, balance: TokenBalance) => {
+        const b = Number(balance.balance) / 10 ** balance.token.decimals
+        return acc + b * prices[balance.token.address]
     }, 0)
 })
-const stakedWorth = 0
-const nftWorth = 0
-const claimableWorth = 0
+const lpWorth = computed(() => {
+    return user.pools.reduce((acc: number, pool: PoolBalance) => {
+        const { token0Balance, token1Balance } = getPoolBreakdown(pool)
+        return acc
+            + token0Balance * prices[pool.pool.token0.address]
+            + token1Balance * prices[pool.pool.token1.address]
+    }, 0)
+})
 
-const netWorth = computed(() => tokenWorth.value + stakedWorth + nftWorth + claimableWorth)
+const stakedWorth = computed(() => {
+    return user.farms.reduce((acc: number, farm: FarmBalance) => {
+        const { token0Balance, token1Balance } = getPoolBreakdown(farm)
+        return acc
+            + token0Balance * prices[farm.pool.token0.address]
+            + token1Balance * prices[farm.pool.token1.address]
+    }, 0)
+})
+
+const nftWorth = computed(() => {
+    return user.nfts.reduce((acc: number, nft: NftBalance) => {
+        // calculate all based on floor prices
+        return acc + (Number(nft.nft.collection.floor) / 1e18) * prices.tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq
+    }, 0)
+})
+
+
+
+
+const netWorth = computed(() => tokenWorth.value + nftWorth.value + lpWorth.value + stakedWorth.value)
 
 const secondaryCurrencies = computed(() => {
     const options = ['USD', 'ALPH', 'BTC', 'ETH'] as const
     return options.filter(a => a !== currency.value).slice(0, 3)
 })
 
-const routeUserAddress = route.params.address as string
+const routeUserAddress = ref(route.params.address as string)
+
+const isContract = computed(() => bs58.decode(routeUserAddress.value)[0] === 0x03)
 
 
 </script>
@@ -77,9 +74,9 @@ const routeUserAddress = route.params.address as string
 <template>
     <div class="flex flex-col w-full max-w-2xl">
 
-        <div class="grid md:grid-cols-4 gap-2 p-4 w-full">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-4 w-full">
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl md:col-span-2 md:row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
+                class="col-span-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl md:col-span-2 md:row-span-2 rounded p-2 flex flex-col justify-between border-b border-b-calypso-800">
                 <span class="text-calypso-800 dark:text-calypso-300 text-sm opacity-75">Net Worth</span>
                 <span class="text-2xl font-bold  text-calypso-700 dark:text-calypso-500">
                     {{ format(netWorth, currency) }}
@@ -89,154 +86,75 @@ const routeUserAddress = route.params.address as string
                 </span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Wallet</span>
                 <span class="text-lg font-bold">{{ format(tokenWorth) }}</span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Staked</span>
                 <span class="text-lg font-bold">{{ format(stakedWorth) }}</span>
             </div>
             <div
-                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
+                <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Pools</span>
+                <span class="text-lg font-bold">{{ format(lpWorth) }}</span>
+            </div>
+            <div
+                class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">NFTs</span>
                 <span class="text-lg font-bold">{{ format(nftWorth) }}</span>
             </div>
-            <div
+            <!-- <div
                 class="bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded p-2  flex flex-col border-b border-b-calypso-800 hidden md:flex">
                 <span class="text-calypso-900 dark:text-calypso-300 text-sm opacity-75">Claimable</span>
-                <span class="text-lg font-bold">{{ format(claimableWorth) }}</span>
-            </div>
+                <span class="text-lg font-bold">--</span>
+            </div> -->
         </div>
 
         <div class="flex gap-2 p-4 w-full">
             <div
-                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex flex-col md:flex-row md:items-center justify-between border-b border-b-calypso-800 w-full">
+                class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex flex-col md:items-center justify-between border-b border-b-calypso-800 w-full gap-2">
+                <div class="flex items-center justify-between w-full">
 
-                <div class="md:hidden">
-                    {{ truncateAddress(routeUserAddress, 24) }}
+                    <div class="md:hidden">
+                        {{ truncateAddress(routeUserAddress, 24) }}
+                    </div>
+
+                    <div class="hidden md:inline-block">
+                        {{ truncateAddress(routeUserAddress, 50) }} {{ }}
+                    </div>
+                    <button @click="() => refreshWallet(routeUserAddress)">
+                        <ArrowPathIcon class="h-4 w-4 text-calypso-500" />
+                    </button>
                 </div>
 
-                <div class="hidden md:inline-block">
-                    {{ truncateAddress(routeUserAddress, 50) }}
-                </div>
+                <div class="flex gap-4 justify-between w-full">
+                    <span v-if="isContract"
+                        class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span>
 
-                <div>
 
-                    <ExternalLink :href="`https://explorer.alephium.org/addresses/${routeUserAddress}`" class="">
-                        Explorer
-                    </ExternalLink>
+                    <div class="flex gap-4">
+                        <ExternalLink :href="`https://explorer.alephium.org/addresses/${routeUserAddress}`" class="">
+                            Explorer
+                        </ExternalLink>
 
-                    <ExternalLink :href="`https://deadrare.io/account/${routeUserAddress}`" class="">
-                        DeadRare
-                    </ExternalLink>
+                        <ExternalLink :href="`https://deadrare.io/account/${routeUserAddress}`" class="">
+                            DeadRare
+                        </ExternalLink>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- TODO: only show i.e. top 10 tokens here? -->
-        <ul class="grid gap-2 p-4 w-full">
-            <li v-for="balance in pricedTokens"
-                class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
-                <div class="flex gap-2">
-                    <ProxyImage v-if="balance.token.logo" :src="balance.token.logo" :width="50" :height="50"
-                        class="w-8 h-8 rounded-full dark:bg-zinc-900 bg-zinc-400" />
-                    <Icon v-else name="currency" class="text-calypso-400 w-8 h-8 bg-zinc-800 rounded-full" />
-                    <div>
-                        <div class="text-sm -mb-1">{{ balance.token.symbol }}</div>
-                        <div class="text-xs opacity-50">{{ balance.balance.toLocaleString() }}</div>
-                    </div>
-                </div>
+        <UserTokens :value="tokenWorth" />
 
-                <div v-if="balance.price" class="text-clip overflow-auto opacity-50">
-                    {{ format(balance.price) }}</div>
+        <UserPools :value="lpWorth" />
 
+        <template v-if="false">
+            <UserFarms :value="stakedWorth" />
+        </template>
 
-                <div v-if="balance.price"
-                    class="text-clip overflow-auto font-bold text-calypso-700 dark:text-calypso-500">
-                    {{ format(balance.price * balance.balance) }}
-                </div>
-
-            </li>
-            <li v-if="false"
-                class="shadow dark:bg-calypso-900 bg-zinc-200 grid grid-cols-3 grid-flow-col auto-cols-min items-center justify-between gap-2 rounded-l-full pr-2">
-                <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-8 h-8 bg-zinc-800 rounded-full text-calypso-400">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-
-                    <div class="pl-2 text-sm opacity-50">View More</div>
-                </div>
-            </li>
-        </ul>
-
-        <!-- TODO: Ranked by Rarest+Highest Floor -->
-        <!-- Only show first 4 or 8 -->
-        <ul class="grid grid-cols-2 md:grid-cols-4 flex-wrap gap-2 px-4 pt-4 w-full" v-if="nfts.length">
-            <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
-                <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3" :src="balance.nft.image"
-                    :width="300" :height="300" />
-                <div class="truncate">{{ balance.nft.name }}</div>
-                <div class="text-sm flex items-center justify-between leading-3">
-                    <div class="text-xs opacity-50">Ranked:</div>
-                    <div class="font-bold">---</div>
-                </div>
-                <div class="text-sm flex items-center justify-between leading-3">
-                    <div class="text-xs opacity-50">Floor:</div>
-                    <div class="text-calypso-700 dark:text-calypso-500 font-bold"> {{
-                        format(Number(balance.nft.collection.floor) / 1e18 * alphPrice) }}
-                    </div>
-                    <!-- <div class="font-bold">---</div> -->
-                </div>
-                <div class="text-sm flex items-center justify-between leading-3">
-                    <div class="text-xs opacity-50">Listed:</div>
-                    <div class="font-bold">---</div>
-                </div>
-
-                <ExternalLink :href="`https://deadrare.io/nft/${balance.nft.address}`">
-                    DeadRare
-                </ExternalLink>
-
-            </li>
-        </ul>
-
-        <ul class="m-4 pt-4 w-full flex flex-col gap-2" v-if="false">
-            <li class="bg-zinc-300 dark:bg-calypso-900 max-w-2xl p-4 rounded">
-                <div class="flex gap-2 items-center justify-between">
-                    <img src="../../assets/ayin.png" class="w-12 h-12 position" />
-                    <div class="w-1/3">
-                        <div class="font-bold">ALPH-AYIN</div>
-                        <div class="leading-3 text-xs opacity-50">{{
-                        format(stakedWorth / 2, 'ALPH') }} ALPH</div>
-                        <div class="leading-3 text-xs opacity-50">{{ format(stakedWorth / 2, 'ALPH') }}
-                            AYIN</div>
-                    </div>
-                    <div class="flex flex-1 gap-2 items-center justify-between">
-                        <div>
-                            <div class="text-xs">Currently Staked</div>
-                            <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                        format(stakedWorth) }}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs">Rewards</div>
-                            <div class="text-calypso-700 dark:text-calypso-500 font-bold">{{
-                        format(claimableWorth) }}</div>
-                        </div>
-                        <div>
-                            <div class="text-xs">Total Yield</div>
-                            <div>{{ format(stakedWorth - stakedWorth * 0.72) }}</div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs">Total Deposited</div>
-                            <div>{{ format(stakedWorth * 0.72) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-        </ul>
+        <UserNfts :value="nftWorth" />
     </div>
 </template>

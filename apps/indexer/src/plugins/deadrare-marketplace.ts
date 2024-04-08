@@ -17,6 +17,8 @@ interface PluginData {
   transactions: NewPluginBlock[];
 }
 
+const skippedListings = [5036n, 5037n, 5038n, 5039n, 5040n, 5041n, 5042n];
+
 export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
   PLUGIN_NAME = "deadrare-marketplace";
 
@@ -94,7 +96,11 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
 
             const prev = listings.get(partialListing.listingId);
             if (!prev) {
-              throw new Error("NFTSoldNotFound");
+              // TODO: debug why these are missing?
+              if (skippedListings.includes(partialListing.listingId)) {
+                continue;
+              }
+              throw new Error(`NFTSoldNotFound ${partialListing.listingId}`);
             }
 
             listings.set(partialListing.listingId, {
@@ -114,7 +120,9 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
 
             const prev = listings.get(partial.listingId);
             if (!prev) {
-              throw new Error("NFTListingCancelledNotFound");
+              throw new Error(
+                `NFTListingCancelledNotFound ${partial.listingId}`
+              );
             }
 
             listings.set(partial.listingId, {
@@ -134,8 +142,15 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
             );
 
             const prev = listings.get(partial.listingId);
+
             if (!prev) {
-              throw new Error("NFTListingPriceUpdatedNotFound");
+              // TODO: debug why these are missing?
+              if (skippedListings.includes(partial.listingId)) {
+                continue;
+              }
+              throw new Error(
+                `NFTListingPriceUpdatedNotFound ${partial.listingId}`
+              );
             }
 
             listings.set(partial.listingId, {

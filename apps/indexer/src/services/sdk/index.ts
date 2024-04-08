@@ -427,7 +427,7 @@ export default {
               block: block.blockHash,
             });
             throw new Error(
-              `Missing transaction from explorer, must retry ${
+              `Missing transaction from explorer, getBlocksFromHash, must retry ${
                 block.timestamp
               } (${new Date(block.timestamp).toISOString()}) ${
                 tx.transactionHash
@@ -457,7 +457,7 @@ export default {
             });
             missedTransactions.add(tx.transactionHash);
             logger.debug(
-              `Missing transaction inputs details, aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`
+              `Missing transaction inputs details, (1) aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`
             );
             throw new Error(
               "Missing transaction inputs from explorer, must retry"
@@ -509,7 +509,7 @@ export default {
             }
             if (nodeCount !== alphInputs.length) {
               throw new Error(
-                `Missing transaction inputs details, aborting. ${t.inputs.length} on node, ${inputs.length} on explorer`
+                `Missing transaction inputs details, (2) aborting. ${t.inputs.length} on node, ${inputs.length} on explorer`
               );
             }
             return {
@@ -569,15 +569,20 @@ export default {
     for (const block of flatBlocks) {
       for (const tx of block.transactions) {
         if (tx.inputs.length) {
-          const found = transactionMap.get(tx.transactionHash);
+          const found =
+            transactionMap.get(tx.transactionHash) ??
+            (await explorerService.transactions.fromHash(tx.transactionHash));
+
+          transactionMap.set(tx.transactionHash, found);
           if (!found) {
+            console.log({ tx, found });
             missedTransactions.add(tx.transactionHash);
             throw new Error(
-              `Missing transaction from explorer, must retry ${
+              `Missing transaction from explorer, getBlocksFromTimestamp, must retry ${
                 block.timestamp
               } (${new Date(block.timestamp).toISOString()}) ${
                 tx.transactionHash
-              }`
+              } => ${block.blockHash}`
             );
           }
           const alphInputs = found.inputs.filter(
@@ -585,9 +590,10 @@ export default {
           );
 
           if (tx.inputs.length !== alphInputs.length) {
+            console.log({ found, tx });
             missedTransactions.add(tx.transactionHash);
             logger.debug(
-              `Missing transaction inputs details, aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`
+              `Missing transaction inputs details, (3) aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`
             );
             throw new Error(
               "Missing transaction inputs from explorer, must retry"
@@ -615,7 +621,7 @@ export default {
             );
             if (nodeCount !== alphInputs.length) {
               throw new Error(
-                `Missing transaction inputs details, aborting. ${t.inputs.length} on node, ${inputs.length} on explorer`
+                `Missing transaction inputs details, (4) aborting. ${t.inputs.length} on node, ${inputs.length} on explorer`
               );
             }
             return {
