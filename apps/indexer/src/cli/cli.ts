@@ -81,6 +81,10 @@ Commands:
 					type: "boolean",
 					short: "f",
 				},
+				user: {
+					type: "string",
+					short: "u",
+				},
 				token: {
 					type: "string",
 					short: "t",
@@ -117,11 +121,10 @@ Commands:
 			allowPositionals: true,
 		});
 
-		console.log(args);
 		await fixBalances({
-			user: argv.user,
-			token: argv.token,
-			notToken: argv.notToken,
+			user: args.values.user,
+			token: args.values.token,
+			notToken: args.values.notToken,
 			min: args.values.minTokens ? Number(args.values.minTokens) : undefined,
 			max: args.values.maxTokens ? Number(args.values.maxTokens) : undefined,
 			minBalance: args.values.minBalance

@@ -28,9 +28,6 @@ export async function fixBalances(opts: {
 	maxBalance?: bigint;
 	force?: boolean;
 }) {
-	console.log({
-		opts,
-	});
 	let query = db
 		.selectFrom("Balance")
 		.select(["userAddress", (eb) => eb.fn.count("tokenAddress").as("count")]);
