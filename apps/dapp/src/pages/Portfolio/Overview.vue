@@ -21,6 +21,8 @@ const { user, refreshWallet } = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 
+const farmsEnabled = false
+
 const { prices } = usePrices()
 
 const tokenWorth = computed(() => {
@@ -39,6 +41,9 @@ const lpWorth = computed(() => {
 })
 
 const stakedWorth = computed(() => {
+    if (!farmsEnabled) {
+        return 0
+    }
     return user.farms.reduce((acc: number, farm: FarmBalance) => {
         const { token0Balance, token1Balance } = getPoolBreakdown(farm)
         return acc
@@ -151,7 +156,7 @@ const isContract = computed(() => bs58.decode(routeUserAddress.value)[0] === 0x0
 
         <UserPools :value="lpWorth" />
 
-        <template v-if="false">
+        <template v-if="farmsEnabled">
             <UserFarms :value="stakedWorth" />
         </template>
 

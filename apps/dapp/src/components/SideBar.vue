@@ -20,9 +20,9 @@ const { links } = useNavLinks()
         </RouterLink>
 
         <ul class="text-sm flex flex-col gap-2">
-            <li class="pb-2 px-4 first:border-b-0 border-b border-emerald-200 border-opacity-25"
+            <li class="pb-2 px-4 border-b border-emerald-200 border-opacity-25"
                 v-for="link in links.filter(a => !a.meta?.hide)">
-                <div class="5" v-if="link.name && link.path && !link.children?.length">
+                <div class="" v-if="link.name && link.path && !link.children?.length">
                     <RouterLink :to="link.path">
                         <div class="">
                             {{ link.name }}
@@ -33,7 +33,6 @@ const { links } = useNavLinks()
                 <SideBarDropDown v-else-if="link.children" :open="link.meta?.defaultOpen">
                     <template #summary>
                         <div>{{ link.name }}</div>
-
                     </template>
 
                     <ul class="p-1 flex flex-col gap-2 font-semibold">

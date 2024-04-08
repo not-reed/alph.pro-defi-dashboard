@@ -35,7 +35,7 @@ const options = {
 				minimumFractionDigits: 2,
 				significantDigits: 8,
 			};
-			const numberFormat = new Intl.NumberFormat("en-US", options);
+const numberFormat = new Intl.NumberFormat("en-US", options);
 </script>
 
 <template>
