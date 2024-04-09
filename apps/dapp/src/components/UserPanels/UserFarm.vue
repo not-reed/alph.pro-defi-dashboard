@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
-import type { FarmBalance, PoolBalance } from '../../hooks/useUser'
+import { computed } from 'vue'
+import type { FarmBalance } from '../../hooks/useUser'
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 
