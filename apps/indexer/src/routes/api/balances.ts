@@ -173,6 +173,8 @@ app.post("fix", async (c) => {
 	const wallet = await c.req.query("address");
 
 	await fixBalances({
+		logger: false,
+		force: true,
 		user: wallet,
 	});
 

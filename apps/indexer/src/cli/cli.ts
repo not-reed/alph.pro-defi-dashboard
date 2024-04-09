@@ -122,6 +122,8 @@ Commands:
 		});
 
 		await fixBalances({
+			logger: true,
+			//
 			user: args.values.user,
 			token: args.values.token,
 			notToken: args.values.notToken,

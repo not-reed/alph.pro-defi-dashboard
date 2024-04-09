@@ -27,6 +27,8 @@ export async function fixBalances(opts: {
 	minBalance?: bigint;
 	maxBalance?: bigint;
 	force?: boolean;
+	//
+	logger?: boolean;
 }) {
 	let query = db
 		.selectFrom("Balance")
@@ -85,9 +87,11 @@ export async function fixBalances(opts: {
 
 	const unique = Array.from(new Set(users.map((u) => u.userAddress)));
 
-	console.log(
-		`Found ${users.length}/${unique.length} users with matching balances`,
-	);
+	if (opts.logger) {
+		console.log(
+			`Found ${users.length}/${unique.length} users with matching balances`,
+		);
+	}
 
 	for (const user of users) {
 		const balances = await fetch(
@@ -136,13 +140,17 @@ export async function fixBalances(opts: {
 				balance: bal,
 			});
 		}
+
+		console.log({ newBalances });
 		await db.transaction().execute(async (trx) => {
 			await deleteUserBalances(user.userAddress, trx);
 			await insertUserBalances(newBalances, trx);
 		});
 
-		console.log(
-			`Fixed ${user.userAddress} balances (${newBalances.length} tokens)`,
-		);
+		if (opts.logger) {
+			console.log(
+				`Fixed ${user.userAddress} balances (${newBalances.length} tokens)`,
+			);
+		}
 	}
 }
