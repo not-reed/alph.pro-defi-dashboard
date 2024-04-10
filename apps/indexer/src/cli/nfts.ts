@@ -202,9 +202,8 @@ export async function fixCollection(collection: ContractAddress) {
 	for (const sub of subcontracts) {
 		const id = binToHex(contractIdFromAddress(sub));
 
-		const transactionsUrl = `${config.EXPLORER_URL}/tokens/${id}/transactions`;
-		console.log({ transactionsUrl });
-		console.log(`fetching transactions for ${sub}`);
+		const transactionsUrl = `${config.EXPLORER_URL}/tokens/${id}/transactions?limit=1`;
+
 		const transactions = await fetchOrCacheJson(transactionsUrl);
 		if (!transactions.length) {
 			console.log("could not find transactions for", sub);
@@ -215,11 +214,6 @@ export async function fixCollection(collection: ContractAddress) {
 		const receiver = transaction.outputs.find((o) =>
 			o.tokens?.some((a) => a.id === id),
 		);
-		if (
-			id === "535a35188f3596743748fad31b7aaea11e71a2a5f15e98216977420f2cc36a00"
-		) {
-			console.log({ receiver });
-		}
 
 		if (receiver) {
 			await db.transaction().execute(async (trx) => {
