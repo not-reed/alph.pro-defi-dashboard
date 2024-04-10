@@ -6,6 +6,7 @@ import { runSeeder } from "./seeder";
 import {
 	backfillDeadRare,
 	findUnprocessedNfts,
+	fixCollection,
 	processCollection,
 } from "./nfts";
 import type { ContractAddress } from "../services/common/types/brands";
@@ -67,6 +68,10 @@ Commands:
 		break;
 	case "nft:search":
 		await findUnprocessedNfts();
+		break;
+
+	case "nft:fix":
+		await fixCollection(argv.collection);
 		break;
 	case "fix:prices":
 		await getAyinPrices();

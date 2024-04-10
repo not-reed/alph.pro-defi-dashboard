@@ -133,9 +133,12 @@ export class DeadRareMarketplacePlugin extends Plugin<PluginData> {
 
 						const prev = listings.get(partial.listingId);
 						if (!prev) {
-							throw new Error(
-								`NFTListingCancelledNotFound ${partial.listingId}`,
-							);
+							continue;
+							// TODO: are some price updates simply missing now?
+							// TODO: why are listingIds not yet processed?
+							// throw new Error(
+							// 	`NFTListingCancelledNotFound ${partial.listingId}`,
+							// );
 						}
 
 						listings.set(partial.listingId, {
