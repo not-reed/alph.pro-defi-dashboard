@@ -102,7 +102,6 @@ interface RawBalance {
 	farms: any[];
 }
 function setBalances(balances: RawBalance) {
-	console.log(balances.nfts);
 	user.walletLoaded = true;
 	user.tokens = balances.tokens.map((t) => ({
 		...t,
@@ -130,16 +129,21 @@ function setBalances(balances: RawBalance) {
 			totalSupply: BigInt(p.pool.totalSupply),
 		},
 	}));
-	user.farms = balances.farms.map((s) => ({
-		...s,
-		balance: BigInt(s.balance),
-		pool: {
-			...s.pool,
-			amount0: BigInt(s.pool.amount0),
-			amount1: BigInt(s.pool.amount1),
-			totalSupply: BigInt(s.pool.totalSupply),
-		},
-	}));
+	user.farms = balances.farms
+		.map((s) => ({
+			...s,
+			balance: BigInt(s.balance),
+			pool: {
+				...s.pool,
+				amount0: BigInt(s.pool.amount0),
+				amount1: BigInt(s.pool.amount1),
+				totalSupply: BigInt(s.pool.totalSupply),
+			},
+		}))
+		.filter(
+			(f) =>
+				f.pool.pair.address === "28AudXLCDHEQLQaUNziXExuL5PdfwGb3utEpiGkHhT9h1",
+		);
 }
 
 async function loadBalances(wallet: string) {

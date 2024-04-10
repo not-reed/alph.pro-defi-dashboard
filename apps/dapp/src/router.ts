@@ -261,7 +261,6 @@ router.beforeEach(async (to, _from) => {
 			? to.params.address[0]
 			: to.params.address;
 
-		console.log({ wallet: user.wallet });
 		if (!addressParam && !user.wallet) {
 			// no usable wallet in link
 			return "/";

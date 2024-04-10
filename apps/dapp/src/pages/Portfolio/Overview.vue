@@ -21,7 +21,7 @@ const { user, refreshWallet } = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 
-const farmsEnabled = false
+const farmsEnabled = true
 
 const { prices } = usePrices()
 
