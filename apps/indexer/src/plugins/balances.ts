@@ -1,6 +1,6 @@
 import { Plugin } from "../common/plugins/abstract";
 import type Database from "../database/schemas/Database";
-import type { Transaction } from "kysely";
+import { sql, type Transaction } from "kysely";
 
 import type { Block } from "../services/sdk/types/block";
 import type { TokenBalance } from "../services/common/types/token";
@@ -8,116 +8,137 @@ import { db } from "../database/db";
 import type { NewBalance } from "../database/schemas/public/Balance";
 import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 import type {
-  BlockHash,
-  TransactionHash,
+	BlockHash,
+	TransactionHash,
 } from "../services/common/types/brands";
 import { logger } from "../services/logger";
 
 interface PluginData {
-  balances: NewBalance[];
-  transactions: NewPluginBlock[];
+	balances: NewBalance[];
+	transactions: NewPluginBlock[];
 }
 
 function createBalance(balance: TokenBalance) {
-  return {
-    userAddress: balance.userAddress,
-    tokenAddress: balance.tokenAddress,
-    balance: 0n,
-  } satisfies NewBalance;
+	return {
+		userAddress: balance.userAddress,
+		tokenAddress: balance.tokenAddress,
+		balance: 0n,
+	} satisfies NewBalance;
 }
 
 export class BalancesPlugin extends Plugin<PluginData> {
-  PLUGIN_NAME = "balances";
+	PLUGIN_NAME = "balances";
 
-  async process(blocks: Block[]) {
-    const processedTransactions = new Set<TransactionHash>();
-    const inputsArr: TokenBalance[] = [];
-    const outputsArr: TokenBalance[] = [];
+	async process(blocks: Block[]) {
+		const processedTransactions = new Set<TransactionHash>();
+		const inputsArr: TokenBalance[] = [];
+		const outputsArr: TokenBalance[] = [];
 
-    for (const block of blocks) {
-      for (const transaction of block.transactions) {
-        if (transaction.inputs.length || transaction.outputs.length) {
-          processedTransactions.add(transaction.transactionHash);
-          inputsArr.push(...transaction.inputs);
-          outputsArr.push(...transaction.outputs);
-        }
-      }
-    }
+		for (const block of blocks) {
+			for (const transaction of block.transactions) {
+				if (transaction.inputs.length || transaction.outputs.length) {
+					processedTransactions.add(transaction.transactionHash);
 
-    const userBalanceKeys = new Map<string, Omit<TokenBalance, "amount">>(
-      inputsArr.concat(outputsArr).map((item) => [
-        `${item.userAddress}-${item.tokenAddress}`,
-        {
-          userAddress: item.userAddress,
-          tokenAddress: item.tokenAddress,
-        } as Omit<TokenBalance, "amount">,
-      ])
-    );
+					inputsArr.push(...transaction.inputs);
+					outputsArr.push(...transaction.outputs);
+				}
+			}
+		}
 
-    if (!userBalanceKeys.size) {
-      return { transactions: [], balances: [] };
-    }
-    const balances: NewBalance[] = await db
-      .selectFrom("Balance")
-      .selectAll()
-      .where((eb) => {
-        return eb.or(
-          Array.from(userBalanceKeys.values()).map((balance) => {
-            return eb.and([
-              eb("userAddress", "=", balance.userAddress),
-              eb("tokenAddress", "=", balance.tokenAddress),
-            ]);
-          })
-        );
-      })
-      .execute();
+		const userBalanceKeys = new Map<string, Omit<TokenBalance, "amount">>(
+			inputsArr.concat(outputsArr).map((item) => [
+				`${item.userAddress}-${item.tokenAddress}`,
+				{
+					userAddress: item.userAddress,
+					tokenAddress: item.tokenAddress,
+				} as Omit<TokenBalance, "amount">,
+			]),
+		);
 
-    const balanceMap = new Map(
-      balances.map((b) => [`${b.userAddress}-${b.tokenAddress}`, b])
-    );
+		if (!userBalanceKeys.size) {
+			return { transactions: [], balances: [] };
+		}
 
-    for (const input of inputsArr) {
-      const key = `${input.userAddress}-${input.tokenAddress}`;
-      const balance: NewBalance = balanceMap.get(key) ?? createBalance(input);
-      balance.balance -= input.amount;
-      balanceMap.set(key, balance);
-    }
+		const balances: NewBalance[] = [];
+		// const balances: NewBalance[] = await db
+		// 	.selectFrom("Balance")
+		// 	.selectAll()
+		// 	.where((eb) => {
+		// 		return eb.or(
+		// 			Array.from(userBalanceKeys.values()).map((balance) => {
+		// 				return eb.and([
+		// 					eb("userAddress", "=", balance.userAddress),
+		// 					eb("tokenAddress", "=", balance.tokenAddress),
+		// 				]);
+		// 			}),
+		// 		);
+		// 	})
+		// 	.execute();
 
-    for (const output of outputsArr) {
-      const key = `${output.userAddress}-${output.tokenAddress}`;
-      const balance: NewBalance = balanceMap.get(key) ?? createBalance(output);
-      balance.balance += output.amount;
-      balanceMap.set(key, balance);
-    }
+		const balanceMap = new Map(
+			balances.map((b) => [`${b.userAddress}-${b.tokenAddress}`, b]),
+		);
 
-    // // on LP create, load token0, token1, pair, factory
-    return {
-      balances: Array.from(balanceMap.values()),
-      transactions: Array.from(processedTransactions).map((hash) => ({
-        blockHash: hash,
-        pluginName: this.PLUGIN_NAME,
-      })),
-    };
-  }
+		for (const input of inputsArr) {
+			const key = `${input.userAddress}-${input.tokenAddress}`;
+			const balance: NewBalance = balanceMap.get(key) ?? createBalance(input);
+			balance.balance -= input.amount;
+			balanceMap.set(key, balance);
+		}
 
-  // insert data
-  async insert(trx: Transaction<Database>, data: PluginData) {
-    if (!data.balances?.length) {
-      logger.warn("No balances to insert, but had block balances...");
-      return;
-    }
+		for (const output of outputsArr) {
+			const key = `${output.userAddress}-${output.tokenAddress}`;
+			const balance: NewBalance = balanceMap.get(key) ?? createBalance(output);
+			balance.balance += output.amount;
+			balanceMap.set(key, balance);
+		}
 
-    await trx
-      .insertInto("PluginBlock")
-      .values(data.transactions) // throw on conflict
-      .execute();
+		// // on LP create, load token0, token1, pair, factory
+		return {
+			balances: Array.from(balanceMap.values()),
+			transactions: Array.from(processedTransactions).map((hash) => ({
+				blockHash: hash,
+				pluginName: this.PLUGIN_NAME,
+			})),
+		};
+	}
 
-    await trx
-      .insertInto("Balance")
-      .values(data.balances)
-      .onConflict((col) => col.doNothing()) // TODO: only provide delta, and on conflict increment
-      .execute();
+	// insert data
+	async insert(trx: Transaction<Database>, data: PluginData) {
+		if (!data.balances?.length) {
+			logger.warn("No balances to insert, but had block balances...");
+			return;
+		}
 
-    return;
-  }
+		await trx
+			.insertInto("PluginBlock")
+			.values(data.transactions) // throw on conflict
+			.execute();
+
+		await trx
+			.insertInto("Balance")
+			.values(data.balances)
+			.onConflict((col) => {
+				return col
+					.columns(["userAddress", "tokenAddress"])
+					.doUpdateSet((eb) => ({
+						// SET balance = "Balance"."balance" + excluded.balance;
+						// balance: eb.ref("excluded.balance"),
+						balance: sql`${eb.ref("Balance.balance")} + ${eb.ref(
+							"excluded.balance",
+						)}`,
+					}));
+			})
+			// .onConflict((col) => {
+			// 	return col
+			// 		.columns(["tokenAddress", "userAddress"])
+			// 		.doUpdateSet((eb) => ({
+			// 			// balance: eb.sql("excluded.balance"),
+			// 		}));
+			// })
+
+			.execute();
+
+		return;
+	}
 }
