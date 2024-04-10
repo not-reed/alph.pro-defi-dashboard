@@ -175,7 +175,7 @@ async function fetchPaginatedSubContracts(collection: ContractAddress) {
 		subContracts.push(...subContractResponse.subContracts);
 		page++;
 	} while (subContracts.length !== 0 && subContracts.length % limit === 0);
-	return subContracts;
+	return Array.from(new Set(subContracts));
 }
 
 export async function fixCollection(collection: ContractAddress) {
@@ -195,7 +195,9 @@ export async function fixCollection(collection: ContractAddress) {
 	const minted = Number(state.mutFields[7].value);
 
 	if (minted !== subcontracts.length) {
-		console.log("can't calculate minted nfts, aborting");
+		console.log(
+			`can't calculate minted nfts, aborting. ${minted} => ${subcontracts.length}`,
+		);
 		return;
 	}
 
