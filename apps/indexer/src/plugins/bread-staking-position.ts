@@ -128,11 +128,7 @@ export class BreadStakingPositionPlugin extends Plugin<PluginData> {
 			.values(data.transactions) // throw on conflict
 			.execute();
 
-		await trx
-			.insertInto("StakingEvent")
-			.values(data.positions)
-			.onConflict((col) => col.doNothing())
-			.execute();
+		await trx.insertInto("StakingEvent").values(data.positions).execute();
 		// const { blocks } = data;
 		// await trx
 		//   .insertInto("Block")

@@ -439,7 +439,8 @@ app.openapi(v2Route, async (c) => {
 					.where("userAddress", "=", address)
 					.where("action", "in", ["deposit", "withdraw"])
 					.groupBy("StakingEvent.userAddress")
-					.groupBy("StakingEvent.tokenAddress"),
+					.groupBy("StakingEvent.tokenAddress")
+					.having((eeb) => eeb.fn.sum("amount"), ">", 0), // TODO: verify
 			).as("farms"),
 		])
 		.executeTakeFirst();
