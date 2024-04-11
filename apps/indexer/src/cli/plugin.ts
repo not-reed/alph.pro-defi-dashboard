@@ -1,5 +1,8 @@
 import chalk from "chalk";
-import { autoLoadPluginsFromFolder } from "../core/utils";
+import {
+	autoLoadPluginsFromFolder,
+	filterUnprocessedBlocks,
+} from "../core/utils";
 import sdk from "../services/sdk";
 import { db } from "../database/db";
 import { GENESIS_TS, MAX_DURATION } from "../core/constants";
@@ -69,7 +72,12 @@ export async function processPlugin(
 
 	const blocks = await sdk.getBlocksFromTimestamp(_start, _end);
 
-	const data = await _plugin.plugin.process(blocks);
+	const blocksToProcess = await filterUnprocessedBlocks(
+		_plugin.plugin.PLUGIN_NAME,
+		blocks,
+	);
+
+	const data = await _plugin.plugin.process(blocksToProcess);
 
 	console.log({
 		timestamps: {
@@ -81,11 +89,15 @@ export async function processPlugin(
 	console.log(data);
 
 	if (save) {
-		await db.transaction().execute(async (trx) => {
-			await _plugin.plugin.insert(trx, data);
-			// don't update plugin checkpoint here
-			// as it will be updated by indexer, and this is a one-off
-		});
+		if (data.transactions.length === 0) {
+			console.warn("NOTHING TO SAVE, SKIPPING...");
+		} else {
+			await db.transaction().execute(async (trx) => {
+				await _plugin.plugin.insert(trx, data);
+				// don't update plugin checkpoint here
+				// as it will be updated by indexer, and this is a one-off
+			});
+		}
 	}
 }
 

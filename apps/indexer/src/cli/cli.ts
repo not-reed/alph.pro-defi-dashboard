@@ -16,6 +16,7 @@ import { getAyinPrices } from "./ayin-prices";
 import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 import { parseArgs } from "node:util";
+import { updateFiatRates } from "../tasks/fiat";
 
 switch (argv._[0]) {
 	case "help":
@@ -68,6 +69,10 @@ Commands:
 		break;
 	case "nft:search":
 		await findUnprocessedNfts();
+		break;
+
+	case "fiat":
+		await updateFiatRates();
 		break;
 
 	case "nft:fix":
