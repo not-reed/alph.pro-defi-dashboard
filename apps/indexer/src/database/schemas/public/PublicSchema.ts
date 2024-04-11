@@ -25,6 +25,7 @@ import { type default as NonceTable } from './Nonce';
 import { type default as SocialTable } from './Social';
 import { type default as DeadRareListingTable } from './DeadRareListing';
 import { type default as StakingEventTable } from './StakingEvent';
+import { type default as FiatExchangeTable } from './FiatExchange';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -74,4 +75,6 @@ export default interface PublicSchema {
   DeadRareListing: DeadRareListingTable;
 
   StakingEvent: StakingEventTable;
+
+  FiatExchange: FiatExchangeTable;
 }

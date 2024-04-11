@@ -4,6 +4,7 @@ import { startPluginTask } from "../tasks/plugins";
 import { startTokensTask } from "../tasks/tokens";
 import { startPricesTask } from "../tasks/prices";
 import { startPoolsTask } from "../tasks/pools";
+import { startFiatTask } from "../tasks/fiat";
 
 function resetAllCronJobs() {
 	// clear existing jobs when `bun --hot` is being used
@@ -20,6 +21,7 @@ export async function core() {
 	await startPluginTask();
 
 	// temporary fixes until node is more reliable
+	await startFiatTask();
 	await startPoolsTask();
 	await startTokensTask();
 	await startPricesTask();

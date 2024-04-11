@@ -122,6 +122,15 @@ app.openapi(route, async (c) => {
 	});
 });
 
+app.get("/fiat", async (c) => {
+	return c.json({
+		currency: await db
+			.selectFrom("FiatExchange")
+			.select(["code", "rate"])
+			.execute(),
+	});
+});
+
 app.doc("/docs.json", {
 	info: {
 		title: "Alph.Pro Indexer API",
