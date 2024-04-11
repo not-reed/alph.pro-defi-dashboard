@@ -437,33 +437,43 @@ app.openapi(v2Route, async (c) => {
 							).as("pool"),
 					])
 					.where("userAddress", "=", address)
+					.where(
+						"accountAddress",
+						"!=",
+						"26B8TfTHPKEdWuehaDrtjuPyGH57gPoDoXtm1T7L4uuJf", // remove pounder data
+					)
 					.where("action", "in", ["deposit", "withdraw"])
 					.groupBy("StakingEvent.userAddress")
 					.groupBy("StakingEvent.tokenAddress")
+					.groupBy("StakingEvent.accountAddress")
 					.having((eeb) => eeb.fn.sum("amount"), ">", 0), // TODO: verify
 			).as("farms"),
 		])
 		.executeTakeFirst();
+
 	return c.json({
-		tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
-		nfts: balances?.nfts.map((n) => ({
-			...n,
-			balance: BigInt(n.balance),
-			nft: {
-				...n.nft,
-				attributes: [], // TODO: remove this to restore attributes
-			},
-		})),
-		pools: balances?.pools.map((p) => ({
-			...p,
-			balance: BigInt(p.balance),
-			pool: {
-				...p.pool,
-				amount0: BigInt(p.pool.amount0),
-				amount1: BigInt(p.pool.amount1),
-				totalSupply: BigInt(p.pool.totalSupply),
-			},
-		})),
+		// tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
+		// nfts: balances?.nfts.map((n) => ({
+		// 	...n,
+		// 	balance: BigInt(n.balance),
+		// 	nft: {
+		// 		...n.nft,
+		// 		attributes: [], // TODO: remove this to restore attributes
+		// 	},
+		// })),
+		// pools: balances?.pools.map((p) => ({
+		// 	...p,
+		// 	balance: BigInt(p.balance),
+		// 	pool: {
+		// 		...p.pool,
+		// 		amount0: BigInt(p.pool.amount0),
+		// 		amount1: BigInt(p.pool.amount1),
+		// 		totalSupply: BigInt(p.pool.totalSupply),
+		// 	},
+		// })),
+		tokens: [],
+		nfts: [],
+		pools: [],
 		farms: balances?.farms.map((s) => ({
 			...s,
 			balance: BigInt(s.balance),
