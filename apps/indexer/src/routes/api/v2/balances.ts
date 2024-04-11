@@ -320,6 +320,7 @@ app.openapi(v2Route, async (c) => {
 						),
 					)
 					.where("userAddress", "=", address)
+					.whereRef("userAddress", "!=", "tokenAddress")
 					.where("balance", ">", 0n),
 			).as("pools"),
 
