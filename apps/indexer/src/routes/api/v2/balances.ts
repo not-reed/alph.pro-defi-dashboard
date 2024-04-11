@@ -452,28 +452,25 @@ app.openapi(v2Route, async (c) => {
 		.executeTakeFirst();
 
 	return c.json({
-		// tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
-		// nfts: balances?.nfts.map((n) => ({
-		// 	...n,
-		// 	balance: BigInt(n.balance),
-		// 	nft: {
-		// 		...n.nft,
-		// 		attributes: [], // TODO: remove this to restore attributes
-		// 	},
-		// })),
-		// pools: balances?.pools.map((p) => ({
-		// 	...p,
-		// 	balance: BigInt(p.balance),
-		// 	pool: {
-		// 		...p.pool,
-		// 		amount0: BigInt(p.pool.amount0),
-		// 		amount1: BigInt(p.pool.amount1),
-		// 		totalSupply: BigInt(p.pool.totalSupply),
-		// 	},
-		// })),
-		tokens: [],
-		nfts: [],
-		pools: [],
+		tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
+		nfts: balances?.nfts.map((n) => ({
+			...n,
+			balance: BigInt(n.balance),
+			nft: {
+				...n.nft,
+				attributes: [], // TODO: remove this to restore attributes
+			},
+		})),
+		pools: balances?.pools.map((p) => ({
+			...p,
+			balance: BigInt(p.balance),
+			pool: {
+				...p.pool,
+				amount0: BigInt(p.pool.amount0),
+				amount1: BigInt(p.pool.amount1),
+				totalSupply: BigInt(p.pool.totalSupply),
+			},
+		})),
 		farms: balances?.farms.map((s) => ({
 			...s,
 			balance: BigInt(s.balance),
