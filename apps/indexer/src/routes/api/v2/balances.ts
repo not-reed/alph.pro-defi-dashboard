@@ -437,10 +437,16 @@ app.openapi(v2Route, async (c) => {
 							).as("pool"),
 					])
 					.where("userAddress", "=", address)
-					.where(
-						"accountAddress",
-						"!=",
-						"26B8TfTHPKEdWuehaDrtjuPyGH57gPoDoXtm1T7L4uuJf", // remove pounder data
+					.where((eb) =>
+						eb.or([
+							eb("accountAddress", "is", null), // bread didn't track stake account at first?
+
+							eb(
+								"accountAddress",
+								"!=",
+								"26B8TfTHPKEdWuehaDrtjuPyGH57gPoDoXtm1T7L4uuJf", // remove pounder data
+							),
+						]),
 					)
 					.where("action", "in", ["deposit", "withdraw"])
 					.groupBy("StakingEvent.userAddress")

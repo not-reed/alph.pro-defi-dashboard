@@ -41,7 +41,6 @@ export class AyinAlphAyinPositionPlugin extends Plugin<PluginData> {
 			.distinct()
 			.execute();
 
-		console.log({ stakingAccountEntries });
 		const stakingAccounts = new Set<string>(
 			stakingAccountEntries.map((entry) => entry.accountAddress as string),
 		);
