@@ -53,6 +53,7 @@ const options = {
                     {{ farm.pool.token0.symbol }}
                     <span class="font-black text-3xl pt-1">/</span>
                     {{ farm.pool.token1.symbol }}
+                    <span class="text-xs ml-2 opacity-75">{{ numberFormat.format(Number(farm.balance) / 1e18)}}</span>
                 </div>
 
 

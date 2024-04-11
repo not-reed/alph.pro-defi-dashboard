@@ -54,6 +54,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                     {{ balance.pool.token0.symbol }}
                     <span class="font-black text-3xl pt-1">/</span>
                     {{ balance.pool.token1.symbol }}
+                    <span class="text-xs ml-2 opacity-75">{{ numberFormat.format(Number(balance.balance) /
+                        1e18)}}</span>
                 </div>
 
 

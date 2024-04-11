@@ -319,7 +319,8 @@ app.openapi(v2Route, async (c) => {
 								.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
 						),
 					)
-					.where("userAddress", "=", address),
+					.where("userAddress", "=", address)
+					.where("balance", ">", 0n),
 			).as("pools"),
 
 			jsonArrayFrom(
