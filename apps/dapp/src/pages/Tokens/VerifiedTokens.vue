@@ -56,8 +56,10 @@ onMounted(async () => {
     rawTokens.value = results.holders
 })
 
-const sortBy = ref<SortBy>(SortBy.Holders)
-const sortDirection = ref<SortDirection>(SortDirection.Desc)
+const DEFAULT_SORT_BY =  localStorage.getItem("tokens:sortBy") as SortBy
+const DEFAULT_SORT_DIRECTION = localStorage.getItem("tokens:sortDirections") as SortDirection
+const sortBy = ref<SortBy>(DEFAULT_SORT_BY || SortBy.Holders)
+const sortDirection = ref<SortDirection>(DEFAULT_SORT_DIRECTION || SortDirection.Desc)
 
 function getSortValue(holder: TokenHolder) {
     switch (sortBy.value) {
@@ -119,6 +121,10 @@ function sortByField(sort: SortBy) {
         sortBy.value = sort
         sortDirection.value = SortDirection.Desc
     }
+
+
+    localStorage.setItem("tokens:sortBy", sortBy.value)
+    localStorage.setItem("tokens:sortDirections", sortDirection.value)
 }
 </script>
 <template>

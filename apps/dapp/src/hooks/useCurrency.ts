@@ -5,9 +5,13 @@ const { prices } = usePrices();
 
 export type Currency = keyof typeof formatters;
 
-const currency = ref<Currency>("USD");
+const DEFAULT_CURRENCY =
+	(localStorage.getItem("user:currency") as Currency) || "USD";
+
+const currency = ref<Currency>(DEFAULT_CURRENCY);
 
 function setCurrency(currency_: Currency) {
+	localStorage.setItem("user:currency", currency_);
 	currency.value = currency_;
 }
 
