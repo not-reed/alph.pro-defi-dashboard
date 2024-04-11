@@ -32,9 +32,9 @@ const token1Value = computed(() => {
 const totalValue = computed(() => token0Value.value + token1Value.value)
 
 const options = {
-				minimumFractionDigits: 2,
-				significantDigits: 8,
-			};
+    minimumFractionDigits: 4,
+    significantDigits: 8,
+};
 const numberFormat = new Intl.NumberFormat("en-US", options);
 </script>
 

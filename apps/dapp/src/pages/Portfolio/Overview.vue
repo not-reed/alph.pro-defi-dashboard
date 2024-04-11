@@ -8,9 +8,8 @@ import { bs58 } from '@alephium/web3';
 import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
 import { useRoute } from 'vue-router';
-import ProxyImage from '../../components/ProxyImage.vue';
 
-import { ArrowPathIcon, ChevronDownIcon} from '@heroicons/vue/24/outline';
+import { ArrowPathIcon } from '@heroicons/vue/24/outline';
 import UserTokens from '../../components/UserPanels/UserTokens.vue';
 import UserPools from '../../components/UserPanels/UserPools.vue';
 import UserFarms from '../../components/UserPanels/UserFarms.vue';
