@@ -107,7 +107,8 @@ app.openapi(v2Route, async (c) => {
 							),
 						),
 					)
-					.where("userAddress", "=", address),
+					.where("userAddress", "=", address)
+					.where("balance", ">", 0n),
 			).as("tokens"),
 			jsonArrayFrom(
 				eb
@@ -195,7 +196,8 @@ app.openapi(v2Route, async (c) => {
 								.whereRef("Nft.address", "=", "Balance.tokenAddress"),
 						),
 					)
-					.where("userAddress", "=", address),
+					.where("userAddress", "=", address)
+					.where("balance", ">", 0n),
 			).as("nfts"),
 
 			jsonArrayFrom(
