@@ -7,7 +7,7 @@ import { testPrivateKey } from '@alephium/web3-test'
 import { loadDeployments } from '../artifacts/ts/deployments'
 import config from '../alephium.config'
 
-const network = 'devnet' as const
+const network = 'mainnet' as const
 
 const deployments = loadDeployments(network)
 
