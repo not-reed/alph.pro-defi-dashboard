@@ -1,0 +1,85 @@
+Contract OrderManager(
+    mut price: U256,
+    mut owner: Address,
+    mut minDuration: U256,
+    mut maxDuration: U256
+) {
+    // ***************************************** //
+    // **************** Events ***************** //
+    // ***************************************** //
+
+    event Withdraw(who: Address, amount: U256, when: U256)
+    event Subscribe(who: Address, amount: U256, when: U256, duration: U256)
+
+
+    // ***************************************** //
+    // **************** Enums ***************** //
+    // ***************************************** //
+
+    enum ErrorCodes {
+        Forbidden = 0
+        InvalidDuration = 1
+    }
+
+    // ***************************************** //
+    // *************** Handlers **************** //
+    // ***************************************** //
+
+    @using(checkExternalCaller = false, preapprovedAssets = true, assetsInContract = true)
+    pub fn subscribe(duration: U256) -> () {
+        assert!(duration >= minDuration, ErrorCodes.InvalidDuration)
+        assert!(duration <= maxDuration, ErrorCodes.InvalidDuration)
+
+        let caller = callerAddress!()
+        let amount = price * duration
+
+        transferTokenToSelf!(caller, ALPH, amount)
+
+        emit Subscribe(caller, amount, blockTimeStamp!(), duration)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdraw(amount: U256) -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+
+        transferTokenFromSelf!(owner, ALPH, amount)
+
+        emit Withdraw(owner, amount, blockTimeStamp!())
+    }
+
+    // ***************************************** //
+    // **************** Getters **************** //
+    // ***************************************** //
+
+    pub fn getPrice() -> (U256) {
+        return price
+    }
+    
+    // ***************************************** //
+    // ******* Updatable Mutable Fields ******** //
+    // ***************************************** //
+
+    @using(updateFields = true)
+    pub fn setPrice(newPrice: U256) -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+        price = newPrice
+    }
+
+    @using(updateFields = true)
+    pub fn setOwner(newOwner: Address) -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+        owner = newOwner
+    }
+
+    @using(updateFields = true)
+    pub fn setMinDuration(newMinDuration: U256) -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+        minDuration = newMinDuration
+    }
+
+    @using(updateFields = true)
+    pub fn setMaxDuration(newMaxDuration: U256) -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+        maxDuration = newMaxDuration
+    }
+}

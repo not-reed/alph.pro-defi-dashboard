@@ -1,0 +1,3 @@
+TxScript Withdraw(orderManager: OrderManager, amount: U256) {
+    orderManager.withdraw(amount)
+}

@@ -1,0 +1,62 @@
+{
+  "fullNodeVersion": "v2.12.0",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": false,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "OrderManager": {
+      "sourceFile": "OrderManager.ral",
+      "sourceCodeHash": "26774b41a48585208fa97ccf299b00815cc699fdb9bf5bfa74be7fe5da8eb829",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "90aa7eba60d213fb4b15b6aebeb800b04465dfb99c5df1dd98c8f5e61ce26b6b",
+      "warnings": []
+    },
+    "SetMaxDuration": {
+      "sourceFile": "scripts/SetMaxDuration.ral",
+      "sourceCodeHash": "70656a67c9b9fa43644207dc74210a649f1f295c0a94d52043da6ae851d88e97",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "SetMinDuration": {
+      "sourceFile": "scripts/SetMinDuration.ral",
+      "sourceCodeHash": "a6d9d6c8874a1994971251baa8b7951f6891b82d57fccba0f1512ea61347f0ea",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "SetOwner": {
+      "sourceFile": "scripts/SetOwner.ral",
+      "sourceCodeHash": "c693860c27fc1314a882586e9c1cf65fdc23821b20b9187e178a9fb8af0a91e4",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "SetPrice": {
+      "sourceFile": "scripts/SetPrice.ral",
+      "sourceCodeHash": "5960acd19c9a49f36257e2e815220e9de0fba6471060037b292d6eb65ef59412",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Subscribe": {
+      "sourceFile": "scripts/Subscribe.ral",
+      "sourceCodeHash": "b3c66a4fca56e0cead9d19f87c90182f0ce29e39fcaae2489c1244f8681c9a3b",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Withdraw": {
+      "sourceFile": "scripts/Withdraw.ral",
+      "sourceCodeHash": "b65debfcd673031c85973389a7858901b5cd0701f9bf35742a3bb2dba9998c0d",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    }
+  }
+}

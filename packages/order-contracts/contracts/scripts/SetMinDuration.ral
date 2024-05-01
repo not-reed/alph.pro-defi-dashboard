@@ -1,0 +1,3 @@
+TxScript SetMinDuration(orderManager: OrderManager, minDuration: U256) {
+    orderManager.setMinDuration(minDuration)
+}
