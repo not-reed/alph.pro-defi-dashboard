@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { CheckBadgeIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import { ExclamationCircleIcon } from '@heroicons/vue/24/solid';
-
-import { computed, ref } from 'vue';
+import { AlephiumConnect, useAccount, useConnect } from '@alphpro/web3-vue'
+import { computed, onMounted, ref } from 'vue';
+import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
 import { useUser } from '../hooks/useUser';
 import { useRouter } from 'vue-router';
-import { useAlephiumAccount } from '../hooks/useAlephiumAccount';
-import { useAlephiumConnect } from '../hooks/useAlephiumConnect';
 import {
     TransitionRoot,
     TransitionChild,
@@ -14,10 +13,12 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import { ConnectorId } from '../utils/connectors/constants';
-import { useAlephiumProvider } from '../hooks/useAlephiumProvider';
 import { useDiscordAccount } from '../hooks/useDiscordAccount';
 import { truncateAddress } from '../utils/addresses';
+import Subscriptions from '../components/Settings/Subscriptions.vue';
+import ApiKeyManagement from '../components/Settings/ApiKeyManagement.vue';
+import CurrencyDropdown from '../components/CurrencyDropdown.vue';
+import { useDarkMode } from '../hooks/utils/useDarkMode';
 
 const isOpen = ref(false)
 
@@ -28,25 +29,32 @@ function openModal() {
     isOpen.value = true
 }
 
-
 const { setWallet } = useUser()
-const { account } = useAlephiumAccount()
-const { connect, disconnect } = useAlephiumConnect()
-const { provider, getProvider } = useAlephiumProvider()
-const { saveUnverifiedWallet, deleteWallet, refreshWallets, wallets, tipBotAddress, setTipBotAddress } = useDiscordAccount({
-    loadWalletsOnMount: true
-})
-
+const { onConnect } = useConnect();
+const { account } = useAccount()
 const router = useRouter()
 
+onConnect(() => closeModal())
 
+
+
+const { saveUnverifiedWallet, deleteWallet, refreshWallets, wallets, tipBotAddress, setTipBotAddress, signWallet, signOut } = useDiscordAccount()
+
+async function signOutOfDiscord() {
+    await signOut()
+    router.push('/')
+}
+
+onMounted(async () => {
+    await refreshWallets()
+})
 
 
 async function viewWallet(address: string) {
     setWallet(address)
     await router.push(`/portfolio/overview/${address}`)
 }
-let inputWallet = ref('')
+const inputWallet = ref('')
 async function saveWallet() {
     await saveUnverifiedWallet(inputWallet.value)
     inputWallet.value = ''
@@ -58,114 +66,120 @@ async function deleteSelectedWallet(address: string) {
     deleteWallet(address)
 }
 
-async function signWallet() {
-    const { message } = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/web3/get-challenge`, {
-        method: 'POST',
-        credentials: 'include',
-        body: JSON.stringify({ address: account.address, publicKey: account.publicKey })
-    }).then(a => a.json())
-
-
-    const result = await getProvider().signer?.signMessage({
-        message: message,
-        messageHasher: 'alephium',
-        signerAddress: account.address
-    })
-
-    // no need to store token, we will refresh wallet list and if its verified it will be displayed as such
-    await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/web3/verify`, {
-        method: 'POST',
-        credentials: 'include',
-        body: JSON.stringify({ address: account.address, signature: result?.signature, publicKey: account.publicKey })
-    }).then(a => a.json())
-
-
-    await refreshWallets()
-}
-
-async function connectWith(id: ConnectorId) {
-    await connect(id)
-
-    if (!provider.value) {
-        console.warn('No provider')
-        return;
-    }
-
-    if (!wallets.value.some(wallet => wallet.address === account.address)) {
-        await saveUnverifiedWallet(account.address)
-    }
-
-    closeModal()
-}
-
 const activeAccountIsVerified = computed(() => {
     return wallets.value.some(a => a.address === account.address && a.verified)
 })
 
 
+const { mode, nextTheme } = useDarkMode()
 </script>
 
 <template>
-    <div class="p-6 flex flex-col gap-9">
-        <div class="flex">
-            <div class="flex flex-col dark:bg-calypso-900 p-4 rounded w-full max-w-lg">
-                <div @click="openModal">Connect & Verify Wallet</div>
-                <div class="flex gap-4">
-                    <button class="px-4 py-2 rounded bg-calypso-800  transition" :disabled="!!account.address"
-                        :class="account.address ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700'"
-                        @click="openModal">
-                        Connect
-                    </button>
+    <div class="p-6 flex flex-col gap-9 max-w-2xl w-screen">
+        <div class="flex flex-col gap-2 dark:bg-calypso-900 p-4">
+            <div class="underline">
+                Settings
+            </div>
 
-                    <button class="px-4 py-2 rounded bg-calypso-800 transition"
-                        :disabled="!account.address || activeAccountIsVerified"
-                        :class="!account.address || activeAccountIsVerified ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700 '"
-                        @click="signWallet">Verify</button>
-                    <button class="px-4 py-2 rounded bg-calypso-800 transition" :disabled="!account.address"
-                        :class="!account.address ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700 '"
-                        @click="disconnect">Disconnect</button>
+            <div class="flex gap-2 items-center">
+                <div class="opacity-50">Preferred Currency:</div>
+                <CurrencyDropdown />
+            </div>
+
+
+            <div class="flex gap-2 items-center">
+                <div class="opacity-50">Theme:</div>
+                <div @click="nextTheme">
+                    <SunIcon v-if="mode === 'light'" class="w-6 h-6" />
+                    <MoonIcon v-if="mode === 'dark'" class="w-6 h-6" />
+                    <ComputerDesktopIcon v-if="mode === 'system'" class="w-6 h-6" />
                 </div>
             </div>
+
+
+            <!-- <div class="flex gap-2 items-center">
+                <div class="opacity-50">Charts:</div>
+                <select class="bg-zinc-300 dark:bg-calypso-900 p-2">
+                    <option value="mobula">Mobula</option>
+                    <option value="rakku">Rakku</option>
+                </select>
+            </div> -->
+
+
         </div>
 
-        <div class="flex">
-            <div class="flex flex-col gap-4 dark:bg-calypso-900 rounded p-4 w-full max-w-lg">
-                <div @click="openModal">Add <span class="italic -mb-2">Watch-Only</span> Wallet</div>
-                <form @submit.prevent="saveWallet" class="flex gap-2 -mt-4">
-                    <input type="text" class="px-4 py-2 bg-calypso-700 w-96 rounded" v-model="inputWallet" />
-                    <button class="px-4 py-2 rounded bg-calypso-800 hover:bg-calypso-700 transition">Watch</button>
+        <Subscriptions />
+
+        <div class="flex flex-col gap-2 dark:bg-calypso-900 p-4">
+            <div class="underline">Wallet Management</div>
+            <div class="flex flex-col w-full">
+                <div @click="openModal">Add Verified Wallets</div>
+
+                <AlephiumConnect v-slot="{ disconnect, isConnected }">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <button class="px-4 py-2 rounded bg-calypso-800  transition" :disabled="isConnected"
+                            :class="isConnected ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700'"
+                            @click="openModal">
+                            Connect
+                        </button>
+
+                        <button class="px-4 py-2 rounded bg-calypso-800 transition"
+                            :disabled="!isConnected || activeAccountIsVerified"
+                            :class="!isConnected || activeAccountIsVerified ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700 '"
+                            @click="signWallet">Verify</button>
+                        <button class="px-4 py-2 rounded bg-calypso-800 transition" :disabled="!isConnected"
+                            :class="!isConnected ? 'cursor-not-allowed opacity-50' : 'hover:bg-calypso-700 '"
+                            @click="disconnect">Disconnect</button>
+                    </div>
+                </AlephiumConnect>
+            </div>
+
+            <div class="flex flex-col gap-4 w-full">
+                <div>Add <span class="italic -mb-2">Watch-Only</span> Wallet</div>
+                <form @submit.prevent="saveWallet" class="flex gap-2 -mt-4 flex-col md:flex-row">
+                    <input type="text" class="px-4 py-2 bg-calypso-700 md:w-96 rounded" v-model="inputWallet"
+                        placeholder="....." />
+                    <button class="px-4 py-2 rounded bg-calypso-800 hover:bg-calypso-700 transition"
+                        :disabled="inputWallet.length === 0">Watch
+                        Address</button>
                 </form>
             </div>
-        </div>
 
-        <div class="flex">
-            <ul class="dark:bg-calypso-900 rounded p-4 flex flex-col w-full max-w-lg">
+            <ul class=" flex flex-col w-full">
                 <li class="grid grid-cols-2 gap-2 my-4">
-                    <div class="font-bold text-xl">
+                    <div class="font-bold">
                         Verified Wallets:
                     </div>
 
-                    <div class="flex gap-2 items-center justify-center w-64">
+                    <div class="flex gap-2 items-center justify-center md:w-64">
                         <div class="flex-1 flex items-center justify-center text-emerald-500">Verified</div>
-                        <div class="flex-1 flex items-center justify-center text-sky-500">TipBot</div>
+                        <div class="flex-1 flex items-center justify-center text-sky-500">Primary</div>
                         <div class="flex-1 flex items-center justify-center text-red-700">Delete</div>
                     </div>
 
                 </li>
 
                 <li v-for="wallet in wallets" :key="wallet.address" class="grid grid-cols-2 gap-2">
-                    <div @click="viewWallet(wallet.address)" class="hover:underline cursor-pointer">
-                        {{ truncateAddress(wallet.address) }}
+                    <div class="flex items-center justify-start">
+                        <button @click="viewWallet(wallet.address)"
+                            class="hover:underline cursor-pointer hidden md:inline-flex text-left">
+                            {{ truncateAddress(wallet.address) }}
+                        </button>
+
+                        <button @click="viewWallet(wallet.address)"
+                            class="hover:underline cursor-pointer md:hidden text-left">
+                            {{ truncateAddress(wallet.address, 16) }}
+                        </button>
                     </div>
 
-                    <div class="flex gap-2 items-center justify-center w-64">
+                    <div class="flex gap-2 items-center justify-center md:w-64">
                         <div class="flex-1 flex items-center justify-center">
                             <CheckBadgeIcon class="w-8 h-8 text-emerald-500" v-if="wallet.verified" />
                             <ExclamationCircleIcon class="w-8 h-8 text-orange-400" v-else />
                         </div>
 
                         <div class="flex-1 flex items-center justify-center">
-                            <label class="relative flex items-center p-3 rounded-full cursor-pointer"
+                            <label class="relative flex items-center rounded-full cursor-pointer"
                                 v-if="wallet.verified">
                                 <input name="color" type="radio" :value="wallet.address"
                                     :checked="tipBotAddress === wallet.address"
@@ -188,6 +202,17 @@ const activeAccountIsVerified = computed(() => {
                     </div>
                 </li>
             </ul>
+        </div>
+
+        <details v-if="false">
+            <summary>Developer Settings</summary>
+            <ApiKeyManagement />
+        </details>
+
+        <div>
+            <button class="bg-red-700 px-4 py-2 rounded" @click="signOutOfDiscord">
+                Log Out of Discord
+            </button>
         </div>
     </div>
 
@@ -214,27 +239,29 @@ const activeAccountIsVerified = computed(() => {
                                 </p>
                             </div>
 
-                            <div class="mt-4 flex gap-2">
-                                <button type="button"
-                                    class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
-                                    @click="connectWith('injected')">
-                                    Extension
-                                </button>
-                                <button type="button"
-                                    class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
-                                    @click="connectWith('walletConnect')">
-                                    Wallet Connect
-                                </button>
-                                <button type="button"
-                                    class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
-                                    @click="connectWith('desktopWallet')">
-                                    Desktop
-                                </button>
-                            </div>
+                            <AlephiumConnect v-slot="{ connectExtension, connectDesktop, connectWalletConnect }">
+                                <div class="mt-4 flex gap-2">
+                                    <button type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
+                                        @click="connectExtension">
+                                        Extension
+                                    </button>
+                                    <button type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
+                                        @click="connectWalletConnect">
+                                        Wallet Connect
+                                    </button>
+                                    <button type="button"
+                                        class="inline-flex justify-center rounded-md border border-transparent dark:bg-calypso-600 px-4 py-2 text-sm font-bold transition dark:text-calypso-300 dark:hover:text-calypso-200 dark:hover:bg-calypso-700"
+                                        @click="connectDesktop">
+                                        Desktop
+                                    </button>
+                                </div>
+                            </AlephiumConnect>
                         </DialogPanel>
                     </TransitionChild>
                 </div>
             </div>
         </Dialog>
     </TransitionRoot>
-</template>../hooks/useAlephiumAccount
+</template>

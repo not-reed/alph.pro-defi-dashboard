@@ -1,0 +1,3 @@
+TxScript SetPrice(orderManager: OrderManager, price: U256) {
+    orderManager.setPrice(price)
+}

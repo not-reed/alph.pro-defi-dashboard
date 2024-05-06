@@ -1,0 +1,34 @@
+{
+  "name": "@repo/order-contracts",
+  "type": "module",
+  "main": "./index.ts",
+  "module": "./index.ts",
+  "export": {
+    "./": "./index.ts"
+  },
+  "scripts": {
+    "cli": "bun ../../node_modules/@alephium/cli/cli_internal.ts",
+    "compile": "bun cli compile",
+    "compile:devnet": "bun run cli compile -n devnet",
+    "compile:mainnet": "bun run cli compile -n mainnet",
+    "compile:testnet": "bun run cli compile -n testnet",
+    "compile:watch": "fd -e .ral | entr -r bun run compile",
+    "deploy:devnet": "bun run cli deploy --network devnet",
+    "deploy:mainnet": "bun run cli deploy --network mainnet",
+    "deploy:testnet": "bun run cli deploy --network testnet",
+    "test": "bun test",
+    "test:watch": "fd -e .ts | entr -r bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@alephium/cli": "^0.39.3",
+    "@alephium/web3": "^0.39.3",
+    "@alephium/web3-test": "^0.39.3",
+    "@alephium/web3-wallet": "^0.39.3"
+  }
+}

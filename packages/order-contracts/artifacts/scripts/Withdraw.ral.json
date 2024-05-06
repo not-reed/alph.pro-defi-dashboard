@@ -1,0 +1,31 @@
+{
+  "version": "v2.11.1",
+  "name": "Withdraw",
+  "bytecodeTemplate": "01010300000005{1}0d0c{0}0101",
+  "fieldsSig": {
+    "names": [
+      "orderManager",
+      "amount"
+    ],
+    "types": [
+      "OrderManager",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

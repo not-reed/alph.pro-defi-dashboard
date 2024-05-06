@@ -24,5 +24,5 @@ const target = computed(() => {
 <template>
     <RouterLink class="hover:underline" :to="target" v-if="!to.startsWith('http')">{{ label }}
     </RouterLink>
-    <a class="hover:underline" :href="to" v-else>{{ label }}</a>
+    <a class="hover:underline" :href="to" target="_blank" v-else>{{ label }}</a>
 </template>

@@ -68,6 +68,10 @@ export class AyinPoolsPlugin extends Plugin<PluginData> {
     for (const block of blocks) {
       for (const transaction of block.transactions) {
         for (const event of transaction.events) {
+          if (!reserveMap.has(event.contractAddress)) {
+            continue;
+          }
+
           if (event.fields.length === 4 && [0, 1].includes(event.eventIndex)) {
             // best guess, some false positives, but alternatively
             // we run the risk of missing some interactions

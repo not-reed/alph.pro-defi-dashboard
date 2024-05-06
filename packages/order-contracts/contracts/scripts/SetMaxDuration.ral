@@ -1,0 +1,3 @@
+TxScript SetMaxDuration(orderManager: OrderManager, maxDuration: U256) {
+    orderManager.setMaxDuration(maxDuration)
+}

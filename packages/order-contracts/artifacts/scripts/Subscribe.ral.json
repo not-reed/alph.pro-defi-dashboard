@@ -1,0 +1,31 @@
+{
+  "version": "v2.11.1",
+  "name": "Subscribe",
+  "bytecodeTemplate": "0101030001000f{1}0c0d{0}01022c1700b41600a2{1}0d0c{0}0100",
+  "fieldsSig": {
+    "names": [
+      "orderManager",
+      "duration"
+    ],
+    "types": [
+      "OrderManager",
+      "U256"
+    ],
+    "isMutable": [
+      false,
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

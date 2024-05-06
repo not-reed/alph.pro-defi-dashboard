@@ -29,13 +29,13 @@ const farms = computed(() => Array.from(user.farms).sort((a,b) => {
 </script>
 
 <template>
-    <details open class="[&_svg.icon]:open:-rotate-180">
-        <summary class="px-4 list-none flex items-center">
+    <details open class="[&_svg.icon]:open:-rotate-180 px-4 max-w-screen w-screen md:w-auto">
+        <summary class="list-none flex items-center">
             <ChevronDownIcon class="w-4 mb-1 mr-2 icon" />
             Staking <span class="px-2 text-calypso-500">{{ format(value) }}</span>
         </summary>
 
-        <ul class="px-4 py-4 w-full flex flex-col gap-2" v-if="true">
+        <ul class="py-4 w-full flex flex-col gap-2">
             <UserFarm v-for="farm in farms" :farm="farm" />
         </ul>
     </details>

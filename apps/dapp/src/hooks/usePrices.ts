@@ -29,6 +29,9 @@ async function updateAllPrices() {
 setInterval(updateAllPrices, 1000 * 30);
 
 async function updatePrices(tokenAddresses: string[]) {
+	if (!tokenAddresses.length) {
+		return;
+	}
 	const query = new URLSearchParams({ address: [tokenAddresses].join(",") });
 	const url = `${import.meta.env.VITE_API_ENDPOINT}/api/prices?${query}`;
 	const data = await fetch(url).then((a) => a.json());

@@ -25,7 +25,7 @@ app.get("/plugins", (c) => {
 
 			const plugins = await db
 				.selectFrom("Plugin")
-				.select(["name", "timestamp"])
+				.select(["name", "timestamp", "status"])
 				.execute();
 
 			logger.info("[SSE] Plugin status fetched. Writing status to stream");
@@ -41,6 +41,16 @@ app.get("/plugins", (c) => {
 			await stream.sleep(1000);
 		}
 	});
+});
+
+app.get("/plugins-poll", async (c) => {
+	// basic Indexer status page, start & pause buttons
+			const plugins = await db
+				.selectFrom("Plugin")
+				.select(["name", "timestamp", "status"])
+				.execute();
+
+				return c.json({ plugins })
 });
 
 export default app;

@@ -1,0 +1,4 @@
+TxScript Subscribe(orderManager: OrderManager, duration: U256) {
+    let amount = duration * orderManager.getPrice()
+    orderManager.subscribe{ callerAddress!() -> ALPH: amount }(duration)
+}

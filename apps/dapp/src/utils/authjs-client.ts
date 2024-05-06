@@ -71,12 +71,12 @@ export async function signIn<
 	const res = await fetch(_signInUrl, {
 		method: "post",
 		headers: {
-			"Content-Type": "application/x-www-form-urlencoded",
+			"Content-Type": "application/json",
 			"X-Auth-Return-Redirect": "1",
 			"X-CSRF-TOKEN": csrfToken,
 		},
 		credentials: "include",
-		body: new URLSearchParams({
+		body: JSON.stringify({
 			...options,
 			redirect: redirect.toString(),
 			csrfToken,

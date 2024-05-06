@@ -3,11 +3,13 @@ import { computed } from 'vue'
 import type { FarmBalance } from '../../hooks/useUser'
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
+import { useDiscordAccount } from '../../hooks/useDiscordAccount';
 
 const props = defineProps<{ farm: FarmBalance }>()
 
 const { prices } = usePrices()
 const { format } = useCurrency()
+const { isActiveSubscription } = useDiscordAccount()
 
 const poolShare = computed(() => {
     return Number(props.farm.balance) / Number(props.farm.pool.totalSupply)
@@ -59,11 +61,13 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 
                 <div class="flex flex-col w-28 shrink">
                     <div class="leading-3 text-xs flex gap-4 justify-between">
-                        <div class="opacity-75">{{numberFormat.format(token0Balance) }}</div>
+                        <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
+                            {{numberFormat.format(token0Balance) }}</div>
                         <div class="opacity-50">{{ farm.pool.token0.symbol}}</div>
                     </div>
                     <div class="leading-3 text-xs flex gap-4 justify-between">
-                        <div class="opacity-75">{{numberFormat.format(token1Balance) }}</div>
+                        <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
+                            {{numberFormat.format(token1Balance) }}</div>
                         <div class="opacity-50">{{ farm.pool.token1.symbol}}</div>
                     </div>
                 </div>
@@ -94,7 +98,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                 <div class="flex flex-1 gap-2 items-center justify-end">
                     <div class="w-32 hidden md:block">
                         <div class="text-xs">Pool Share</div>
-                        <div class="text-calypso-700 dark:text-calypso-500 font-bold">
+                        <div class="text-calypso-700 dark:text-calypso-500 font-bold"
+                            :class="{ ['blur-[2px]']: !isActiveSubscription}">
                             {{ Math.round(poolShare * 10000) / 100 }}%
                         </div>
                     </div>

@@ -65,7 +65,19 @@ export async function startTokensTask() {
         token.logo = meta.logoURI;
       }
 
+      const previouslyListed = await db.selectFrom("Token")
+        .selectAll()
+        .where("listed", "=", true)
+        .where('Token.address', 'not in', tokenListAddresses)
+        .execute();
+
       await db.transaction().execute(async (trx) => {
+        if (previouslyListed.length) {
+          await trx.updateTable("Token")
+            .set({ listed: false })
+            .where("id", 'in', previouslyListed.map(a => a.id))
+            .execute();
+        }
         for (const token of tokens) {
           await updateToken(token, trx);
         }

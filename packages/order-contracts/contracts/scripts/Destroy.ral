@@ -1,0 +1,3 @@
+TxScript Destroy(orderManager: OrderManager) {
+    orderManager.destroy()
+}

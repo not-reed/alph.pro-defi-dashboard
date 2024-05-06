@@ -1,9 +1,11 @@
-import { type Env, type Schema } from "hono";
+import type { Env, Schema } from "hono";
 import { db } from "../../database/db";
 import {
 	addressFromContractId,
 	binToHex,
 	contractIdFromAddress,
+	hexToString,
+	stringToHex,
 } from "@alephium/web3";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
@@ -69,6 +71,54 @@ app.openapi(addressToId, async (c) => {
 	}
 
 	return c.json(response);
+});
+
+const hexToStringRoute = createRoute({
+	method: "get",
+	tags: ["Utils"],
+	path: "/hex-to-string",
+	request: {
+		query: z.object({ hex: z.string() }),
+	},
+	responses: {
+		200: {
+			content: {
+				/** Skipped */
+			},
+			description: "converts hex to a string",
+		},
+	},
+});
+app.openapi(hexToStringRoute, async (c) => {
+	const { hex } = c.req.valid("query");
+	return c.json({
+		string: hexToString(hex),
+		hex,
+	});
+});
+
+const stringToHexRoute = createRoute({
+	method: "get",
+	tags: ["Utils"],
+	path: "/string-to-hex",
+	request: {
+		query: z.object({ string: z.string() }),
+	},
+	responses: {
+		200: {
+			content: {
+				/** Skipped */
+			},
+			description: "converts string to a hex",
+		},
+	},
+});
+app.openapi(stringToHexRoute, async (c) => {
+	const { string } = c.req.valid("query");
+	return c.json({
+		string,
+		hex: stringToHex(string),
+	});
 });
 
 export default app;

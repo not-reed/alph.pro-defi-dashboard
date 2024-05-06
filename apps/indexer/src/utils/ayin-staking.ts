@@ -78,6 +78,7 @@ export async function processStakingContractForBlocks(
 				if (!balanceDiffByToken.has(depositToken)) {
 					break;
 				}
+
 				if (event.fields.length === 3) {
 					const [one, two, three] = event.fields;
 					if (
@@ -116,7 +117,6 @@ export async function processStakingContractForBlocks(
 									amount: 0n,
 								};
 								prev.amount += cur.amount;
-								console.log({ acc, cur, key, prev });
 								return acc.set(key, prev);
 							}, new Map())
 							.values(),

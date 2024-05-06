@@ -11,12 +11,13 @@ import UserSettingsDropDown from './UserSettingsDropDown.vue';
 import { usePrices } from '../hooks/usePrices';
 import { useCurrency } from '../hooks/useCurrency';
 import type { Token } from '../types/token';
+import { useDiscordAccount } from '../hooks/useDiscordAccount';
 
 const { mode, nextTheme } = useDarkMode()
 const route = useRoute()
 const { prices, tokens } = usePrices()
 const { format } = useCurrency()
-
+const { session } = useDiscordAccount()
 const { links } = useNavLinks()
 
 const page = computed(() => {
@@ -118,8 +119,9 @@ const marqueeTokens = computed(() => {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg> -->
 
-                <RouterLink to="/settings">
-                    <Cog6ToothIcon class="w-6 h-6" />
+                <RouterLink :to="Boolean(session.expires) ? '/settings' : ''">
+                    <Cog6ToothIcon class="w-6 h-6"
+                        :class="{'opacity-50 cursor-not-allowed': !Boolean(session.expires)}" />
                 </RouterLink>
 
                 <UserSettingsDropDown />

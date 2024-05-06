@@ -31,18 +31,18 @@ interface TokenHolder {
 }
 
 enum SortBy {
-    Name,
-    Symbol,
-    Price,
-    Decimals,
-    Explorer,
-    Holders,
-    MarketCap,
-    Liquidity
+    Name = 0,
+    Symbol = 1,
+    Price = 2,
+    Decimals = 3,
+    Explorer = 4,
+    Holders = 5,
+    MarketCap = 6,
+    Liquidity = 7
 }
 enum SortDirection {
-    Asc,
-    Desc
+    Asc = 0,
+    Desc = 1
 }
 
 const { format: formatCurrency } = useCurrency()
@@ -86,7 +86,6 @@ const tokens = computed(() => rawTokens.value.map((holder) => {
         : 0
     const liquidity = markets[holder.token.address]?.length
         ? markets[holder.token.address].reduce((acc, cur) => {
-            console.log({ acc, cur })
             return acc + BigInt(cur.liquidity || '0')
         }, 0n)
         : 0n

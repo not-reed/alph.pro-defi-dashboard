@@ -2,7 +2,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/solid'
 import { useCurrency } from '../hooks/useCurrency';
-import { type UnwrapRef, computed } from 'vue';
+import { computed } from 'vue';
 const { currency, exchangeRates, setCurrency } = useCurrency()
 
 
