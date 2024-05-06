@@ -1,6 +1,6 @@
 interface PoolLike {
 	balance: bigint;
-	pool: {
+	pool?: {
 		totalSupply: bigint | string;
 		amount0: bigint | string;
 		amount1: bigint | string;
@@ -10,6 +10,9 @@ interface PoolLike {
 }
 
 export function getPoolBreakdown<T extends PoolLike>(a: T) {
+	if (!a.pool) {
+		return { token0Balance: 0, token1Balance: 0, poolShare: 0 };
+	}
 	const poolShare = Number(a.balance) / Number(a.pool.totalSupply);
 	const token0Balance =
 		Number(BigInt(a.pool.amount0) / 10n ** BigInt(a.pool.token0.decimals)) *
