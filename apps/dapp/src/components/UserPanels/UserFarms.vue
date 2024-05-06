@@ -13,12 +13,21 @@ const { prices } = usePrices()
 defineProps<{ value: number }>()
 
 function getPoolValue(a: FarmBalance) {
-    const poolShare = Number(a.balance) / Number(a.pool.totalSupply)
-    const token0Balance = Number(a.pool.amount0 / 10n ** BigInt(a.pool.token0.decimals)) * poolShare
-    const token1Balance = Number(a.pool.amount1 / 10n ** BigInt(a.pool.token1.decimals)) * poolShare
-    const token0Value = token0Balance * prices[a.pool.token0.address]
-    const token1Value = token1Balance * prices[a.pool.token1.address]
-    return token0Value + token1Value
+    if (a.pool) {
+        const poolShare = Number(a.balance) / Number(a.pool.totalSupply)
+        const token0Balance = Number(a.pool.amount0 / 10n ** BigInt(a.pool.token0.decimals)) * poolShare
+        const token1Balance = Number(a.pool.amount1 / 10n ** BigInt(a.pool.token1.decimals)) * poolShare
+        const token0Value = token0Balance * prices[a.pool.token0.address]
+        const token1Value = token1Balance * prices[a.pool.token1.address]
+        return token0Value + token1Value
+    }
+
+    if (a.single) {
+        const b = Number(a.balance) / 10 ** a.single.decimals
+        return b * prices[a.single.address]
+    }
+
+    return 0
 }
 
 const farms = computed(() => Array.from(user.farms).sort((a,b) => {
