@@ -49,14 +49,359 @@ const v2Route = createRoute({
 
 app.openapi(v2Route, async (c) => {
 	const { address } = c.req.valid("query");
-	const balances = await db
-		.selectNoFrom((eb) => [
-			jsonArrayFrom(
-				eb
-					.selectFrom("Balance")
-					.select((eeb) => [
-						"userAddress",
-						"balance",
+	const balancesQuery = db.selectNoFrom((eb) => [
+		jsonArrayFrom(
+			eb
+				.selectFrom("Balance")
+				.select((eeb) => [
+					"userAddress",
+					"balance",
+					jsonObjectFrom(
+						eeb
+							.selectFrom("Token")
+							.select([
+								"address",
+								"name",
+								"symbol",
+								"decimals",
+								"totalSupply",
+								"listed",
+								"description",
+								"logo",
+								(eeeb) =>
+									jsonObjectFrom(
+										eeeb
+											.selectFrom("Social")
+											.select([
+												"name",
+												"github",
+												"twitter",
+												"website",
+												"telegram",
+												"medium",
+												"discord",
+											])
+											.whereRef("Token.socialId", "=", "Social.id"),
+									).as("social"),
+							])
+							.whereRef("Token.address", "=", "Balance.tokenAddress"),
+					).as("token"),
+				])
+				.where((eb) =>
+					eb.exists(
+						eb
+							.selectFrom("Token")
+							.selectAll()
+							.whereRef("Token.address", "=", "Balance.tokenAddress"),
+					),
+				)
+				.where((eb) =>
+					eb.not(
+						eb.exists(
+							eb
+								.selectFrom("Pool")
+								.selectAll()
+								.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
+						),
+					),
+				)
+				.where("userAddress", "=", address)
+				.where("balance", ">", 0n),
+		).as("tokens"),
+		jsonArrayFrom(
+			eb
+				.selectFrom("Balance")
+				.leftJoinLateral(
+					(eeb) =>
+						eeb
+							.selectFrom("Nft")
+							.select((eeeb) => [
+								"Nft.address",
+								"Nft.description",
+								"Nft.image",
+								"Nft.name",
+								"Nft.nftIndex",
+								"Nft.collectionAddress",
+								// jsonArrayFrom(
+								// 	eeeb
+								// 		.selectFrom("NftAttribute")
+								// 		.select(["NftAttribute.key", "NftAttribute.value"])
+								// 		.distinct()
+								// 		.whereRef("NftAttribute.nftId", "=", "Nft.id"),
+								// ).as("attributes"),
+								// jsonObjectFrom(
+								// 	eeeb
+								// 		.selectFrom("NftCollection")
+								// 		.select([
+								// 			"address",
+								// 			"uri",
+								// 			"image",
+								// 			"name",
+								// 			"description",
+								// 			"listed",
+								// 			(eeeeb) =>
+								// 				jsonObjectFrom(
+								// 					eeeeb
+								// 						.selectFrom("Social")
+								// 						.select([
+								// 							"name",
+								// 							"github",
+								// 							"twitter",
+								// 							"website",
+								// 							"telegram",
+								// 							"medium",
+								// 							"discord",
+								// 						])
+								// 						.whereRef(
+								// 							"NftCollection.socialId",
+								// 							"=",
+								// 							"Social.id",
+								// 						),
+								// 				).as("social"),
+
+								// 			(eeeeb) =>
+								// 				eeeeb
+								// 					.selectFrom("DeadRareListing")
+								// 					.whereRef(
+								// 						"DeadRareListing.collectionAddress",
+								// 						"=",
+								// 						"NftCollection.address",
+								// 					)
+								// 					.select([(eb) => eb.fn.min("price").as("floor")])
+								// 					.where("soldAt", "is", null)
+								// 					.where("unlistedAt", "is", null)
+								// 					// .orderBy("price", "asc")
+								// 					.limit(1)
+								// 					.as("floor"),
+								// 		])
+								// 		.whereRef(
+								// 			"NftCollection.address",
+								// 			"=",
+								// 			"Nft.collectionAddress",
+								// 		),
+								// ).as("collection"),
+							])
+							.whereRef("Nft.address", "=", "Balance.tokenAddress")
+							.as("nft"),
+					(join) => join.onTrue(),
+				)
+				.select((eeb) => [
+					"userAddress",
+					"balance",
+					"nft",
+					// jsonObjectFrom(
+					// 	eeb
+					// 		.selectFrom("Nft")
+					// 		.select((eeeb) => [
+					// 			"Nft.address",
+					// 			"Nft.description",
+					// 			"Nft.image",
+					// 			"Nft.name",
+					// 			"Nft.nftIndex",
+					// 			jsonArrayFrom(
+					// 				eeeb
+					// 					.selectFrom("NftAttribute")
+					// 					.select((eeeeb) => [
+					// 						"NftAttribute.key",
+					// 						"NftAttribute.value",
+					// 					])
+					// 					.whereRef("NftAttribute.nftId", "=", "Nft.id"),
+					// 			).as("attributes"),
+
+					// 			jsonObjectFrom(
+					// 				eeeb
+					// 					.selectFrom("NftCollection")
+					// 					.select([
+					// 						"address",
+					// 						"uri",
+					// 						"image",
+					// 						"name",
+					// 						"description",
+					// 						"listed",
+					// 						(eeeeb) =>
+					// 							jsonObjectFrom(
+					// 								eeeeb
+					// 									.selectFrom("Social")
+					// 									.select([
+					// 										"name",
+					// 										"github",
+					// 										"twitter",
+					// 										"website",
+					// 										"telegram",
+					// 										"medium",
+					// 										"discord",
+					// 									])
+					// 									.whereRef(
+					// 										"NftCollection.socialId",
+					// 										"=",
+					// 										"Social.id",
+					// 									),
+					// 							).as("social"),
+					// 						eeeb
+					// 							.selectFrom("DeadRareListing")
+					// 							.whereRef(
+					// 								"DeadRareListing.collectionAddress",
+					// 								"=",
+					// 								"Nft.collectionAddress",
+					// 							)
+					// 							.select("price")
+					// 							.where("soldAt", "is", null)
+					// 							.where("unlistedAt", "is", null)
+					// 							.orderBy("price", "asc")
+					// 							.limit(1)
+					// 							.as("floor"),
+					// 					])
+					// 					.whereRef(
+					// 						"NftCollection.address",
+					// 						"=",
+					// 						"Nft.collectionAddress",
+					// 					),
+					// 			).as("collection"),
+					// 		])
+					// 		.whereRef("Nft.address", "=", "Balance.tokenAddress"),
+					// ).as("nft"),
+				])
+				.where((eb) =>
+					eb.exists((eeb) =>
+						eeb
+							.selectFrom("Nft")
+							.selectAll()
+							.whereRef("Nft.address", "=", "Balance.tokenAddress"),
+					),
+				)
+				.where("userAddress", "=", address)
+				.where("balance", ">", 0n),
+		).as("nfts"),
+
+		jsonArrayFrom(
+			eb
+				.selectFrom("Balance")
+				.select((eeb) => [
+					"userAddress",
+					"balance",
+					jsonObjectFrom(
+						eeb
+							.selectFrom("Pool")
+							.innerJoin("AyinReserve", "Pool.pair", "AyinReserve.pairAddress")
+							.select((eeeb) => [
+								"factory",
+								"amount0",
+								"amount1",
+								"totalSupply",
+								jsonObjectFrom(
+									eeeb
+										.selectFrom("Token")
+										.select([
+											"address",
+											"name",
+											"symbol",
+											"decimals",
+											"totalSupply",
+											"listed",
+											"description",
+											"logo",
+											(eeeb) =>
+												jsonObjectFrom(
+													eeeb
+														.selectFrom("Social")
+														.select([
+															"name",
+															"github",
+															"twitter",
+															"website",
+															"telegram",
+															"medium",
+															"discord",
+														])
+														.whereRef("Token.socialId", "=", "Social.id"),
+												).as("social"),
+										])
+										.whereRef("Token.address", "=", "Pool.pair"),
+								).as("pair"),
+								jsonObjectFrom(
+									eeeb
+										.selectFrom("Token")
+										.select([
+											"address",
+											"name",
+											"symbol",
+											"decimals",
+											"totalSupply",
+											"listed",
+											"description",
+											"logo",
+											(eeeb) =>
+												jsonObjectFrom(
+													eeeb
+														.selectFrom("Social")
+														.select([
+															"name",
+															"github",
+															"twitter",
+															"website",
+															"telegram",
+															"medium",
+															"discord",
+														])
+														.whereRef("Token.socialId", "=", "Social.id"),
+												).as("social"),
+										])
+										.whereRef("Token.address", "=", "Pool.token0"),
+								).as("token0"),
+								jsonObjectFrom(
+									eeeb
+										.selectFrom("Token")
+										.select([
+											"address",
+											"name",
+											"symbol",
+											"decimals",
+											"totalSupply",
+											"listed",
+											"description",
+											"logo",
+											(eeeb) =>
+												jsonObjectFrom(
+													eeeb
+														.selectFrom("Social")
+														.select([
+															"name",
+															"github",
+															"twitter",
+															"website",
+															"telegram",
+															"medium",
+															"discord",
+														])
+														.whereRef("Token.socialId", "=", "Social.id"),
+												).as("social"),
+										])
+										.whereRef("Token.address", "=", "Pool.token1"),
+								).as("token1"),
+							])
+							.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
+					).as("pool"),
+				])
+				.where((eb) =>
+					eb.exists((eeb) =>
+						eeb
+							.selectFrom("Pool")
+							.selectAll()
+							.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
+					),
+				)
+				.where("userAddress", "=", address)
+				.whereRef("userAddress", "!=", "tokenAddress")
+				.where("balance", ">", 0n),
+		).as("pools"),
+
+		jsonArrayFrom(
+			eb
+				.selectFrom("StakingEvent")
+				.select([
+					(eeb) => eeb.fn.sum("amount").as("balance"),
+					"StakingEvent.userAddress",
+					(eeb) =>
 						jsonObjectFrom(
 							eeb
 								.selectFrom("Token")
@@ -69,9 +414,9 @@ app.openapi(v2Route, async (c) => {
 									"listed",
 									"description",
 									"logo",
-									(eeeb) =>
+									(eeb) =>
 										jsonObjectFrom(
-											eeeb
+											eeb
 												.selectFrom("Social")
 												.select([
 													"name",
@@ -85,126 +430,9 @@ app.openapi(v2Route, async (c) => {
 												.whereRef("Token.socialId", "=", "Social.id"),
 										).as("social"),
 								])
-								.whereRef("Token.address", "=", "Balance.tokenAddress"),
-						).as("token"),
-					])
-					.where((eb) =>
-						eb.exists(
-							eb
-								.selectFrom("Token")
-								.selectAll()
-								.whereRef("Token.address", "=", "Balance.tokenAddress"),
-						),
-					)
-					.where((eb) =>
-						eb.not(
-							eb.exists(
-								eb
-									.selectFrom("Pool")
-									.selectAll()
-									.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
-							),
-						),
-					)
-					.where("userAddress", "=", address)
-					.where("balance", ">", 0n),
-			).as("tokens"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("Balance")
-					.select((eeb) => [
-						"userAddress",
-						"balance",
-						jsonObjectFrom(
-							eeb
-								.selectFrom("Nft")
-								.select((eeeb) => [
-									"Nft.address",
-									"Nft.description",
-									"Nft.image",
-									"Nft.name",
-									"Nft.nftIndex",
-									jsonArrayFrom(
-										eeeb
-											.selectFrom("NftAttribute")
-											.select((eeeeb) => [
-												"NftAttribute.key",
-												"NftAttribute.value",
-											])
-											.whereRef("NftAttribute.nftId", "=", "Nft.id"),
-									).as("attributes"),
-
-									jsonObjectFrom(
-										eeeb
-											.selectFrom("NftCollection")
-											.select([
-												"address",
-												"uri",
-												"image",
-												"name",
-												"description",
-												"listed",
-												(eeeeb) =>
-													jsonObjectFrom(
-														eeeeb
-															.selectFrom("Social")
-															.select([
-																"name",
-																"github",
-																"twitter",
-																"website",
-																"telegram",
-																"medium",
-																"discord",
-															])
-															.whereRef(
-																"NftCollection.socialId",
-																"=",
-																"Social.id",
-															),
-													).as("social"),
-												eeeb
-													.selectFrom("DeadRareListing")
-													.whereRef(
-														"DeadRareListing.collectionAddress",
-														"=",
-														"Nft.collectionAddress",
-													)
-													.select("price")
-													.where("soldAt", "is", null)
-													.where("unlistedAt", "is", null)
-													.orderBy("price", "asc")
-													.limit(1)
-													.as("floor"),
-											])
-											.whereRef(
-												"NftCollection.address",
-												"=",
-												"Nft.collectionAddress",
-											),
-									).as("collection"),
-								])
-								.whereRef("Nft.address", "=", "Balance.tokenAddress"),
-						).as("nft"),
-					])
-					.where((eb) =>
-						eb.exists((eeb) =>
-							eeb
-								.selectFrom("Nft")
-								.selectAll()
-								.whereRef("Nft.address", "=", "Balance.tokenAddress"),
-						),
-					)
-					.where("userAddress", "=", address)
-					.where("balance", ">", 0n),
-			).as("nfts"),
-
-			jsonArrayFrom(
-				eb
-					.selectFrom("Balance")
-					.select((eeb) => [
-						"userAddress",
-						"balance",
+								.whereRef("Token.address", "=", "StakingEvent.tokenAddress"),
+						).as("single"),
+					(eeb) =>
 						jsonObjectFrom(
 							eeb
 								.selectFrom("Pool")
@@ -309,198 +537,100 @@ app.openapi(v2Route, async (c) => {
 											.whereRef("Token.address", "=", "Pool.token1"),
 									).as("token1"),
 								])
-								.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
+								.whereRef("Pool.pair", "=", "StakingEvent.tokenAddress"),
 						).as("pool"),
-					])
-					.where((eb) =>
-						eb.exists((eeb) =>
-							eeb
-								.selectFrom("Pool")
-								.selectAll()
-								.whereRef("Pool.pair", "=", "Balance.tokenAddress"),
+				])
+				.where("userAddress", "=", address)
+				.where((eb) =>
+					eb.or([
+						eb("accountAddress", "is", null), // bread didn't track stake account at first?
+
+						eb(
+							"accountAddress",
+							"!=",
+							"26B8TfTHPKEdWuehaDrtjuPyGH57gPoDoXtm1T7L4uuJf", // remove pounder data
 						),
-					)
-					.where("userAddress", "=", address)
-					.whereRef("userAddress", "!=", "tokenAddress")
-					.where("balance", ">", 0n),
-			).as("pools"),
+					]),
+				)
+				.where("action", "in", ["deposit", "withdraw"])
+				.groupBy("StakingEvent.userAddress")
+				.groupBy("StakingEvent.tokenAddress")
+				.groupBy("StakingEvent.accountAddress")
+				.having((eeb) => eeb.fn.sum("amount"), ">", 0), // TODO: verify
+		).as("farms"),
+	]);
 
-			jsonArrayFrom(
-				eb
-					.selectFrom("StakingEvent")
-					.select([
-						(eeb) => eeb.fn.sum("amount").as("balance"),
-						"StakingEvent.userAddress",
-						(eeb) =>
+	const balances = await balancesQuery.executeTakeFirst();
+
+	const collections =
+		balances?.nfts.length === 0
+			? new Map()
+			: await db
+					.selectFrom("NftCollection")
+					.select((eeeb) => [
+						"address",
+						"uri",
+						"image",
+						"name",
+						"description",
+						"listed",
+						(eeeeb) =>
 							jsonObjectFrom(
-								eeb
-									.selectFrom("Token")
+								eeeeb
+									.selectFrom("Social")
 									.select([
-										"address",
 										"name",
-										"symbol",
-										"decimals",
-										"totalSupply",
-										"listed",
-										"description",
-										"logo",
-										(eeb) =>
-											jsonObjectFrom(
-												eeb
-													.selectFrom("Social")
-													.select([
-														"name",
-														"github",
-														"twitter",
-														"website",
-														"telegram",
-														"medium",
-														"discord",
-													])
-													.whereRef("Token.socialId", "=", "Social.id"),
-											).as("social"),
+										"github",
+										"twitter",
+										"website",
+										"telegram",
+										"medium",
+										"discord",
 									])
-									.whereRef("Token.address", "=", "StakingEvent.tokenAddress"),
-							).as("single"),
-						(eeb) =>
-							jsonObjectFrom(
-								eeb
-									.selectFrom("Pool")
-									.innerJoin(
-										"AyinReserve",
-										"Pool.pair",
-										"AyinReserve.pairAddress",
-									)
-									.select((eeeb) => [
-										"factory",
-										"amount0",
-										"amount1",
-										"totalSupply",
-										jsonObjectFrom(
-											eeeb
-												.selectFrom("Token")
-												.select([
-													"address",
-													"name",
-													"symbol",
-													"decimals",
-													"totalSupply",
-													"listed",
-													"description",
-													"logo",
-													(eeeb) =>
-														jsonObjectFrom(
-															eeeb
-																.selectFrom("Social")
-																.select([
-																	"name",
-																	"github",
-																	"twitter",
-																	"website",
-																	"telegram",
-																	"medium",
-																	"discord",
-																])
-																.whereRef("Token.socialId", "=", "Social.id"),
-														).as("social"),
-												])
-												.whereRef("Token.address", "=", "Pool.pair"),
-										).as("pair"),
-										jsonObjectFrom(
-											eeeb
-												.selectFrom("Token")
-												.select([
-													"address",
-													"name",
-													"symbol",
-													"decimals",
-													"totalSupply",
-													"listed",
-													"description",
-													"logo",
-													(eeeb) =>
-														jsonObjectFrom(
-															eeeb
-																.selectFrom("Social")
-																.select([
-																	"name",
-																	"github",
-																	"twitter",
-																	"website",
-																	"telegram",
-																	"medium",
-																	"discord",
-																])
-																.whereRef("Token.socialId", "=", "Social.id"),
-														).as("social"),
-												])
-												.whereRef("Token.address", "=", "Pool.token0"),
-										).as("token0"),
-										jsonObjectFrom(
-											eeeb
-												.selectFrom("Token")
-												.select([
-													"address",
-													"name",
-													"symbol",
-													"decimals",
-													"totalSupply",
-													"listed",
-													"description",
-													"logo",
-													(eeeb) =>
-														jsonObjectFrom(
-															eeeb
-																.selectFrom("Social")
-																.select([
-																	"name",
-																	"github",
-																	"twitter",
-																	"website",
-																	"telegram",
-																	"medium",
-																	"discord",
-																])
-																.whereRef("Token.socialId", "=", "Social.id"),
-														).as("social"),
-												])
-												.whereRef("Token.address", "=", "Pool.token1"),
-										).as("token1"),
-									])
-									.whereRef("Pool.pair", "=", "StakingEvent.tokenAddress"),
-							).as("pool"),
+									.whereRef("NftCollection.socialId", "=", "Social.id"),
+							).as("social"),
+						eeeb
+							.selectFrom("DeadRareListing")
+							.whereRef(
+								"DeadRareListing.collectionAddress",
+								"=",
+								"NftCollection.address",
+							)
+							.select("price")
+							.where("soldAt", "is", null)
+							.where("unlistedAt", "is", null)
+							.orderBy("price", "asc")
+							.limit(1)
+							.as("floor"),
 					])
-					.where("userAddress", "=", address)
-					.where((eb) =>
-						eb.or([
-							eb("accountAddress", "is", null), // bread didn't track stake account at first?
-
-							eb(
-								"accountAddress",
-								"!=",
-								"26B8TfTHPKEdWuehaDrtjuPyGH57gPoDoXtm1T7L4uuJf", // remove pounder data
-							),
-						]),
+					.where(
+						"address",
+						"in",
+						balances?.nfts.map((n) => n.nft.collectionAddress) ?? [],
 					)
-					.where("action", "in", ["deposit", "withdraw"])
-					.groupBy("StakingEvent.userAddress")
-					.groupBy("StakingEvent.tokenAddress")
-					.groupBy("StakingEvent.accountAddress")
-					.having((eeb) => eeb.fn.sum("amount"), ">", 0), // TODO: verify
-			).as("farms"),
-		])
-		.executeTakeFirst();
+					.execute()
+					.then((collections) =>
+						collections.reduce((acc, collection) => {
+							return acc.set(collection.address, collection);
+						}, new Map()),
+					);
 
 	return c.json({
 		tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
-		nfts: balances?.nfts.map((n) => ({
-			...n,
-			balance: BigInt(n.balance),
-			nft: {
-				...n.nft,
-				attributes: [], // TODO: remove this to restore attributes
-			},
-		})),
+		nfts: balances?.nfts.map((n) => {
+			if (!n.nft?.collection) {
+				console.log({ n });
+			}
+			return {
+				...n,
+				balance: BigInt(n.balance),
+				nft: {
+					...n.nft,
+					attributes: [], // TODO: remove this to restore attributes
+					collection: collections?.get(n.nft.collectionAddress) ?? null,
+				},
+			};
+		}),
 		pools: balances?.pools
 			.map(
 				(p) =>
