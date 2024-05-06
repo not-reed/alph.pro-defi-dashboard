@@ -334,6 +334,37 @@ app.openapi(v2Route, async (c) => {
 						(eeb) =>
 							jsonObjectFrom(
 								eeb
+									.selectFrom("Token")
+									.select([
+										"address",
+										"name",
+										"symbol",
+										"decimals",
+										"totalSupply",
+										"listed",
+										"description",
+										"logo",
+										(eeb) =>
+											jsonObjectFrom(
+												eeb
+													.selectFrom("Social")
+													.select([
+														"name",
+														"github",
+														"twitter",
+														"website",
+														"telegram",
+														"medium",
+														"discord",
+													])
+													.whereRef("Token.socialId", "=", "Social.id"),
+											).as("social"),
+									])
+									.whereRef("Token.address", "=", "StakingEvent.tokenAddress"),
+							).as("single"),
+						(eeb) =>
+							jsonObjectFrom(
+								eeb
 									.selectFrom("Pool")
 									.innerJoin(
 										"AyinReserve",
@@ -486,20 +517,20 @@ app.openapi(v2Route, async (c) => {
 			)
 			.filter(Boolean),
 		farms: balances?.farms
-			.map(
-				(s) =>
-					s?.pool && {
-						...s,
-						balance: BigInt(s.balance),
-						pool: {
-							...s.pool,
-							amount0: BigInt(s.pool.amount0),
-							amount1: BigInt(s.pool.amount1),
-							totalSupply: BigInt(s.pool.totalSupply),
-						},
+			.map((s) => {
+				return {
+					...s,
+					balance: BigInt(s.balance),
+					single: s?.pool ? null : s?.single,
+					pool: s?.pool && {
+						...s.pool,
+						amount0: BigInt(s.pool.amount0),
+						amount1: BigInt(s.pool.amount1),
+						totalSupply: BigInt(s.pool.totalSupply),
 					},
-			)
-			.filter(Boolean),
+				};
+			})
+			.filter((s) => s.pool || s.single),
 	});
 });
 

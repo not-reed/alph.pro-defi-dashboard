@@ -14,7 +14,7 @@ interface PluginData {
 
 const STAKING_CONTRACT = "yzoCumd4Fpi959NSis9Nnyr28UkgyRYqrKBgYNAuYj3m";
 const REWARD_TOKEN = "27HxXZJBTPjhHXwoF1Ue8sLMcSxYdxefoN2U6d8TKmZsm";
-const LP_TOKEN = "vFpZ1DF93x1xGHoXM8rsDBFjpcoSsCi5ZEuA5NG5UJGX";
+const LP_TOKEN = "27HxXZJBTPjhHXwoF1Ue8sLMcSxYdxefoN2U6d8TKmZsm"; //"vFpZ1DF93x1xGHoXM8rsDBFjpcoSsCi5ZEuA5NG5UJGX";
 
 enum StakingEvent {
 	AccountCreate = 0,

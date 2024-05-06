@@ -63,10 +63,15 @@ const stakedWorth = computed(() => {
         return 0
     }
     return user.farms.reduce((acc: number, farm: FarmBalance) => {
-        const { token0Balance, token1Balance } = getPoolBreakdown(farm)
-        return acc
+        if (farm.pool) {
+            const { token0Balance, token1Balance } = getPoolBreakdown(farm)
+            return acc
             + token0Balance * prices[farm.pool.token0.address]
             + token1Balance * prices[farm.pool.token1.address]
+        }
+
+        const balance = Number(farm.balance) / 10 ** farm.single.decimals
+        return balance * prices[farm.single.address]
     }, 0)
 })
 

@@ -12,26 +12,45 @@ const { format } = useCurrency()
 const { isActiveSubscription } = useDiscordAccount()
 
 const poolShare = computed(() => {
-    return Number(props.farm.balance) / Number(props.farm.pool.totalSupply)
+     if (props.farm.pool) {
+         return Number(props.farm.balance) / Number(props.farm.pool.totalSupply)
+    }
+
+    return 0;
 })
 
 const token0Balance = computed(() => {
-    return Number(props.farm.pool.amount0 / 10n ** BigInt(props.farm.pool.token0.decimals)) * poolShare.value
+    if (props.farm.pool) {
+        return Number(props.farm.pool.amount0 / 10n ** BigInt(props.farm.pool.token0.decimals)) * poolShare.value
+    }
+
+    return Number(props.farm.balance) / 10 ** props.farm.single.decimals
 })
 
 const token1Balance = computed(() => {
-    return Number(props.farm.pool.amount1 / 10n ** BigInt(props.farm.pool.token1.decimals)) * poolShare.value
+    if (props.farm.pool) {
+        return Number(props.farm.pool.amount1 / 10n ** BigInt(props.farm.pool.token1.decimals)) * poolShare.value
+    }
+
+    return null;
 })
 
 const token0Value = computed(() => {
-    return token0Balance.value * prices[props.farm.pool.token0.address]
+    if (props.farm.pool) {
+        return token0Balance.value * prices[props.farm.pool.token0.address]
+    }
+
+    return token0Balance.value * prices[props.farm.single.address]
 })
 
 const token1Value = computed(() => {
-    return token1Balance.value * prices[props.farm.pool.token1.address]
+    if (props.farm.pool && token1Balance.value) {
+        return token1Balance.value * prices[props.farm.pool.token1.address]
+    }
+    return null;
 })
 
-const totalValue = computed(() => token0Value.value + token1Value.value)
+const totalValue = computed(() => token0Value.value + (token1Value.value || 0))
 
 const options = {
     minimumFractionDigits: 4,
@@ -42,7 +61,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 
 <template>
     <li class="bg-zinc-300 dark:bg-calypso-900 max-w-2xl p-2 rounded">
-        <div class="flex gap-2 items-center justify-between">
+        <!-- Pool -->
+        <div class="flex gap-2 items-center justify-between" v-if="farm.pool">
             <div v-if="farm.pool.pair.logo" class="w-12 h-12 relative">
                 <img :src="farm.pool.pair.logo" class="w-12 h-12 position" />
             </div>
@@ -97,6 +117,63 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 
                 <div class="flex flex-1 gap-2 items-center justify-end">
                     <div class="w-32 hidden md:block">
+                        <div class="text-xs">Pool Share</div>
+                        <div class="text-calypso-700 dark:text-calypso-500 font-bold"
+                            :class="{ ['blur-[2px]']: !isActiveSubscription}">
+                            {{ Math.round(poolShare * 10000) / 100 }}%
+                        </div>
+                    </div>
+                    <div class="md:w-32">
+                        <div class="text-xs">Total Value</div>
+                        <div class="text-calypso-700 dark:text-calypso-500 font-bold">
+                            {{ format(totalValue)}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single -->
+        <div class="flex gap-2 items-center justify-between" v-if="farm.single">
+            <div v-if="farm.single.logo" class="w-12 h-12 relative">
+                <img :src="farm.single.logo" class="w-12 h-12 position" />
+            </div>
+            <div v-else class="w-12 h-12 relative">
+                <img :src="farm.single.logo" class="w-8 h-8 position rounded-full absolute left-0" />
+                <img :src="farm.single.logo" class="w-8 h-8 position rounded-full absolute left-4 top-4" />
+            </div>
+            <div class="w-1/3">
+                <div class="font-bold align-top flex items-center -mb-2 -mt-2">
+                    {{ farm.single.symbol }}
+                    <span class="text-xs ml-2 opacity-75">{{ numberFormat.format(Number(farm.balance) / 10 **
+                        farm.single.decimals)}}</span>
+                </div>
+            </div>
+            <div class="flex flex-1 gap-2 items-center justify-between">
+                <!-- <div>
+                    <div class="text-xs">Currently Staked</div>
+                    <div class="text-calypso-700 dark:text-calypso-500 font-bold">
+                        {{ format(stakedWorth) }}
+                    </div>
+                </div> -->
+                <!-- <div>
+                    <div class="text-xs">Rewards</div>
+                    <div class="text-calypso-700 dark:text-calypso-500 font-bold">
+                        {{ format(claimableWorth) }}
+                    </div>
+                </div> -->
+                <!-- <div>
+                    <div class="text-xs">Total Yield</div>
+                    <div>{{ format(stakedWorth - stakedWorth * 0.72) }}</div>
+                </div> -->
+
+                <!-- <div>
+                    <div class="text-xs">Total Deposited</div>
+                    <div>{{ format(stakedWorth * 0.72) }}</div>
+                </div> -->
+
+                <div class="flex flex-1 gap-2 items-center justify-end">
+                    <div class="w-32 hidden md:block" v-if="false">
                         <div class="text-xs">Pool Share</div>
                         <div class="text-calypso-700 dark:text-calypso-500 font-bold"
                             :class="{ ['blur-[2px]']: !isActiveSubscription}">

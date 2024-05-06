@@ -65,9 +65,17 @@ export interface PoolBalance {
 	};
 }
 
-export interface FarmBalance {
+interface FarmBalanceSingle {
 	userAddress: string;
 	balance: bigint;
+	single: Token;
+	pool: null;
+}
+
+interface FarmBalancePool {
+	userAddress: string;
+	balance: bigint;
+	single: null;
 	pool: {
 		factory: string;
 		amount0: bigint;
@@ -78,6 +86,8 @@ export interface FarmBalance {
 		token1: Token;
 	};
 }
+
+export type FarmBalance = FarmBalanceSingle | FarmBalancePool;
 
 const EMPTY_USER = () => ({
 	//
@@ -132,7 +142,8 @@ function setBalances(balances: RawBalance) {
 	user.farms = balances.farms.map((s) => ({
 		...s,
 		balance: BigInt(s.balance),
-		pool: {
+		single: s.single,
+		pool: s.pool && {
 			...s.pool,
 			amount0: BigInt(s.pool.amount0),
 			amount1: BigInt(s.pool.amount1),
@@ -170,11 +181,12 @@ async function loadBalances(wallet: string) {
 			),
 		)
 		.concat(
-			data.farms.reduce(
-				(acc: string[], f: FarmBalance) =>
-					acc.concat(f.pool.token0.address, f.pool.token1.address),
-				[],
-			),
+			data.farms.reduce((acc: string[], f: FarmBalance) => {
+				if (f.pool) {
+					return acc.concat(f.pool.token0.address, f.pool.token1.address);
+				}
+				return f.single.address;
+			}, []),
 		);
 
 	await updatePrices(Array.from(new Set(tokens)));
