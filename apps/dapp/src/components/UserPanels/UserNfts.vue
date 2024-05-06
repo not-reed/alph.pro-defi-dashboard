@@ -52,6 +52,7 @@ const nfts = computed(() => {
             <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
                 <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3"
                     :class="isActiveSubscription ? 'cursor-pointer' : 'blur overflow-hidden'" :src="balance.nft.image"
+                    :style="balance.nft.collection.address === 'ur9P93enfgdSZKs9jqygfBwrzCpumSzEnRnkLEzZSZrX' ? 'image-rendering: pixelated;' : ''"
                     :width="300" :height="300" />
                 <div class="truncate">{{ balance.nft.name }}</div>
                 <div class="text-sm flex items-center justify-between leading-3">
