@@ -44,7 +44,7 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
     <li class="bg-zinc-300 dark:bg-calypso-900 max-w-2xl p-2 rounded">
         <div class="flex gap-2 items-center justify-between">
 
-            <div v-if="balance.pool.pair.logo" class="w-12 h-12 relative">
+            <div v-if="balance.pool.pair?.logo" class="w-12 h-12 relative">
                 <img :src="balance.pool.pair.logo" class="w-12 h-12 position" />
             </div>
             <div v-else class="w-12 h-12 relative">
@@ -59,7 +59,6 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                     <span class="text-xs ml-2 opacity-75">{{ numberFormat.format(Number(balance.balance) /
                         1e18)}}</span>
                 </div>
-
 
                 <div class="flex flex-col w-28 shrink">
                     <div class="leading-3 text-xs flex gap-4 justify-between">
