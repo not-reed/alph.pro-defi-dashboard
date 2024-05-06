@@ -9,7 +9,7 @@ const { links } = useNavLinks()
 
 <template>
     <nav
-        class="dark:bg-calypso-900 dark:text-calypso-300 bg-gray-200 h-dvh max-w-48 sticky top-0 bottom-0 overflow-auto">
+        class="dark:bg-calypso-900 dark:text-calypso-300 bg-gray-200 h-dvh max-w-48 sticky top-0 bottom-0 min-w-48 overflow-y-auto">
         <RouterLink to="/" class="text-2xl flex items-center justify-center py-4 px-2">
             <svg class="w-6 h-6 -mt-3" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="310.5"
                 height="352.4" viewBox="0 0 82.2 93.2">
