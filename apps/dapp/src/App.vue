@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import Layout from './components/Layout.vue'
-import { useAlephiumConnect } from './hooks/useAlephiumConnect';
-import { useAlephiumAccount } from './hooks/useAlephiumAccount';
+import Notifications from './components/Notifications.vue'
+
 import { useRoute, useRouter } from 'vue-router';
 import { useUser } from './hooks/useUser';
 import { useDiscordAccount } from './hooks/useDiscordAccount';
+import { AlephiumConnectionProvider, useAccount } from '@alphpro/web3-vue';
 
-const { autoConnect } = useAlephiumConnect()
-const { account } = useAlephiumAccount()
+const { account } = useAccount()
 const { setWallet } = useUser()
-const { loadSession, setLoaded } = useDiscordAccount()
+const { loadSession, setLoaded, wallets, refreshWallets } = useDiscordAccount()
 const router = useRouter()
 const route = useRoute()
 const loaded = ref(false)
@@ -18,17 +18,17 @@ onMounted(async () => {
   let wallet = ''
   try {
     await loadSession()
-    const response: any = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`, { credentials: 'include' }).then(a => a.json())
-    if (response.wallets[0]?.address) {
-      wallet = response.wallets[0].address
-      setWallet(response.wallets[0].address)
+    await refreshWallets()
+    const defaultWallet = wallets.value.find(w => w.isTipBot) || wallets.value[0]
+    if (defaultWallet && !account.address) {
+      wallet = defaultWallet.address
+      setWallet(defaultWallet.address)
     }
   } catch {
     setLoaded()
   }
 
   try {
-    await autoConnect()
     if (account.address) {
       wallet = account.address
       setWallet(account.address)
@@ -47,7 +47,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Layout>
-    <RouterView v-if="loaded" />
-  </Layout>
-</template>./hooks/useAlephiumAccount
+  <AlephiumConnectionProvider :autoConnect="true" :group="0" network="mainnet">
+    <Layout>
+      <Notifications />
+      <RouterView v-if="loaded" />
+    </Layout>
+  </AlephiumConnectionProvider>
+</template>

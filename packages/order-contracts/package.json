@@ -26,9 +26,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@alephium/cli": "^0.39.2",
-    "@alephium/web3": "^0.39.2",
-    "@alephium/web3-test": "^0.39.2",
-    "@alephium/web3-wallet": "^0.39.2"
+    "@alephium/cli": "^0.39.3",
+    "@alephium/web3": "^0.39.3",
+    "@alephium/web3-test": "^0.39.3",
+    "@alephium/web3-wallet": "^0.39.3"
   }
 }

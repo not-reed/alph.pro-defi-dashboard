@@ -14,6 +14,7 @@ import {
 	testNodeWallet,
 } from "@alephium/web3-test";
 import {
+	Destroy,
 	OrderManager,
 	SetMaxDuration,
 	SetMinDuration,
@@ -148,10 +149,6 @@ describe("integration tests", () => {
 	});
 
 	it("should deploy with correct fields", async () => {
-		const account = await testNodeWallet().then((a) =>
-			a.getAccount(testAddress),
-		);
-
 		const orderManager = await deployOrderManager();
 
 		expect(orderManager.groupIndex).toEqual(0);
@@ -162,7 +159,7 @@ describe("integration tests", () => {
 		expect(initialState.fields.price * ONE_MONTH_IN_MS).toEqual(
 			4999999999932000000n,
 		);
-		expect(initialState.fields.owner).toEqual(account.address);
+		expect(initialState.fields.owner).toEqual(testAddress);
 		expect(initialState.fields.minDuration).toEqual(ONE_MONTH_IN_MS);
 		expect(initialState.fields.maxDuration).toEqual(ONE_MONTH_IN_MS * 12n);
 	});
@@ -560,6 +557,34 @@ describe("integration tests", () => {
 					duration: THREE_MONTH_IN_MS,
 				},
 				attoAlphAmount: THREE_MONTH_IN_MS * PRICE_PER_MS,
+			}),
+		).resolves.toBeDefined();
+	});
+
+	it("should not allow users to destroy contract", async () => {
+		const orderManager = await deployOrderManager();
+		const signer = await getSigner();
+
+		await expect(
+			Destroy.execute(signer, {
+				initialFields: {
+					orderManager: orderManager.contractId,
+				},
+			}),
+		).rejects.toThrow(
+			new RegExp(`Error Code: ${OrderManager.consts.ErrorCodes.Forbidden}$`),
+		);
+	});
+
+	it("should allow owner to destroy contract", async () => {
+		const orderManager = await deployOrderManager();
+		const owner = await testNodeWallet();
+
+		await expect(
+			Destroy.execute(owner, {
+				initialFields: {
+					orderManager: orderManager.contractId,
+				},
 			}),
 		).resolves.toBeDefined();
 	});

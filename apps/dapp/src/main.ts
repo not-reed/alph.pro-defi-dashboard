@@ -1,3 +1,4 @@
+import "./polyfill";
 import { createApp } from "vue";
 import "nprogress/nprogress.css";
 import "./style.css";

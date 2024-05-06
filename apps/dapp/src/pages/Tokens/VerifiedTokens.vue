@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownIcon } from '@heroicons/vue/24/outline';
+import { ArrowDownIcon, QuestionMarkCircleIcon } from '@heroicons/vue/24/outline';
 import { computed, onMounted, ref } from 'vue';
 import ExternalLink from '../../components/ExternalLink.vue';
 import { useCurrency } from '../../hooks/useCurrency';
@@ -89,7 +89,6 @@ const tokens = computed(() => rawTokens.value.map((holder) => {
         : 0
     const liquidity = markets[holder.token.address]?.length
         ? markets[holder.token.address].reduce((acc, cur) => {
-            console.log({ acc, cur })
             return acc + BigInt(cur.liquidity || '0')
         }, 0n)
         : 0n
@@ -114,148 +113,131 @@ const tokens = computed(() => rawTokens.value.map((holder) => {
 
 }))
 
-function sortByField(sort: SortBy) {
-    if (sortBy.value === sort) {
-        sortDirection.value = sortDirection.value === SortDirection.Asc ? SortDirection.Desc : SortDirection.Asc
-    } else {
-        sortBy.value = sort
-        sortDirection.value = SortDirection.Desc
-    }
-
-
+function sortByField(e: any) {
+    const sort = e.target.value as SortBy
+    sortBy.value = sort
     localStorage.setItem("tokens:sortBy", sortBy.value)
+}
+
+function sortDirectionField(e: any) {
+    const direction = e.target.value as SortDirection
+    sortDirection.value = direction
     localStorage.setItem("tokens:sortDirections", sortDirection.value)
 }
 </script>
 <template>
-    <div class="flex flex-col gap-8 p-4 max-w-4xl">
-        <div>
+    <div class="flex flex-col gap-4 md:p-4 max-w-screen md:max-w-4xl">
 
-            <div class="text-xl font-bold">
-                Listed Tokens
+        <div class="px-4 w-screen md:w-auto">
+            <div class="flex flex-col md:flex-row gap-4 justify-between pt-4">
+                <div class="text-xl font-bold">Listed Tokens</div>
+
+                <div class="flex gap-4 flex-col md:flex-row">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>Sort Direction:</div>
+                        <select v-model="sortDirection" class="bg-zinc-300 dark:bg-calypso-900 p-2"
+                            @input="sortDirectionField">
+                            <option v-for="option in Object.values(SortDirection)" :value="option">{{ option }}</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <div>Sort by:</div>
+                        <select v-model="sortBy" class="bg-zinc-300 dark:bg-calypso-900 p-2" @input="sortByField">
+                            <option v-for="option in Object.values(SortBy)" :value="option">{{ option }}</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <Table>
-
-                <TableHead>
-                    <TableRow>
-                        <TableHeader @click="sortByField(SortBy.Name)">&nbsp;</TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Name)">&nbsp;</TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Name)" class="cursor-pointer hidden md:table-cell">
-                            <span class="flex items-center gap-2">
-                                Name
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Name"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Symbol)" class="cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                Symbol
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Symbol"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Decimals)" class="cursor-pointer hidden md:table-cell">
-                            <span class="flex items-center gap-2">
-                                Decimals
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Decimals"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Explorer)" class="px-2 py-2 hidden md:table-cell">
-                            <span class="flex items-center gap-2">
-                                Explorer
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Explorer"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Holders)" class="cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                Holders
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Holders"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.MarketCap)" class="cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                MarketCap
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.MarketCap"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Liquidity)" class="cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                Liquidity
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Liquidity"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                        <TableHeader @click="sortByField(SortBy.Price)" class="cursor-pointer">
-                            <span class="flex items-center gap-2">
-                                Price
-                                <ArrowDownIcon class="w-4 h-4 transition" v-if="sortBy === SortBy.Price"
-                                    :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
-                                <span class="w-4 h-4" v-else>&nbsp;</span>
-                            </span>
-                        </TableHeader>
-                    </TableRow>
-                </TableHead>
-
-
-
-                <TableBody>
-                    <TableRow v-for="(token, idx) in tokens"
-                        class="odd:dark:bg-calypso-800 even:dark:bg-calypso-900 odd:dark:hover:bg-calypso-700 even:dark:hover:bg-calypso-700 bg-zinc-300 odd:bg-zinc-300 even:bg-zinc-200">
-                        <TableCell class="px-2 py-1 text-right">{{ idx + 1 }}.</TableCell>
-                        <TableCell class="px-2 py-1 min-w-10">
-                            <ProxyImage :src="token.token.logo" :width="50" :height="50" class="w-6 h-6 rounded-full"
-                                v-if="token.token.logo" />
-                            <QuestionMarkCircleIcon class="w-6 h-6 rounded-full" v-else />
-                        </TableCell>
-                        <TableCell class="px-2 py-1 truncate max-w-36 hidden md:table-cell">{{ token.token.name }}
-                        </TableCell>
-                        <TableCell class="px-2 py-1 hidden md:table-cell">
-                            {{ token.token.symbol }}
-                        </TableCell>
-                        <TableCell class="px-2 py-1 table-cell md:hidden">
-                            <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.token.address}`"
-                                class="">
-                                <span class="w-14 text-ellipsis overflow-hidden">
-                                    {{ token.token.symbol }}
-                                </span>
-                            </ExternalLink>
-                        </TableCell>
-                        <TableCell class="px-2 py-1 hidden md:table-cell">{{ token.token.decimals }}</TableCell>
-                        <TableCell class="px-2 py-1 hidden md:table-cell">
-                            <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.token.address}`">
-                                {{ token.token.address.slice(0, 4) }}...{{ token.token.address.slice(-4) }}
-                            </ExternalLink>
-                        </TableCell>
-                        <TableCell class="px-2 py-1">{{ token.holderCount }}</TableCell>
-                        <TableCell class="px-2 py-1">
-                            <template v-if="token.marketCap">
-                                {{ formatCurrency(token.marketCap) }}
-                            </template>
-                        </TableCell>
-                        <TableCell class="px-2 py-1">
-                            <template v-if="token.liquidity">
-                                {{ formatCurrency(token.liquidity) }}
-                            </template>
-                        </TableCell>
-                        <TableCell class="px-2 py-1">
-                            <template v-if="token.price">
-                                {{ formatCurrency(token.price) }}
-                            </template>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
         </div>
+
+        <Table class="w-full">
+            <TableHead class=" sticky -top-px md:top-10">
+                <TableRow>
+                    <TableHeader>&nbsp;</TableHeader>
+                    <TableHeader class="cursor-pointer">
+                        <span class="flex items-center gap-2 justify-center text-center">
+                            Token
+                        </span>
+                    </TableHeader>
+                    <TableHeader class="cursor-pointer">
+                        <span class="flex items-center gap-2">
+                            Holders
+                            <ArrowDownIcon class="w-4 h-4 transition hidden md:inline-flex"
+                                v-if="sortBy === SortBy.Holders"
+                                :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
+                            <span class="w-4 h-4" v-else>&nbsp;</span>
+                        </span>
+                    </TableHeader>
+
+                    <TableHeader class="cursor-pointer">
+                        <span class="flex items-center gap-2">
+                            Price
+                            <ArrowDownIcon class="w-4 h-4 transition hidden md:inline-flex"
+                                v-if="sortBy === SortBy.Price"
+                                :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
+                            <span class="w-4 h-4" v-else>&nbsp;</span>
+                        </span>
+                    </TableHeader>
+                    <TableHeader class="cursor-pointer">
+                        <span class="flex items-center justify-center whitespace-nowrap">
+                            <span class="hidden md:inline-block">MarketCap</span><span class="md:hidden">MCap</span>
+                            <ArrowDownIcon class="w-4 h-4 transition hidden md:inline-flex"
+                                v-if="sortBy === SortBy.MarketCap"
+                                :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
+                            <span v-else></span>
+                            /<span class="hidden md:inline-block">Liquidity</span><span class="md:hidden">Liq</span>
+                            <ArrowDownIcon class="w-4 h-4 transition hidden md:inline-flex"
+                                v-if="sortBy === SortBy.Liquidity"
+                                :class="sortDirection === SortDirection.Asc ? 'rotate-0' : 'rotate-180'" />
+                            <span class="w-4 h-4" v-else>&nbsp;</span>
+                        </span>
+                    </TableHeader>
+
+                    <TableHeader class="cursor-pointer hidden md:table-cell">
+                        <span class="flex items-center gap-2">
+                            Decimals
+                        </span>
+                    </TableHeader>
+                    <TableHeader class="px-2 py-2 hidden md:table-cell">
+                        <span class="flex items-center gap-2">
+                            Explorer
+                        </span>
+                    </TableHeader>
+                </TableRow>
+            </TableHead>
+
+            <TableBody>
+                <TableRow v-for="(token, idx) in tokens"
+                    class="odd:dark:bg-calypso-800 even:dark:bg-calypso-900 odd:dark:hover:bg-calypso-700 even:dark:hover:bg-calypso-700 bg-zinc-300 odd:bg-zinc-300 even:bg-zinc-200">
+                    <TableCell class="px-px md:px-2 py-1 text-right">{{ idx + 1 }}.</TableCell>
+                    <TableCell class="px-2 py-1 flex flex-col items-center max-w-16 md:max-w-32">
+                        <ProxyImage :src="token.token.logo" :width="50" :height="50" class="w-6 h-6 rounded-full"
+                            v-if="token.token.logo" />
+                        <QuestionMarkCircleIcon class="w-6 h-6 rounded-full" v-else />
+                        <div class="text-ellipsis overflow-hidden text-center max-w-16 md:max-w-32 whitespace-nowrap">
+                            {{ token.token.symbol }}
+                        </div>
+                    </TableCell>
+
+
+                    <TableCell class="px-2 py-1">{{ token.holderCount }}</TableCell>
+                    <TableCell class="px-2 py-1 max-w-4 overflow-auto">
+                        <template v-if="token.price">{{ formatCurrency(token.price) }}</template>
+                    </TableCell>
+                    <TableCell class="px-2 py-1">
+                        <div class="text-calypso-700 dark:text-calypso-400">{{ formatCurrency(token.marketCap || 0) }}
+                        </div>
+                        <div class="">{{ formatCurrency(token.liquidity) }}</div>
+                    </TableCell>
+                    <TableCell class="px-2 py-1 hidden md:table-cell">{{ token.token.decimals }}</TableCell>
+                    <TableCell class="px-2 py-1 hidden md:table-cell">
+                        <ExternalLink :href="`https://explorer.alephium.org/addresses/${token.token.address}`">
+                            {{ token.token.address.slice(0, 3) }}...{{ token.token.address.slice(-3) }}
+                        </ExternalLink>
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
+
     </div>
 </template>

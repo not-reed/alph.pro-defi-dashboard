@@ -16,7 +16,7 @@ import { logger } from "../logger";
 import { chunkArray } from "../../utils/arrays";
 import { RateLimiter } from "limiter";
 
-const limiter = new RateLimiter({ tokensPerInterval: 25, interval: "second" });
+const limiter = new RateLimiter({ tokensPerInterval: 30, interval: "second" });
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -30,6 +30,9 @@ import UnverifiedTokens from "./pages/Tokens/UnverifiedTokens.vue";
 import ListedNFTs from "./pages/NFTs/ListedNFTs.vue";
 import UnlistedNFTs from "./pages/NFTs/UnlistedNFTs.vue";
 
+import Pricing from "./pages/Pricing.vue";
+import Api from "./pages/Api.vue";
+
 const { loadBalances, user } = useUser();
 declare module "vue-router" {
 	interface RouteMeta {
@@ -59,28 +62,28 @@ export const routes = [
 					needsWallet: true,
 				},
 			},
-			{
-				path: "/portfolio/wallet",
-				name: "PortfolioWallet",
-				component: PortfolioWalletVue,
-				meta: {
-					title: "Wallet",
-					icon: "wallet",
-					needsWallet: true,
-					disabled: true,
-				},
-			},
-			{
-				path: "/portfolio/defi",
-				name: "PortfolioDeFi",
-				component: PortfolioDeFiVue,
-				meta: {
-					title: "DeFi",
-					icon: "banknotes",
-					needsWallet: true,
-					disabled: true,
-				},
-			},
+			// {
+			// 	path: "/portfolio/wallet",
+			// 	name: "PortfolioWallet",
+			// 	component: PortfolioWalletVue,
+			// 	meta: {
+			// 		title: "Wallet",
+			// 		icon: "wallet",
+			// 		needsWallet: true,
+			// 		disabled: true,
+			// 	},
+			// },
+			// {
+			// 	path: "/portfolio/defi",
+			// 	name: "PortfolioDeFi",
+			// 	component: PortfolioDeFiVue,
+			// 	meta: {
+			// 		title: "DeFi",
+			// 		icon: "banknotes",
+			// 		needsWallet: true,
+			// 		disabled: true,
+			// 	},
+			// },
 		],
 	},
 	{
@@ -99,14 +102,20 @@ export const routes = [
 				path: "/defi/swaps",
 				name: "Swaps",
 				component: SwapsVue,
-				meta: { title: "Swaps", disabled: true },
+				meta: { title: "Live Swaps" },
 			},
 			{
-				path: "/defi/opportunities",
-				name: "Opportunities",
-				component: OpportunitiesVue,
-				meta: { title: "Opportunities", icon: "currency", disabled: true },
+				path: "/defi/fresh-liquidity",
+				name: "Fresh Liquidity",
+				component: FreshLiquidityVue,
+				meta: { title: "Fresh Liquidity" },
 			},
+			// {
+			// 	path: "/defi/opportunities",
+			// 	name: "Opportunities",
+			// 	component: OpportunitiesVue,
+			// 	meta: { title: "Opportunities", icon: "currency", disabled: true },
+			// },
 		],
 	},
 	{
@@ -146,18 +155,12 @@ export const routes = [
 				component: HoldersVue,
 				meta: { title: "Top Holders" },
 			},
-			{
-				path: "/tokens/hot",
-				name: "Hot Tokens",
-				component: HotTokensVue,
-				meta: { title: "Hot Tokens", disabled: true },
-			},
-			{
-				path: "/tokens/fresh-liquidity",
-				name: "Fresh Liquidity",
-				component: FreshLiquidityVue,
-				meta: { title: "Fresh Liquidity", disabled: true },
-			},
+			// {
+			// 	path: "/tokens/hot",
+			// 	name: "Hot Tokens",
+			// 	component: HotTokensVue,
+			// 	meta: { title: "Hot Tokens", disabled: true },
+			// },
 		],
 	},
 	{
@@ -190,18 +193,18 @@ export const routes = [
 				component: NftHoldersVue,
 				meta: { title: "Holders" },
 			},
-			{
-				path: "/nfts/hot",
-				name: "Hot NFTs",
-				component: HotNFTsVue,
-				meta: { title: "Hot NFTs", disabled: true },
-			},
-			{
-				path: "/nfts/minting",
-				name: "Minting",
-				component: MintingVue,
-				meta: { title: "Minting", disabled: true },
-			},
+			// {
+			// 	path: "/nfts/hot",
+			// 	name: "Hot NFTs",
+			// 	component: HotNFTsVue,
+			// 	meta: { title: "Hot NFTs", disabled: true },
+			// },
+			// {
+			// 	path: "/nfts/minting",
+			// 	name: "Minting",
+			// 	component: MintingVue,
+			// 	meta: { title: "Minting", disabled: true },
+			// },
 		],
 	},
 
@@ -220,14 +223,16 @@ export const routes = [
 				name: "Discord",
 				component: Home,
 			},
-			{ path: "/", name: "Github", component: Home, meta: { disabled: true } },
-			{ path: "/", name: "Docs", component: Home, meta: { disabled: true } },
-			{ path: "/", name: "API", component: Home, meta: { disabled: true } },
 			{
-				path: "/",
-				name: "Brand Kit",
+				path: "https://github.com/not-reed/alph.pro-defi-dashboard",
+				name: "Github",
 				component: Home,
-				meta: { disabled: true },
+			},
+			{ path: "/api", name: "API", component: Api },
+			{
+				path: "/pricing",
+				name: "Pricing",
+				component: Pricing,
 			},
 			{
 				path: "/settings",

@@ -30,14 +30,14 @@ const pools = computed(() => Array.from(user.pools).sort((a,b) => {
 </script>
 
 <template>
-    <details open class="[&_svg.icon]:open:-rotate-180">
-        <summary class="px-4 list-none flex items-center">
+    <details open class="[&_svg.icon]:open:-rotate-180 px-4 max-w-screen w-screen md:w-auto">
+        <summary class="list-none flex items-center">
             <ChevronDownIcon class="w-4 mb-1 mr-2 icon" />
             Pools <span class="px-2 text-calypso-500">{{ format(value) }}</span>
         </summary>
 
         <!-- TODO: only show i.e. top 10 tokens here? -->
-        <ul class="px-4 py-4 w-full flex flex-col gap-2">
+        <ul class="py-4 w-full flex flex-col gap-2">
             <UserPool v-for="balance in pools" :balance="balance" />
         </ul>
     </details>

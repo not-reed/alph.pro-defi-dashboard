@@ -11,12 +11,17 @@ import {
   SignerProvider,
   HexString,
 } from "@alephium/web3";
+import { default as DestroyScriptJson } from "../scripts/Destroy.ral.json";
 import { default as SetMaxDurationScriptJson } from "../scripts/SetMaxDuration.ral.json";
 import { default as SetMinDurationScriptJson } from "../scripts/SetMinDuration.ral.json";
 import { default as SetOwnerScriptJson } from "../scripts/SetOwner.ral.json";
 import { default as SetPriceScriptJson } from "../scripts/SetPrice.ral.json";
 import { default as SubscribeScriptJson } from "../scripts/Subscribe.ral.json";
 import { default as WithdrawScriptJson } from "../scripts/Withdraw.ral.json";
+
+export const Destroy = new ExecutableScript<{ orderManager: HexString }>(
+  Script.fromJson(DestroyScriptJson, "", [])
+);
 
 export const SetMaxDuration = new ExecutableScript<{
   orderManager: HexString;

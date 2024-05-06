@@ -1,0 +1,28 @@
+{
+  "version": "v2.11.1",
+  "name": "Destroy",
+  "bytecodeTemplate": "010103000000040c0c{0}0107",
+  "fieldsSig": {
+    "names": [
+      "orderManager"
+    ],
+    "types": [
+      "OrderManager"
+    ],
+    "isMutable": [
+      false
+    ]
+  },
+  "functions": [
+    {
+      "name": "main",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
+    }
+  ]
+}

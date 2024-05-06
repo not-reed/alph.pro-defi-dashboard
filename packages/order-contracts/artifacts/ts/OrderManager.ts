@@ -154,6 +154,14 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResultWithoutMaps<null>> => {
       return testMethod(this, "setMaxDuration", params);
     },
+    destroy: async (
+      params: Omit<
+        TestContractParamsWithoutMaps<OrderManagerTypes.Fields, never>,
+        "testArgs"
+      >
+    ): Promise<TestContractResultWithoutMaps<null>> => {
+      return testMethod(this, "destroy", params);
+    },
   };
 }
 
@@ -162,7 +170,7 @@ export const OrderManager = new Factory(
   Contract.fromJson(
     OrderManagerContractJson,
     "",
-    "90aa7eba60d213fb4b15b6aebeb800b04465dfb99c5df1dd98c8f5e61ce26b6b",
+    "4a942d5b052d8289873479f63b52deb431e226ebfbe8dd35d4518e76bd586cac",
     []
   )
 );

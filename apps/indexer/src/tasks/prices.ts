@@ -176,8 +176,13 @@ export async function saveOnChainPrices() {
 
     const decimal0 = decimals.get(pool.token0);
     const decimal1 = decimals.get(pool.token1);
-    if (decimal0 === undefined || decimal1 === undefined) {
-      logger.warn("tokens missing decimals");
+    if (decimal0 === undefined) {
+      logger.warn(`token0 missing decimals => pool: ${pool.pair} => token: ${pool.token0}`);
+      continue;
+    }
+
+    if (decimal1 === undefined) {
+      logger.warn(`token1 missing decimals => pool: ${pool.pair} => token: ${pool.token1}`);
       continue;
     }
 

@@ -26,6 +26,7 @@ import { type default as SocialTable } from './Social';
 import { type default as DeadRareListingTable } from './DeadRareListing';
 import { type default as StakingEventTable } from './StakingEvent';
 import { type default as FiatExchangeTable } from './FiatExchange';
+import { type default as SubscriptionTable } from './Subscription';
 
 export default interface PublicSchema {
   kysely_migration: KyselyMigrationTable;
@@ -77,4 +78,6 @@ export default interface PublicSchema {
   StakingEvent: StakingEventTable;
 
   FiatExchange: FiatExchangeTable;
+
+  Subscription: SubscriptionTable;
 }

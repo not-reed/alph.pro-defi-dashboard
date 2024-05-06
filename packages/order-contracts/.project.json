@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v2.12.0",
+  "fullNodeVersion": "v2.11.1",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": false,
     "ignoreUnusedVariablesWarnings": false,
@@ -9,11 +9,18 @@
     "ignoreCheckExternalCallerWarnings": false
   },
   "infos": {
+    "Destroy": {
+      "sourceFile": "scripts/Destroy.ral",
+      "sourceCodeHash": "693667add9401fc695b954a3fca8321858ccefdc27a6c3a1aebee495618b9069",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
     "OrderManager": {
       "sourceFile": "OrderManager.ral",
-      "sourceCodeHash": "26774b41a48585208fa97ccf299b00815cc699fdb9bf5bfa74be7fe5da8eb829",
+      "sourceCodeHash": "e73a8cb0cc34c937893e1f30f9e37dabac51858ff561d9bb9611a5d2e3f55ead",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "90aa7eba60d213fb4b15b6aebeb800b04465dfb99c5df1dd98c8f5e61ce26b6b",
+      "codeHashDebug": "4a942d5b052d8289873479f63b52deb431e226ebfbe8dd35d4518e76bd586cac",
       "warnings": []
     },
     "SetMaxDuration": {

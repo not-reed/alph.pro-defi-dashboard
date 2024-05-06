@@ -82,4 +82,10 @@ Contract OrderManager(
         checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
         maxDuration = newMaxDuration
     }
+
+    @using(assetsInContract = true)
+    pub fn destroy() -> () {
+        checkCaller!(callerAddress!() == owner, ErrorCodes.Forbidden)
+        destroySelf!(owner)
+    }
 }

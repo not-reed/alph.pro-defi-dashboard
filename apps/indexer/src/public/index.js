@@ -16,6 +16,7 @@ document.addEventListener("alpine:init", () => {
             Math.min(new Date(p.timestamp).getTime(), Date.now())
           );
           return {
+            status: p.status ? 'Active' : 'Paused',
             name: p.name,
             start: genesis, //genesis block
             // startDate: `${genesisDate.toLocaleDateString()}<br>${genesisDate.toLocaleTimeString()}`,
@@ -29,25 +30,37 @@ document.addEventListener("alpine:init", () => {
             // endDate: `${end.toLocaleDateString()}<br>${end.toLocaleTimeString()}`,
           };
         })
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .sort((a, b) => a.status === b.status ? a.name.localeCompare(b.name) : a.status.localeCompare(b.status));
     },
   });
 
   if (location.pathname === "/") {
-    const sse = new EventSource(`${location.origin}/api/sse/plugins`);
+    // initial load
+    fetch(`${location.origin}/api/sse/plugins-poll`).then(a => a.json()).then(a => a.plugins).then(plugins => {
+      Alpine.store("plugins").set(plugins);
+    })
 
-    sse.addEventListener("plugin-status", (e) => {
-      Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
-    });
 
-    sse.addEventListener("close", (event) => {
-      console.log('Received "close" event. Closing connection...');
-      sse.close();
-    });
+    setInterval(async () => {
+      const {plugins} = await fetch(`${location.origin}/api/sse/plugins-poll`).then(a => a.json())
+      Alpine.store("plugins").set(plugins);
+    }, 1000);
 
-    sse.onerror = (error) => {
-      console.error("EventSource error:", error);
-    };
+    // SSE is slow here for some reason
+    // const sse = new EventSource(`${location.origin}/api/sse/plugins`);
+
+    // sse.addEventListener("plugin-status", (e) => {
+    //   Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
+    // });
+
+    // sse.addEventListener("close", (event) => {
+    //   console.log('Received "close" event. Closing connection...');
+    //   sse.close();
+    // });
+
+    // sse.onerror = (error) => {
+    //   console.error("EventSource error:", error);
+    // };
   }
 });
 

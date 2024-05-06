@@ -1,5 +1,5 @@
 {
-  "version": "v2.12.0",
+  "version": "v2.11.1",
   "name": "Subscribe",
   "bytecodeTemplate": "0101030001000f{1}0c0d{0}01022c1700b41600a2{1}0d0c{0}0100",
   "fieldsSig": {

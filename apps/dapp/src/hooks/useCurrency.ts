@@ -176,7 +176,7 @@ export function useCurrency() {
 		exchangeRates,
 		format: (n: number, cur = currency.value) => {
 			const offset = exchangeRates.value[cur];
-			return formatCurrency(n / offset, cur);
+			return formatCurrency(Math.max(n / offset, 0), cur);
 		},
 	};
 }

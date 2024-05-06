@@ -1,11 +1,6 @@
-import { type Env, Hono, type Schema } from "hono";
+import { Hono, type Schema } from "hono";
 
-import {
-	authHandler,
-	verifyAuth,
-	type AuthUser,
-	type AuthConfig,
-} from "@hono/auth-js";
+import { verifyAuth, type AuthUser, type AuthConfig } from "@hono/auth-js";
 import { db } from "../../database/db";
 import type { UserId } from "../../database/schemas/public/User";
 import {
@@ -74,6 +69,34 @@ app.post("tip-bot", async (c) => {
 	});
 
 	return c.json({ success: true });
+});
+
+app.get("subscription", async (c) => {
+	const auth = c.get("authUser");
+	const subscription = await db
+		.selectFrom("Subscription")
+		.selectAll()
+		.where((eb) =>
+			eb.exists((eeb) =>
+				eeb
+					.selectFrom("UserWallet")
+					.selectAll()
+					.where("userId", "=", auth.user?.id as UserId)
+					.where("verified", "=", true),
+			),
+		)
+		.orderBy("endAt", "desc")
+		.executeTakeFirst();
+
+	if (!subscription || subscription.endAt < new Date()) {
+		return c.json({ subscription: null });
+	}
+
+	return c.json({
+		subscription: {
+			expires: subscription.endAt,
+		},
+	});
 });
 
 export default app;

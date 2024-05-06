@@ -14,7 +14,10 @@ export const IndexerStatus: FC = () => {
           <template x-for="plugin in $store.plugins.forDisplay">
             <li
               class="p-4 w-full shadow"
+              x-bind:class="{ 'opacity-50': plugin.status !== 'Active' }"
               style={`background: ${theme.calypso["800"]}`}
+
+              x-bind:style="{ 'opacity-50': plugin.status !== 'Active' }"
             >
               <div x-text="plugin.name" class="font-bold uppercase" />
               <div class="flex gap-4">
@@ -43,6 +46,10 @@ export const IndexerStatus: FC = () => {
                 <div class="flex">
                   <div class="w-32">Current Time:</div>
                   <div x-html="plugin.endDate" />
+                </div>
+                <div class="flex">
+                  <div class="w-32">Status: </div>
+                  <div x-html="plugin.status" />
                 </div>
               </div>
             </li>

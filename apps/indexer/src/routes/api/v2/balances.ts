@@ -4,7 +4,6 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 
 import { BalanceSchema } from "../../schemas/balance";
-import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 const app = new OpenAPIHono<Env, Schema, "/api/balances">();
 
@@ -471,26 +470,36 @@ app.openapi(v2Route, async (c) => {
 				attributes: [], // TODO: remove this to restore attributes
 			},
 		})),
-		pools: balances?.pools.map((p) => ({
-			...p,
-			balance: BigInt(p.balance),
-			pool: {
-				...p.pool,
-				amount0: BigInt(p.pool.amount0),
-				amount1: BigInt(p.pool.amount1),
-				totalSupply: BigInt(p.pool.totalSupply),
-			},
-		})),
-		farms: balances?.farms.map((s) => ({
-			...s,
-			balance: BigInt(s.balance),
-			pool: {
-				...s.pool,
-				amount0: BigInt(s.pool.amount0),
-				amount1: BigInt(s.pool.amount1),
-				totalSupply: BigInt(s.pool.totalSupply),
-			},
-		})),
+		pools: balances?.pools
+			.map(
+				(p) =>
+					p?.pool && {
+						...p,
+						balance: BigInt(p.balance),
+						pool: {
+							...p.pool,
+							amount0: BigInt(p.pool.amount0),
+							amount1: BigInt(p.pool.amount1),
+							totalSupply: BigInt(p.pool.totalSupply),
+						},
+					},
+			)
+			.filter(Boolean),
+		farms: balances?.farms
+			.map(
+				(s) =>
+					s?.pool && {
+						...s,
+						balance: BigInt(s.balance),
+						pool: {
+							...s.pool,
+							amount0: BigInt(s.pool.amount0),
+							amount1: BigInt(s.pool.amount1),
+							totalSupply: BigInt(s.pool.totalSupply),
+						},
+					},
+			)
+			.filter(Boolean),
 	});
 });
 
