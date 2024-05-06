@@ -17,7 +17,7 @@ import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
 import {  useRoute, useRouter } from 'vue-router';
 
-import {  CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/outline';
+import { ArrowPathIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/outline';
 import UserTokens from '../../components/UserPanels/UserTokens.vue';
 import UserPools from '../../components/UserPanels/UserPools.vue';
 import UserFarms from '../../components/UserPanels/UserFarms.vue';
@@ -26,7 +26,7 @@ import { getPoolBreakdown } from '../../utils/pools';
 import { useDiscordAccount } from '../../hooks/useDiscordAccount';
 import Clipboard from '../../components/Clipboard.vue';
 
-const { user} = useUser()
+const { user, refreshWallet} = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 const { wallets, isActiveSubscription } = useDiscordAccount()
@@ -210,6 +210,10 @@ watch(route, (route) => {
 
                     <Clipboard :text="routeUserAddress"
                         class="h-6 w-6 relative text-calypso-500 hover:text-calypso-600 transition" />
+
+                    <button @click="() => refreshWallet(routeUserAddress)">
+                        <ArrowPathIcon class="h-4 w-4 text-calypso-500" />
+                    </button>
                 </div>
 
                 <div class="flex gap-4 justify-between w-full">
