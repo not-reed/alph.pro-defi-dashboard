@@ -59,10 +59,9 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
             <TableHead>
                 <TableRow>
                     <TableHeader>User</TableHeader>
-                    <TableHeader>Buy</TableHeader>
-                    <TableHeader>Sell</TableHeader>
+                    <TableHeader>Swap</TableHeader>
                     <TableHeader>Value</TableHeader>
-                    <TableHeader>Timestamp</TableHeader>
+                    <TableHeader>Time</TableHeader>
                     <TableHeader>Transaction</TableHeader>
                 </TableRow>
             </TableHead>
@@ -75,8 +74,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                     <!-- {{ swap }} -->
                     <TableCell>
                         <RouterLink :to="`/portfolio/overview/${swap.userAddress}`"
-                            class="text-calypso-500 cursor-pointer flex items-center justify-start">
-                            {{truncateAddress(swap.userAddress, 16)}}
+                            class="text-calypso-500 cursor-pointer flex items-center justify-start font-mono">
+                            {{truncateAddress(swap.userAddress, 12)}}
                             <!-- <span v-if="holder.isContract"
                                 class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span> -->
                         </RouterLink>
@@ -85,8 +84,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                     <!-- <TableCell>{{ swap.timestamp }}</TableCell> -->
                     <!-- <TableCell>{{ swap.transactionHash }}</TableCell> -->
 
-                    <TableCell class="text-emerald-500">
-                        <div class="flex justify-between gap-4 items-center"
+                    <TableCell class="flex flex-col">
+                        <div class="text-emerald-500 flex justify-between gap-4 items-center"
                             v-if="Number(swap.amount1) > 0 ? swap.pool.token0 : swap.pool.token1">
                             {{ numberFormat.format(Number(swap.amount1) > 0
                             ?
@@ -103,9 +102,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                                     :width="50" :height="50" class="rounded-full h-4 w-4" />
                             </div>
                         </div>
-                    </TableCell>
-                    <TableCell class="text-rose-500">
-                        <div class="flex justify-between gap-4 items-center"
+
+                        <div class="text-rose-500 flex justify-between gap-4 items-center"
                             v-if="Number(swap.amount0) > 0 ? swap.pool.token0 : swap.pool.token1">
 
                             {{ numberFormat.format(Number(swap.amount0) > 0 ? Math.abs(swap.amount0) / 10 **
@@ -123,10 +121,13 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                         </div>
                     </TableCell>
                     <TableCell>{{ format(getSwapValue(swap)) }}</TableCell>
-                    <TableCell>{{ new Date(swap.timestamp).toLocaleString() }}</TableCell>
                     <TableCell>
-                        <ExternalLink :href="`https://explorer.alephium.org/transactions/${swap.transactionHash}`">
-                            {{ truncateAddress(swap.transactionHash, 16) }}
+                        <div>{{ new Date(swap.timestamp).toLocaleTimeString() }}</div>
+                    </TableCell>
+                    <TableCell>
+                        <ExternalLink :href="`https://explorer.alephium.org/transactions/${swap.transactionHash}`"
+                            class="font-mono">
+                            {{ truncateAddress(swap.transactionHash, 10) }}
                         </ExternalLink>
 
                     </TableCell>

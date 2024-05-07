@@ -103,6 +103,7 @@ function viewWallet(address: string) {
 watch(route, (route) => {
     routeUserAddress.value = route.params.address as string
 })
+
 </script>
 
 <template>
