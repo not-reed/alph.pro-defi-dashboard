@@ -9,14 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@alphpro/web3-vue": "^0.0.3",
+    "@alphpro/web3-vue": "^0.0.4",
     "@auth/core": "^0.30.0",
     "@headlessui/vue": "^1.7.21",
     "@heroicons/vue": "^2.1.3",
     "@sentry/vue": "^7.113.0",
     "buffer": "^6.0.3",
     "nprogress": "^0.2.0",
-    "vue": "^3.4.26",
+    "vue": "^3.4.27",
     "vue-router": "^4.3.2",
     "vue-toastification": "next"
   },
