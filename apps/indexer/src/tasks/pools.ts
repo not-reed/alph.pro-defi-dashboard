@@ -26,7 +26,7 @@ export async function startPoolsTask() {
 	});
 }
 export async function ayinPoolReserves() {
-	const pools = await sdk.fetchSubContracts(AYIN_FACTORY);
+	const pools = await sdk.fetchSubContracts(AYIN_FACTORY, true);
 
 	for (const pool of pools) {
 		const state = await sdk.fetchState(pool, TokenPairAbi as Artifact);

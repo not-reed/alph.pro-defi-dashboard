@@ -51,7 +51,6 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
             <TableHead>
                 <TableRow>
                     <TableHeader>User</TableHeader>
-                    <TableHeader class="hidden md:table-cell">Action</TableHeader>
                     <TableHeader>Amount</TableHeader>
                     <TableHeader>LP Tokens</TableHeader>
                     <TableHeader>Value</TableHeader>
@@ -67,53 +66,49 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 
                     <TableCell>
                         <RouterLink :to="`/portfolio/overview/${swap.userAddress}`"
-                            class="text-calypso-500 cursor-pointer flex items-center justify-start">
-                            {{truncateAddress(swap.userAddress, 16)}}
+                            class="text-calypso-500 cursor-pointer flex items-center justify-start font-mono">
+                            {{truncateAddress(swap.userAddress, 12)}}
                             <!-- <span v-if="holder.isContract"
                                 class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span> -->
                         </RouterLink>
 
                     </TableCell>
-                    <!-- <TableCell>{{ swap.timestamp }}</TableCell> -->
-                    <!-- <TableCell>{{ swap.transactionHash }}</TableCell> -->
-                    <TableCell
-                        :class="{ 'text-red-500': swap.action === 'Burn', 'text-emerald-500': swap.action === 'Mint'}">
-                        {{ swap.action }}</TableCell>
+
                     <TableCell class="">
                         <div class="flex flex-col"
                             :class="{ 'text-red-500': swap.action === 'Burn', 'text-emerald-500': swap.action === 'Mint'}">
 
-                            <div class="flex justify-between gap-4 items-center" v-if="swap?.pool?.token0">
+                            <div class="flex justify-between gap-2 items-center" v-if="swap?.pool?.token0">
                                 {{ numberFormat.format(
                                 Math.abs(swap.amount0) / 10 ** swap.pool.token0.decimals) }}
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-20">{{
+                                    <span class="text-ellipsis text-right overflow-hidden w-16">{{
                                         swap.pool.token0.symbol }}</span>
                                     <ProxyImage :src="swap.pool.token0.logo" :width="50" :height="50"
                                         class="rounded-full h-4" />
                                 </div>
                             </div>
-                            <div class="flex justify-between gap-4 items-center" v-else>
+                            <div class="flex justify-between gap-2 items-center" v-else>
                                 ---
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-20">---</span>
+                                    <span class="text-ellipsis text-right overflow-hidden">---</span>
                                 </div>
                             </div>
 
-                            <div class="flex justify-between gap-4 items-center" v-if="swap?.pool?.token1">
+                            <div class="flex justify-between gap-2 items-center" v-if="swap?.pool?.token1">
                                 {{ numberFormat.format(
                                 Math.abs(swap.amount1) / 10 ** swap.pool.token1.decimals) }}
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-20">{{
+                                    <span class="text-ellipsis text-right overflow-hidden w-16">{{
                                         swap.pool.token1.symbol }}</span>
                                     <ProxyImage :src="swap.pool.token1.logo" :width="50" :height="50"
                                         class="rounded-full h-4" />
                                 </div>
                             </div>
-                            <div class="flex justify-between gap-4 items-center" v-else>
+                            <div class="flex justify-between gap-2 items-center" v-else>
                                 ---
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-20">---</span>
+                                    <span class="text-ellipsis text-right overflow-hidden">---</span>
                                 </div>
                             </div>
                         </div>
@@ -123,10 +118,11 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                         {{ numberFormat.format(swap.liquidity / 1e18) }}</TableCell>
 
                     <TableCell>{{ format(getSwapValue(swap)) }}</TableCell>
-                    <TableCell>{{ new Date(swap.timestamp).toLocaleString() }}</TableCell>
+                    <TableCell>{{ new Date(swap.timestamp).toLocaleTimeString() }}</TableCell>
                     <TableCell>
-                        <ExternalLink :href="`https://explorer.alephium.org/transactions/${swap.transactionHash}`">
-                            {{ truncateAddress(swap.transactionHash, 16) }}
+                        <ExternalLink :href="`https://explorer.alephium.org/transactions/${swap.transactionHash}`"
+                            class="font-mono">
+                            {{ truncateAddress(swap.transactionHash, 10) }}
                         </ExternalLink>
 
                     </TableCell>
