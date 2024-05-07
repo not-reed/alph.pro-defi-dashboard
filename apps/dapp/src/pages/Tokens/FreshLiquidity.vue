@@ -82,7 +82,7 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                                 {{ numberFormat.format(
                                 Math.abs(swap.amount0) / 10 ** swap.pool.token0.decimals) }}
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-16">{{
+                                    <span class="text-ellipsis text-right overflow-hidden w-20">{{
                                         swap.pool.token0.symbol }}</span>
                                     <ProxyImage :src="swap.pool.token0.logo" :width="50" :height="50"
                                         class="rounded-full h-4" />
@@ -99,7 +99,7 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                                 {{ numberFormat.format(
                                 Math.abs(swap.amount1) / 10 ** swap.pool.token1.decimals) }}
                                 <div class="flex items-center justify-end">
-                                    <span class="text-ellipsis text-right overflow-hidden w-16">{{
+                                    <span class="text-ellipsis text-right overflow-hidden w-20">{{
                                         swap.pool.token1.symbol }}</span>
                                     <ProxyImage :src="swap.pool.token1.logo" :width="50" :height="50"
                                         class="rounded-full h-4" />
