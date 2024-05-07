@@ -7,8 +7,8 @@ const isVideo = computed(() => false && props.src.endsWith('.mp4'))
 </script>
 
 <template>
-    <video v-if="isVideo">
+    <video v-if="isVideo && src">
         <source :src="src">
     </video>
-    <img :src="proxySrc" v-else />
+    <img :src="proxySrc" v-else-if="src" />
 </template>

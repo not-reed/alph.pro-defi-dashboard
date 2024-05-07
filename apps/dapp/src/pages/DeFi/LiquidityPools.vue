@@ -9,6 +9,7 @@ import TableCell from '../../components/table/TableCell.vue';
 import ExternalLink from '../../components/ExternalLink.vue';
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
+import ProxyImage from '../../components/ProxyImage.vue';
 
 const pools = ref([])
 const { prices, updatePrices } = usePrices();
@@ -39,7 +40,7 @@ const sortedPools = computed(() => pools.value.sort((a, b) => getPoolTvl(b) - ge
 <template>
     <div>
         <Table>
-            <TableHead>
+            <TableHead class="sticky top-10">
                 <TableRow>
                     <TableHeader>
                         Pair
@@ -49,16 +50,14 @@ const sortedPools = computed(() => pools.value.sort((a, b) => getPoolTvl(b) - ge
                     </TableHeader>
 
                     <TableHeader>
+                        TVL
+                    </TableHeader>
+                    <TableHeader>
                         Total Supply
                     </TableHeader>
 
-
                     <TableHeader>
-                        TVL
-                    </TableHeader>
-
-                    <TableHeader>
-                        Links
+                        Explorer
                     </TableHeader>
                 </TableRow>
             </TableHead>
@@ -67,30 +66,46 @@ const sortedPools = computed(() => pools.value.sort((a, b) => getPoolTvl(b) - ge
                 <TableRow v-for="(pool, idx) in sortedPools"
                     class="odd:dark:bg-calypso-800 even:dark:bg-calypso-900 odd:dark:hover:bg-calypso-700 even:dark:hover:bg-calypso-700 bg-zinc-300 odd:bg-zinc-300 even:bg-zinc-200">
                     <TableCell>
-                        {{ pool.token0.symbol }} / {{ pool.token1.symbol}}
+                        <div class="flex gap-1">
+                            <div class="max-w-20 text-ellipsis overflow-hidden">{{ pool.token0.symbol }}</div>/<div
+                                class="max-w-20 text-ellipsis overflow-hidden">{{ pool.token1.symbol}}</div>
+
+                        </div>
                     </TableCell>
 
                     <TableCell class="flex justify-between">
-                        <div>
-                            {{ numberFormat.format(pool.amount0 / 10 ** pool.token0.decimals) }} {{ pool.token0.symbol}}
-                        </div>
+                        <div class="flex flex-col w-full">
+
+                            <div class="flex justify-between gap-2">
+                                <div>{{ numberFormat.format(pool.amount0 / 10 ** pool.token0.decimals) }}</div>
+                                <div class="flex gap-1">
+                                    <div class="w-20 text-ellipsis overflow-hidden">{{ pool.token0.symbol}}</div>
+                                    <ProxyImage :src="pool.token0.logo" :width="50" :height="50"
+                                        class="rounded-full h-4 w-4" />
+                                </div>
+
+                            </div>
 
 
-                        <div>
-                            {{ numberFormat.format(pool.amount1 / 10 ** pool.token1.decimals) }} {{ pool.token1.symbol}}
+                            <div class="flex justify-between gap-2">
+                                <div>{{ numberFormat.format(pool.amount1 / 10 ** pool.token1.decimals) }}</div>
+                                <div class="flex gap-1">
+                                    <div class="w-20 text-ellipsis overflow-hidden">{{ pool.token1.symbol}}</div>
+                                    <ProxyImage :src="pool.token1.logo" :width="50" :height="50"
+                                        class="rounded-full h-4 w-4" />
+
+                                </div>
+                            </div>
                         </div>
                     </TableCell>
-
-
-                    <TableCell>
-                        {{ numberFormat.format(pool.totalSupply / 1e18) }}
-                    </TableCell>
-
 
                     <TableCell>
                         {{ format(getPoolTvl(pool)) }}
                     </TableCell>
 
+                    <TableCell>
+                        {{ numberFormat.format(pool.totalSupply / 1e18) }}
+                    </TableCell>
 
                     <TableCell>
                         <ExternalLink :href="`https://explorer.alephium.org/addresses/${pool.pair.address}`">
@@ -98,8 +113,6 @@ const sortedPools = computed(() => pools.value.sort((a, b) => getPoolTvl(b) - ge
                         </ExternalLink>
                     </TableCell>
                 </TableRow>
-
-
             </TableBody>
         </Table>
     </div>

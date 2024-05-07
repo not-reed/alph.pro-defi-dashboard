@@ -48,11 +48,11 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 <template>
     <div>
         <Table class="max-w-md">
-            <TableHead>
+            <TableHead class="sticky top-10">
                 <TableRow>
                     <TableHeader>User</TableHeader>
                     <TableHeader>Amount</TableHeader>
-                    <TableHeader>LP Tokens</TableHeader>
+                    <TableHeader class="whitespace-nowrap">LP Tokens</TableHeader>
                     <TableHeader>Value</TableHeader>
                     <TableHeader>Timestamp</TableHeader>
                     <TableHeader>Transaction</TableHeader>

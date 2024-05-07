@@ -56,7 +56,7 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
 <template>
     <div>
         <Table class="max-w-md">
-            <TableHead>
+            <TableHead class="sticky top-10">
                 <TableRow>
                     <TableHeader>User</TableHeader>
                     <TableHeader>Swap</TableHeader>
