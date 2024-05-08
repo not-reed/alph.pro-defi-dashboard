@@ -82,6 +82,7 @@ app.get("subscription", async (c) => {
 					.selectFrom("UserWallet")
 					.selectAll()
 					.where("userId", "=", auth.user?.id as UserId)
+					.whereRef("UserWallet.address", "=", "Subscription.userAddress")
 					.where("verified", "=", true),
 			),
 		)
