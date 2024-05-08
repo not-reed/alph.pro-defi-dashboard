@@ -30,7 +30,6 @@ const { user, refreshWallet} = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 const { wallets, isActiveSubscription } = useDiscordAccount()
-const farmsEnabled = true
 
 const { prices } = usePrices()
 
@@ -59,9 +58,6 @@ const lpWorth = computed(() => {
 })
 
 const stakedWorth = computed(() => {
-    if (!farmsEnabled) {
-        return 0
-    }
     return user.farms.reduce((acc: number, farm: FarmBalance) => {
         if (farm.pool) {
             const { token0Balance, token1Balance } = getPoolBreakdown(farm)
@@ -235,14 +231,12 @@ watch(route, (route) => {
             </div>
         </div>
 
-        <UserTokens :value="tokenWorth" />
+        <UserTokens :value="tokenWorth" :total="netWorth" />
 
-        <UserPools :value="lpWorth" />
+        <UserPools :value="lpWorth" :total="netWorth" />
 
-        <template v-if="farmsEnabled">
-            <UserFarms :value="stakedWorth" />
-        </template>
+        <UserFarms :value="stakedWorth" :total="netWorth" />
 
-        <UserNfts :value=" nftWorth" />
+        <UserNfts :value="nftWorth" :total="netWorth" />
     </div>
 </template>

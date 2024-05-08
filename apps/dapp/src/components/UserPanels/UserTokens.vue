@@ -13,7 +13,7 @@ import Icon from "../../components/Icon.vue";
 import { ChevronDownIcon, GlobeAltIcon } from "@heroicons/vue/24/outline";
 import { useDiscordAccount } from "../../hooks/useDiscordAccount";
 
-defineProps<{ value: number }>();
+defineProps<{ value: number, total: number }>();
 
 const { user } = useUser();
 const { format } = useCurrency();
@@ -54,12 +54,16 @@ const tokens = computed(() => {
 
     return pricedTokens.value.slice(0, 5)
 })
+
+
+const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigits: 1 });
 </script>
 <template>
     <details open class="[&_svg.icon]:open:-rotate-180">
         <summary class="px-4 list-none flex items-center">
             <ChevronDownIcon class="w-4 mb-1 mr-2 icon" />
-            Tokens <span class="px-2 text-calypso-500">{{ format(value) }}</span>
+            Tokens <span class="px-2 text-calypso-500">{{ format(value) }} ({{percent.format(value / total *
+                100)}}%)</span>
         </summary>
 
         <!-- TODO: only show i.e. top 10 tokens here? -->
@@ -80,6 +84,12 @@ const tokens = computed(() => {
 
                 <div v-if="balance.price" class="text-clip overflow-auto opacity-50">
                     {{ format(balance.price) }}
+                </div>
+
+                <div v-if="balance.price" class="text-clip overflow-auto text-calypso-700 dark:text-calypso-500"
+                    :class="{ 'blur-sm': !isActiveSubscription}">
+                    {{ percent.format((balance.price * balance.balance) /
+                    total * 100) }}%
                 </div>
 
                 <div v-if="balance.price"

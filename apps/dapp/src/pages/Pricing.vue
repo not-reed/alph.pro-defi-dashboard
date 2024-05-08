@@ -48,6 +48,9 @@ async function signUp() {
                     <button class="rounded bg-emerald-500 px-4 py-2" @click="signIn" v-if="!session.expires">
                         Sign up now
                     </button>
+                    <RouterLink to="/settings" class="rounded bg-emerald-500 px-4 py-2" v-else>
+                        Manage Subscription
+                    </RouterLink>
                 </div>
             </div>
 
@@ -94,13 +97,16 @@ async function signUp() {
                     <button class="rounded bg-emerald-500 px-4 py-2" @click="signUp" v-if="!session.expires">
                         Sign up now
                     </button>
+                    <RouterLink to="/settings" class="rounded bg-emerald-500 px-4 py-2" v-else>
+                        Manage Subscription
+                    </RouterLink>
                 </div>
             </div>
         </div>
 
 
         <div class="p-4 max-w-2xl w-full grow h-auto text-lg">
-            <div class="bg-gradient-to-br from-calypso-700 to-emerald-700 p-8 rounded-lg shadow-xl">
+            <div class="bg-gradient-to-br from-calypso-700 to-emerald-700 p-8 rounded-lg shadow-xl text-center">
                 To sign up for Pro, login with <button @click="signIn"
                     class="text-calypso-700 dark:text-calypso-500 font-bold underline italic">Discord</button> and
                 manage

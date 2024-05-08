@@ -10,7 +10,7 @@ const { format } = useCurrency()
 const { user } = useUser()
 const { prices } = usePrices()
 
-defineProps<{ value: number }>()
+defineProps<{ value: number,total: number }>()
 
 function getPoolValue(a: PoolBalance) {
     const poolShare = Number(a.balance) / Number(a.pool.totalSupply)
@@ -27,13 +27,15 @@ const pools = computed(() => Array.from(user.pools).sort((a,b) => {
     const bValue = getPoolValue(b)
     return bValue - aValue
 }))
+const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigits: 1 });
 </script>
 
 <template>
     <details open class="[&_svg.icon]:open:-rotate-180 px-4 max-w-screen w-screen md:w-auto">
         <summary class="list-none flex items-center">
             <ChevronDownIcon class="w-4 mb-1 mr-2 icon" />
-            Pools <span class="px-2 text-calypso-500">{{ format(value) }}</span>
+            Pools <span class="px-2 text-calypso-500">{{ format(value) }} ({{percent.format(value / total *
+                100)}}%)</span>
         </summary>
 
         <!-- TODO: only show i.e. top 10 tokens here? -->

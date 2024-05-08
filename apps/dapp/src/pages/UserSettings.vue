@@ -76,9 +76,12 @@ const { mode, nextTheme } = useDarkMode()
 
 <template>
     <div class="p-6 flex flex-col gap-9 max-w-2xl w-screen">
+
+        <Subscriptions />
+
         <div class="flex flex-col gap-2 dark:bg-calypso-900 p-4">
             <div class="underline">
-                Settings
+                Preferences
             </div>
 
             <div class="flex gap-2 items-center">
@@ -104,11 +107,7 @@ const { mode, nextTheme } = useDarkMode()
                     <option value="rakku">Rakku</option>
                 </select>
             </div> -->
-
-
         </div>
-
-        <Subscriptions />
 
         <div class="flex flex-col gap-2 dark:bg-calypso-900 p-4">
             <div class="underline">Wallet Management</div>

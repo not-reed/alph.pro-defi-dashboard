@@ -13,7 +13,7 @@ const { user } = useUser()
 const { prices } = usePrices()
 const { isActiveSubscription } = useDiscordAccount()
 
-defineProps<{ value: number }>()
+defineProps<{ value: number,total: number }>()
 
 const alphPrice = computed(() => prices.tgx7VNFoP9DJiFMFgXXtafQZkUvyEdDHT9ryamHJYrjq)
 
@@ -36,6 +36,7 @@ const nfts = computed(() => {
 
     return all.slice(0, trialVisibleCount.value)
 })
+const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigits: 1 });
 </script>
 
 <template>
@@ -43,7 +44,8 @@ const nfts = computed(() => {
     <details open class="[&_svg.icon]:open:-rotate-180">
         <summary class="px-4 list-none flex items-center">
             <ChevronDownIcon class="w-4 mb-1 mr-2 icon" />
-            NFTs <span class="px-2 text-calypso-500">{{ format(value) }}</span>
+            NFTs <span class="px-2 text-calypso-500">{{ format(value) }} ({{percent.format(value / total *
+                100)}}%)</span>
         </summary>
 
         <!-- TODO: Ranked by Rarest+Highest Floor -->
