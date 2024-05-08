@@ -64,16 +64,19 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                 </div>
 
                 <div class="flex flex-col w-28 shrink">
-                    <div class="leading-3 text-xs flex gap-4 justify-between">
-                        <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
-                            {{numberFormat.format(token0Balance) }}</div>
-                        <div class="opacity-50">{{ balance.pool.token0.symbol}}</div>
-                    </div>
-                    <div class="leading-3 text-xs flex gap-4 justify-between">
-                        <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
-                            {{numberFormat.format(token1Balance) }}</div>
-                        <div class="opacity-50">{{ balance.pool.token1.symbol}}</div>
-                    </div>
+
+                    <Popper content="Unlock with Pro" :hover="true" :disabled="isActiveSubscription">
+                        <div class="leading-3 text-xs flex gap-4 justify-between">
+                            <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
+                                {{numberFormat.format(token0Balance) }}</div>
+                            <div class="opacity-50">{{ balance.pool.token0.symbol}}</div>
+                        </div>
+                        <div class="leading-3 text-xs flex gap-4 justify-between">
+                            <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
+                                {{numberFormat.format(token1Balance) }}</div>
+                            <div class="opacity-50">{{ balance.pool.token1.symbol}}</div>
+                        </div>
+                    </Popper>
                 </div>
 
             </div>
@@ -81,10 +84,13 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
             <div class="flex flex-1 gap-2 items-center justify-end">
                 <div class="w-32 hidden md:block">
                     <div class="text-xs">Pool Share</div>
-                    <div class="text-calypso-700 dark:text-calypso-500 font-bold"
-                        :class="{ ['blur-[2px]']: !isActiveSubscription}">
-                        {{ Math.round(poolShare * 10000) / 100 }}%
-                    </div>
+
+                    <Popper content="Unlock with Pro" :hover="true" :disabled="isActiveSubscription">
+                        <div class="text-calypso-700 dark:text-calypso-500 font-bold"
+                            :class="{ ['blur-[2px]']: !isActiveSubscription}">
+                            {{ Math.round(poolShare * 10000) / 100 }}%
+                        </div>
+                    </Popper>
                 </div>
                 <div class="md:w-32">
                     <div class="text-xs">Total Value</div>

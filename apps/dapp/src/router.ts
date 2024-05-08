@@ -5,32 +5,9 @@ import {
 	type RouteRecordName,
 } from "vue-router";
 import NProgress from "nprogress";
-import Home from "./pages/Home.vue";
-import PortfolioOverviewVue from "./pages/Portfolio/Overview.vue";
-import PortfolioWalletVue from "./pages/Portfolio/Wallet.vue";
-import PortfolioDeFiVue from "./pages/Portfolio/DeFi.vue";
-import MintingVue from "./pages/NFTs/Minting.vue";
-import HotNFTsVue from "./pages/NFTs/HotNFTs.vue";
-
-import FreshLiquidityVue from "./pages/Tokens/FreshLiquidity.vue";
-import HotTokensVue from "./pages/Tokens/HotTokens.vue";
-import LiquidityPoolsVue from "./pages/DeFi/LiquidityPools.vue";
-import SwapsVue from "./pages/DeFi/Swaps.vue";
-import OpportunitiesVue from "./pages/DeFi/Opportunities.vue";
-import UserSettingsVue from "./pages/UserSettings.vue";
-
 import type { icons } from "./utils/icons";
 import { useUser } from "./hooks/useUser";
 import { useDiscordAccount } from "./hooks/useDiscordAccount";
-import HoldersVue from "./pages/Tokens/Holders.vue";
-import NftHoldersVue from "./pages/NFTs/NftHolders.vue";
-import PageShellVue from "./pages/PageShell.vue";
-import VerifiedTokens from "./pages/Tokens/VerifiedTokens.vue";
-import UnverifiedTokens from "./pages/Tokens/UnverifiedTokens.vue";
-import ListedNFTs from "./pages/NFTs/ListedNFTs.vue";
-import UnlistedNFTs from "./pages/NFTs/UnlistedNFTs.vue";
-
-import Pricing from "./pages/Pricing.vue";
 import Api from "./pages/Api.vue";
 
 const { loadBalances, user } = useUser();
@@ -45,17 +22,22 @@ declare module "vue-router" {
 }
 
 export const routes = [
-	{ path: "/", name: "Home", component: Home, meta: { hide: true } },
+	{
+		path: "/",
+		name: "Home",
+		component: () => import("./pages/Home.vue"),
+		meta: { hide: true },
+	},
 	{
 		path: "/portfolio",
 		name: "Portfolio",
-		component: PageShellVue,
+		component: () => import("./pages/PageShell.vue"),
 		meta: { title: "Portfolio", defaultOpen: true },
 		children: [
 			{
 				path: "/portfolio/overview/:address?",
 				name: "PortfolioOverview",
-				component: PortfolioOverviewVue,
+				component: () => import("./pages/Portfolio/Overview.vue"),
 				meta: {
 					title: "Overview",
 					icon: "home",
@@ -89,25 +71,25 @@ export const routes = [
 	{
 		path: "/defi",
 		name: "DeFi",
-		component: PageShellVue,
+		component: () => import("./pages/PageShell.vue"),
 		meta: { defaultOpen: true },
 		children: [
 			{
 				path: "/defi/liquidity-pools",
 				name: "Liquidity Pools",
-				component: LiquidityPoolsVue,
+				component: () => import("./pages/DeFi/LiquidityPools.vue"),
 				meta: { title: "Liquidity Pools" },
 			},
 			{
 				path: "/defi/swaps",
 				name: "Swaps",
-				component: SwapsVue,
+				component: () => import("./pages/DeFi/Swaps.vue"),
 				meta: { title: "Live Swaps" },
 			},
 			{
 				path: "/defi/fresh-liquidity",
 				name: "Fresh Liquidity",
-				component: FreshLiquidityVue,
+				component: () => import("./pages/Tokens/FreshLiquidity.vue"),
 				meta: { title: "Fresh Liquidity" },
 			},
 			// {
@@ -121,38 +103,38 @@ export const routes = [
 	{
 		path: "/tokens",
 		name: "Tokens",
-		component: PageShellVue,
+		component: () => import("./pages/PageShell.vue"),
 		meta: { defaultOpen: true },
 		children: [
-			{
-				path: "/tokens/verified",
-				name: "Listed Tokens",
-				component: VerifiedTokens,
-				meta: { title: "Listed Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
-			},
-			{
-				path: "/tokens/unverified",
-				name: "Unlisted Tokens",
-				component: UnverifiedTokens,
-				meta: { title: "Unlisted Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
-			},
+			// {
+			// 	path: "/tokens/verified",
+			// 	name: "Listed Tokens",
+			// 	component: () => import("./pages/Tokens/VerifiedTokens.vue"),
+			// 	meta: { title: "Listed Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
+			// },
+			// {
+			// 	path: "/tokens/unverified",
+			// 	name: "Unlisted Tokens",
+			// 	component: () => import("./pages/Tokens/UnverifiedTokens.vue"),
+			// 	meta: { title: "Unlisted Tokens", hide: true }, // TODO: remove, only left to not break bookmarks, should be redirect
+			// },
 
 			{
 				path: "/tokens/listed",
 				name: "Listed Tokens",
-				component: VerifiedTokens,
+				component: () => import("./pages/Tokens/VerifiedTokens.vue"),
 				meta: { title: "Listed Tokens" },
 			},
 			{
 				path: "/tokens/unlisted",
 				name: "Unlisted Tokens",
-				component: UnverifiedTokens,
+				component: () => import("./pages/Tokens/UnverifiedTokens.vue"),
 				meta: { title: "Unlisted Tokens" },
 			},
 			{
 				path: "/tokens/holders/:address?",
 				name: "Token Holders",
-				component: HoldersVue,
+				component: () => import("./pages/Tokens/Holders.vue"),
 				meta: { title: "Top Holders" },
 			},
 			// {
@@ -166,31 +148,31 @@ export const routes = [
 	{
 		path: "/nfts",
 		name: "NFTs",
-		component: PageShellVue,
+		component: () => import("./pages/PageShell.vue"),
 		meta: { defaultOpen: true },
 		children: [
-			{
-				path: "/nfts/new",
-				name: "New NFTs",
-				component: ListedNFTs,
-				meta: { title: "nfts NFTs", hide: true },
-			},
+			// {
+			// 	path: "/nfts/new",
+			// 	name: "New NFTs",
+			// 	component: () => import("./pages/NFTs/ListedNFTs.vue"),
+			// 	meta: { title: "nfts NFTs", hide: true },
+			// },
 			{
 				path: "/nfts/listed",
 				name: "Listed NFTs",
-				component: ListedNFTs,
+				component: () => import("./pages/NFTs/ListedNFTs.vue"),
 				meta: { title: "Listed NFTs" },
 			},
 			{
 				path: "/nfts/unlisted",
 				name: "Unlisted NFTs",
-				component: UnlistedNFTs,
+				component: () => import("./pages/NFTs/UnlistedNFTs.vue"),
 				meta: { title: "Unlisted NFTs" },
 			},
 			{
 				path: "/nfts/holders",
 				name: "Nft Holders",
-				component: NftHoldersVue,
+				component: () => import("./pages/NFTs/NftHolders.vue"),
 				meta: { title: "Holders" },
 			},
 			// {
@@ -211,33 +193,33 @@ export const routes = [
 	{
 		path: "/",
 		name: "More",
-		component: PageShellVue,
+		component: () => import("./pages/PageShell.vue"),
 		children: [
 			{
 				path: "https://twitter.com/alphdotpro",
 				name: "Twitter",
-				component: Home,
+				component: () => import("./pages/Home.vue"),
 			},
 			{
 				path: "https://discord.gg/pfcR8EQZjb",
 				name: "Discord",
-				component: Home,
+				component: () => import("./pages/Home.vue"),
 			},
 			{
 				path: "https://github.com/not-reed/alph.pro-defi-dashboard",
 				name: "Github",
-				component: Home,
+				component: () => import("./pages/Home.vue"),
 			},
 			{ path: "/api", name: "API", component: Api },
 			{
 				path: "/pricing",
 				name: "Pricing",
-				component: Pricing,
+				component: () => import("./pages/Pricing.vue"),
 			},
 			{
 				path: "/settings",
 				name: "Settings",
-				component: UserSettingsVue,
+				component: () => import("./pages/UserSettings.vue"),
 				meta: { title: "Settings", needsDiscord: true },
 			},
 		],
@@ -245,7 +227,7 @@ export const routes = [
 	{
 		path: "/:pathMatch(.*)*",
 		name: "NotFound",
-		component: Home,
+		component: () => import("./pages/Home.vue"),
 		meta: { hide: true },
 	},
 ] satisfies Readonly<RouteRecordRaw[]>;

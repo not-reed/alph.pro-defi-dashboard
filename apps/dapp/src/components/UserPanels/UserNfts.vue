@@ -52,10 +52,14 @@ const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigit
         <!-- Only show first 4 or 8 -->
         <ul class="grid grid-cols-2 md:grid-cols-4 flex-wrap gap-2 px-4 pt-4 w-full" v-if="nfts.length">
             <li class="flex flex-col gap-1 bg-zinc-300 dark:bg-calypso-900 p-2 rounded shadow" v-for="balance in nfts">
-                <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3"
-                    :class="isActiveSubscription ? 'cursor-pointer' : 'blur overflow-hidden'" :src="balance.nft.image"
-                    :style="balance.nft.collection.address === 'ur9P93enfgdSZKs9jqygfBwrzCpumSzEnRnkLEzZSZrX' ? 'image-rendering: pixelated;' : ''"
-                    :width="300" :height="300" />
+
+                <Popper content="Unlock with Pro" :hover="true" :disabled="isActiveSubscription">
+                    <ProxyImage class="w-full h-32 shadow-lg object-cover rounded mb-3"
+                        :class="isActiveSubscription ? 'cursor-pointer' : 'blur-sm overflow-hidden'"
+                        :src="balance.nft.image"
+                        :style="balance.nft.collection.address === 'ur9P93enfgdSZKs9jqygfBwrzCpumSzEnRnkLEzZSZrX' ? 'image-rendering: pixelated;' : ''"
+                        :width="300" :height="300" />
+                </Popper>
                 <div class="truncate">{{ balance.nft.name }}</div>
                 <div class="text-sm flex items-center justify-between leading-3">
                     <div class="text-xs opacity-50">Ranked:</div>
@@ -82,7 +86,8 @@ const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigit
                 v-if="!isActiveSubscription && user.nfts.length > 7">
                 <div>
 
-                    View {{ user.nfts.length - nfts.length }} more with an active Pro subscription...
+                    View {{ user.nfts.length - nfts.length }} more with an active Pro subscription.
+                    <RouterLink to="/pricing" class="italic underline -mt-1 text-calypso-500">Pricing</RouterLink>
                 </div>
             </li>
         </ul>

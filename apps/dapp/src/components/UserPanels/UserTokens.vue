@@ -86,11 +86,13 @@ const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigit
                     {{ format(balance.price) }}
                 </div>
 
-                <div v-if="balance.price" class="text-clip overflow-auto text-calypso-700 dark:text-calypso-500"
-                    :class="{ 'blur-sm': !isActiveSubscription}">
-                    {{ percent.format((balance.price * balance.balance) /
-                    total * 100) }}%
-                </div>
+                <Popper content="Unlock with Pro" :hover="true" :disabled="isActiveSubscription">
+                    <div v-if="balance.price" class="text-clip overflow-auto text-calypso-700 dark:text-calypso-500"
+                        :class="{ 'blur-sm': !isActiveSubscription}">
+                        {{ percent.format((balance.price * balance.balance) /
+                        total * 100) }}%
+                    </div>
+                </Popper>
 
                 <div v-if="balance.price"
                     class="text-clip overflow-auto font-bold text-calypso-700 dark:text-calypso-500">
@@ -151,8 +153,9 @@ const percent = new Intl.NumberFormat(navigator.language, { maximumFractionDigit
                 class="shadow dark:bg-calypso-900 bg-zinc-200 items-center justify-between gap-2 rounded-l-full pr-2">
                 <div class="flex items-center">
 
-                    <div class="h-8 pl-2 text-sm flex items-center pl-10 w-full">
-                        View {{ pricedTokens.length - tokens.length }} More with an active Pro subscription
+                    <div class="h-8 text-sm flex gap-2 items-center pl-10 w-full">
+                        View {{ pricedTokens.length - tokens.length }} More with an active Pro subscription.
+                        <RouterLink to="/pricing" class="italic underline -mt-1 text-calypso-500">Pricing</RouterLink>
                     </div>
                 </div>
             </li>

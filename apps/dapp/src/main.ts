@@ -8,6 +8,7 @@ import { usePrices } from "./hooks/usePrices";
 import Toast from "vue-toastification";
 import * as Sentry from "@sentry/vue";
 import "vue-toastification/dist/index.css";
+import Popper from "vue3-popper";
 
 const app = createApp(App);
 
@@ -36,6 +37,7 @@ Sentry.init({
 });
 
 app
+	.component("Popper", Popper)
 	.use(router)
 	.use(Toast, {
 		transition: "Vue-Toastification__bounce",

@@ -18,7 +18,8 @@
     "nprogress": "^0.2.0",
     "vue": "^3.4.27",
     "vue-router": "^4.3.2",
-    "vue-toastification": "next"
+    "vue-toastification": "next",
+    "vue3-popper": "^1.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.7.3",
