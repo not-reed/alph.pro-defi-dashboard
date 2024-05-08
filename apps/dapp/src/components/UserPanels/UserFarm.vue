@@ -4,6 +4,7 @@ import type { FarmBalance } from '../../hooks/useUser'
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useDiscordAccount } from '../../hooks/useDiscordAccount';
+import ProxyImage from '../ProxyImage.vue';
 
 const props = defineProps<{ farm: FarmBalance }>()
 
@@ -64,11 +65,13 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
         <!-- Pool -->
         <div class="flex gap-2 items-center justify-between" v-if="farm.pool">
             <div v-if="farm.pool.pair.logo" class="w-12 h-12 relative">
-                <img :src="farm.pool.pair.logo" class="w-12 h-12 position" />
+                <ProxyImage :src="farm.pool.pair.logo" :width="50" :height="50" class="w-12 h-12 position" />
             </div>
             <div v-else class="w-12 h-12 relative">
-                <img :src="farm.pool.token0.logo" class="w-8 h-8 position rounded-full absolute left-0" />
-                <img :src="farm.pool.token1.logo" class="w-8 h-8 position rounded-full absolute left-4 top-4" />
+                <ProxyImage :src="farm.pool.token0.logo" :width="50" :height="50"
+                    class="w-8 h-8 position rounded-full absolute left-0" />
+                <ProxyImage :src="farm.pool.token1.logo" :width="50" :height="50"
+                    class="w-8 h-8 position rounded-full absolute left-4 top-4" />
             </div>
             <div class="w-1/3">
                 <div class="font-bold align-top flex items-center -mb-2 -mt-2">
@@ -136,11 +139,7 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
         <!-- Single -->
         <div class="flex gap-2 items-center justify-between" v-if="farm.single">
             <div v-if="farm.single.logo" class="w-12 h-12 relative">
-                <img :src="farm.single.logo" class="w-12 h-12 position" />
-            </div>
-            <div v-else class="w-12 h-12 relative">
-                <img :src="farm.single.logo" class="w-8 h-8 position rounded-full absolute left-0" />
-                <img :src="farm.single.logo" class="w-8 h-8 position rounded-full absolute left-4 top-4" />
+                <ProxyImage :src="farm.single.logo" :width="50" :height="50" class="w-12 h-12 position" />
             </div>
             <div class="w-1/3">
                 <div class="font-bold align-top flex items-center -mb-2 -mt-2">

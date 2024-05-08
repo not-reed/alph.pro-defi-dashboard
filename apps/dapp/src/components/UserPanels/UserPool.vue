@@ -4,6 +4,7 @@ import type { PoolBalance } from '../../hooks/useUser'
 import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useDiscordAccount } from '../../hooks/useDiscordAccount';
+import ProxyImage from '../ProxyImage.vue';
 
 const props = defineProps<{ balance: PoolBalance }>()
 
@@ -45,11 +46,13 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
         <div class="flex gap-2 items-center justify-between">
 
             <div v-if="balance.pool.pair?.logo" class="w-12 h-12 relative">
-                <img :src="balance.pool.pair.logo" class="w-12 h-12 position" />
+                <ProxyImage :src="balance.pool.pair.logo" :width="50" :height="50" class="w-12 h-12 position" />
             </div>
             <div v-else class="w-12 h-12 relative">
-                <img :src="balance.pool.token0.logo" class="w-8 h-8 position rounded-full absolute left-0" />
-                <img :src="balance.pool.token1.logo" class="w-8 h-8 position rounded-full absolute left-4 top-4" />
+                <ProxyImage :src="balance.pool.token0.logo" :width="50" :height="50"
+                    class="w-8 h-8 position rounded-full absolute left-0" />
+                <ProxyImage :src="balance.pool.token1.logo" :width="50" :height="50"
+                    class="w-8 h-8 position rounded-full absolute left-4 top-4" />
             </div>
             <div class="w-36">
                 <div class="font-bold align-top flex items-center -mb-2 -mt-2">
