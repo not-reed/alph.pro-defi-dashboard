@@ -56,6 +56,21 @@ async function fetchCurrentPrices(addresses: string[]) {
 						"logo",
 						"description",
 						"listed",
+						(eeeb) =>
+							jsonObjectFrom(
+								eeeb
+									.selectFrom("Social")
+									.select([
+										"name",
+										"github",
+										"twitter",
+										"website",
+										"telegram",
+										"medium",
+										"discord",
+									])
+									.whereRef("Token.socialId", "=", "Social.id"),
+							).as("social"),
 					])
 					.whereRef("Token.address", "=", "t.address"),
 			).as("token"),
@@ -109,7 +124,7 @@ app.openapi(route, async (c) => {
 					? {
 							id: binToHex(contractIdFromAddress(price.token.address)),
 							...price.token,
-					  }
+						}
 					: null,
 				price: BigInt(bestPrice?.price || 0), // TODO: calculate average based on liquidity
 				markets: price.markets.map((a) => ({
