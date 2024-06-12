@@ -68,8 +68,19 @@ async function getPaginatedResults(
 	} catch (err) {
 		if (retries < 3) {
 			await wait(250);
-			logger.warn(`Retrying ${url} page ${page} after error`, err);
-			return await getPaginatedResults(url, page, limit, retries + 1);
+			// if it errors, could be issue with our explorer node, so alternate
+			// and retry using public explorer
+			const nextUrl = url.startsWith(config.EXPLORER_URL)
+				? url.replace(
+						config.EXPLORER_URL,
+						"https://backend.mainnet.alephium.org",
+					)
+				: url.replace(
+						"https://backend.mainnet.alephium.org",
+						config.EXPLORER_URL,
+					);
+			logger.warn(`Retrying ${nextUrl} page ${page} after error`, err);
+			return await getPaginatedResults(nextUrl, page, limit, retries + 1);
 		}
 		throw err;
 	}

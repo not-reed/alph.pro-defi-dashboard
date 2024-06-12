@@ -43,7 +43,7 @@ export default {
 	blockFlow: {
 		blockWithEventsFromHash: async (hash: BlockHash): Promise<Block> => {
 			// has to use this URL for backfill...
-			const url = `https://wallet-v20.mainnet.alephium.org/blockflow/blocks-with-events/${hash}`;
+			const url = `https://node.mainnet.alephium.org/blockflow/blocks-with-events/${hash}`;
 			//   const url = `${config.NODE_URL}/blockflow/blocks-with-events/${hash}`;
 			const remainingRequests = await publicLimiter.removeTokens(1);
 			const result = await fetch(url).then((a) => a.json());
@@ -408,14 +408,18 @@ async function fetchBlocksWithEventsFallbackToPublicNode(
 			url,
 		});
 		return await fetchBlocksWithEventsFallbackToPublicNode(
-			"https://wallet-v20.mainnet.alephium.org",
+			"https://node.mainnet.alephium.org",
 			fromTs,
 			toTs,
 		);
 	}
 
-	if (detail) {
-		throw new Error(`BlockFlow.blocksAndEvents: ${detail}`);
+	if (detail?.startsWith("Invalid block")) {
+		return await fetchBlocksWithEventsFallbackToPublicNode(
+			"https://node.mainnet.alephium.org",
+			fromTs,
+			toTs,
+		);
 	}
 
 	// 16 groups, 1 per shard/chain

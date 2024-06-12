@@ -50,7 +50,7 @@ if (config.NODE_API_KEY) {
 }
 
 export async function backfillDeadRare() {
-	// https://wallet-v20.mainnet.alephium.org/events/contract/xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF?start=5328&limit=10
+	// https://node.mainnet.alephium.org/events/contract/xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF?start=5328&limit=10
 	// listed 5328, id: 3444
 
 	// list block: 00000000000178fefc2fc36e677906de931f0d2faf0cf8d8b1aa06347f77aff0
@@ -82,7 +82,7 @@ export async function backfillDeadRare() {
 			CACHE_TIME,
 			async () => {
 				return await fetch(
-					`https://wallet-v20.mainnet.alephium.org/events/contract/xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF?start=${start}&limit=${limit}`,
+					`https://node.mainnet.alephium.org/events/contract/xtUinNqtQyEnZHWqgbWVpvdJbZZTbywh6BM6iNkvEgCF?start=${start}&limit=${limit}`,
 					{
 						method: "GET",
 						//   headers: nodeHeaders,

@@ -618,9 +618,6 @@ app.openapi(v2Route, async (c) => {
 	return c.json({
 		tokens: balances?.tokens.map((t) => ({ ...t, balance: BigInt(t.balance) })),
 		nfts: balances?.nfts.map((n) => {
-			if (!n.nft?.collection) {
-				console.log({ n });
-			}
 			return {
 				...n,
 				balance: BigInt(n.balance),
