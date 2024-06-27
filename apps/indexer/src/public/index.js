@@ -1,67 +1,94 @@
 document.addEventListener("alpine:init", () => {
-  Alpine.store("plugins", {
-    items: [],
+	Alpine.store("plugins", {
+		items: [],
 
-    set(plugins) {
-      this.items = [...plugins];
-    },
+		set(plugins) {
+			this.items = [...plugins];
+		},
 
-    get forDisplay() {
-      const genesis = 1636383299070;
-      const genesisDate = new Date(genesis);
-      const end = new Date();
-      return this.items
-        .map((p) => {
-          const current = new Date(
-            Math.min(new Date(p.timestamp).getTime(), Date.now())
-          );
-          return {
-            status: p.status ? 'Active' : 'Paused',
-            name: p.name,
-            start: genesis, //genesis block
-            // startDate: `${genesisDate.toLocaleDateString()}<br>${genesisDate.toLocaleTimeString()}`,
-            startDate: `${genesisDate.toLocaleString()}`,
-            current: current.getTime(),
-            currentDate: `${current.toLocaleString()}`,
-            // currentDate: `${current.toLocaleDateString()}<br>${current.toLocaleTimeString()}`,
+		get forDisplay() {
+			const genesis = 1636383299070;
+			const genesisDate = new Date(genesis);
+			const end = new Date();
+			return this.items
+				.map((p) => {
+					const current = new Date(
+						Math.min(new Date(p.timestamp).getTime(), Date.now()),
+					);
+					return {
+						status: p.status ? "Active" : "Paused",
+						name: p.name,
+						start: genesis, //genesis block
+						// startDate: `${genesisDate.toLocaleDateString()}<br>${genesisDate.toLocaleTimeString()}`,
+						startDate: `${genesisDate.toLocaleString()}`,
+						current: current.getTime(),
+						currentDate: `${current.toLocaleString()}`,
 
-            end: end.getTime(),
-            endDate: `${end.toLocaleString()}`,
-            // endDate: `${end.toLocaleDateString()}<br>${end.toLocaleTimeString()}`,
-          };
-        })
-        .sort((a, b) => a.status === b.status ? a.name.localeCompare(b.name) : a.status.localeCompare(b.status));
-    },
-  });
+						isBackfilling: current.getTime() - end.getTime() < 1000 * 60 * 5, // 5 minutes
+						// currentDate: `${current.toLocaleDateString()}<br>${current.toLocaleTimeString()}`,
 
-  if (location.pathname === "/") {
-    // initial load
-    fetch(`${location.origin}/api/sse/plugins-poll`).then(a => a.json()).then(a => a.plugins).then(plugins => {
-      Alpine.store("plugins").set(plugins);
-    })
+						end: end.getTime(),
+						endDate: `${end.toLocaleString()}`,
+						// endDate: `${end.toLocaleDateString()}<br>${end.toLocaleTimeString()}`,
+					};
+				})
+				.sort((a, b) => {
+					console.log({ a });
+					if (a.status === b.status) {
+						// console.log(end.getTime() - a.current);
+						// return a.name.localeCompare(b.name);
+						if (!a.isBackfilling && !b.isBackfilling) {
+							return a.name.localeCompare(b.name);
+						}
 
+						if (a.isBackfilling && !b.isBackfilling) {
+							return 1;
+						}
 
-    setInterval(async () => {
-      const {plugins} = await fetch(`${location.origin}/api/sse/plugins-poll`).then(a => a.json())
-      Alpine.store("plugins").set(plugins);
-    }, 1000);
+						if (!a.isBackfilling && b.isBackfilling) {
+							return -1;
+						}
 
-    // SSE is slow here for some reason
-    // const sse = new EventSource(`${location.origin}/api/sse/plugins`);
+						return a.current - b.current;
+					}
 
-    // sse.addEventListener("plugin-status", (e) => {
-    //   Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
-    // });
+					return a.status.localeCompare(b.status);
+				});
+		},
+	});
 
-    // sse.addEventListener("close", (event) => {
-    //   console.log('Received "close" event. Closing connection...');
-    //   sse.close();
-    // });
+	if (location.pathname === "/") {
+		// initial load
+		fetch(`${location.origin}/api/sse/plugins-poll`)
+			.then((a) => a.json())
+			.then((a) => a.plugins)
+			.then((plugins) => {
+				Alpine.store("plugins").set(plugins);
+			});
 
-    // sse.onerror = (error) => {
-    //   console.error("EventSource error:", error);
-    // };
-  }
+		setInterval(async () => {
+			const { plugins } = await fetch(
+				`${location.origin}/api/sse/plugins-poll`,
+			).then((a) => a.json());
+			Alpine.store("plugins").set(plugins);
+		}, 1000);
+
+		// SSE is slow here for some reason
+		// const sse = new EventSource(`${location.origin}/api/sse/plugins`);
+
+		// sse.addEventListener("plugin-status", (e) => {
+		//   Alpine.store("plugins").set(Array.from(JSON.parse(e.data).plugins));
+		// });
+
+		// sse.addEventListener("close", (event) => {
+		//   console.log('Received "close" event. Closing connection...');
+		//   sse.close();
+		// });
+
+		// sse.onerror = (error) => {
+		//   console.error("EventSource error:", error);
+		// };
+	}
 });
 
 // function selfDestruction() {
