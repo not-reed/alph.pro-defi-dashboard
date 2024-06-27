@@ -236,27 +236,35 @@ export class NftPlugin extends Plugin<PluginData> {
 		const rawState = await sdk.fetchState(collection);
 
 		try {
-console.log({ rawState})
 			const state = this.safelyParseState(rawState as NodeState);
-console.log({ state })
 			const rawUri = state.fields.find(
 				(a) => a.name === "collectionUri",
 			)?.value;
 
-			return hexToString(rawUri as string);
+			const str = hexToString(rawUri as string);
+			if (str.startsWith("http") || str.startsWith("data:")) {
+				return str;
+			}
 		} catch {}
 
 		try {
 			const [metadata] = await sdk.fetchNftCollectionMetadata([collection]);
+
 			if (
 				metadata &&
 				typeof metadata === "object" &&
 				"collectionUri" in metadata &&
 				typeof metadata.collectionUri === "string"
 			) {
-				return metadata.collectionUri;
+				if (
+					metadata.collectionUri.startsWith("http") ||
+					metadata.collectionUri.startsWith("data:")
+				) {
+					return metadata.collectionUri;
+				}
 			}
 		} catch {}
+
 		throw new Error(
 			`Unable to fetch collection uri for contract ${collection}`,
 		);
@@ -317,7 +325,6 @@ console.log({ state })
 			// not a Old Asia collection
 		}
 
-
 		try {
 			return sdk.parseState(
 				state as NodeState,
@@ -373,7 +380,7 @@ console.log({ state })
 					JSON.stringify(json),
 					"EX",
 					METADATA_CACHE_TIME,
-				); 
+				);
 			}
 
 			return { raw: json, json };
@@ -385,7 +392,7 @@ console.log({ state })
 					JSON.stringify(text),
 					"EX",
 					METADATA_CACHE_TIME,
-				); 
+				);
 			}
 
 			if (text === "" && response.url.includes("arweave")) {
