@@ -24,7 +24,7 @@ document.addEventListener("alpine:init", () => {
 						current: current.getTime(),
 						currentDate: `${current.toLocaleString()}`,
 
-						isBackfilling: current.getTime() - end.getTime() < 1000 * 60 * 5, // 5 minutes
+						isBackfilling: end.getTime() - current.getTime() > 1000 * 60 * 5, // 5 minutes will be considered realtime for this purpose
 						// currentDate: `${current.toLocaleDateString()}<br>${current.toLocaleTimeString()}`,
 
 						end: end.getTime(),
