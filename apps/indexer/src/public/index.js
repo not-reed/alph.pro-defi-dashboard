@@ -33,20 +33,17 @@ document.addEventListener("alpine:init", () => {
 					};
 				})
 				.sort((a, b) => {
-					console.log({ a });
 					if (a.status === b.status) {
-						// console.log(end.getTime() - a.current);
-						// return a.name.localeCompare(b.name);
 						if (!a.isBackfilling && !b.isBackfilling) {
 							return a.name.localeCompare(b.name);
 						}
 
 						if (a.isBackfilling && !b.isBackfilling) {
-							return 1;
+							return -1;
 						}
 
 						if (!a.isBackfilling && b.isBackfilling) {
-							return -1;
+							return 1;
 						}
 
 						return a.current - b.current;
