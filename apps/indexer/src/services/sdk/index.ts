@@ -376,8 +376,6 @@ export default {
 			}),
 		);
 
-		// console.log({ transactions: transactions.flat() });
-
 		const transactionMap = new Map(
 			transactions.flat().map((t) => [t.transactionHash, t]),
 		);
@@ -398,11 +396,6 @@ export default {
 					block.blockHash ===
 						"00000000000306722ee145304ec09640853895bcb4c01974d5211019e40dd7f0"
 				) {
-					console.log({
-						tx,
-						transaction: transactionMap.get(tx.transactionHash),
-						block: block.blockHash,
-					});
 					continue;
 				}
 				if (tx.inputs.length) {
@@ -424,11 +417,6 @@ export default {
 							continue;
 						}
 						missedTransactions.add(tx.transactionHash);
-						console.log({
-							tx,
-							transaction: transactionMap.get(tx.transactionHash),
-							block: block.blockHash,
-						});
 						throw new Error(
 							`Missing transaction from explorer, getBlocksFromHash, must retry ${
 								block.timestamp
@@ -442,22 +430,6 @@ export default {
 					);
 
 					if (tx.inputs.length !== alphInputs.length) {
-						console.log({
-							tx,
-							transaction: transactionMap.get(tx.transactionHash),
-							block: block.blockHash,
-							t: [
-								"4fff51665e47336c941f3941ce71510609b70d8992a3d9fe253b05a15de5c6e6",
-								"0d28f5e2ee99f9e5d69bf392fc64c95bdbbed356e8babb83ce2103be1c8f75b9",
-								"b8d5506149aab96ef0b2e3641e51a4a30c4472e8eafefa0d6efeb65a9d7b5ed0",
-								"aaf4b96cbcb5ba1e9fef9ed043cbd4551d948dd1abac55b07b3971b3ab59cfdc",
-								"a7d4be8d089c211d3806f8e5877b5c2de58a1ebd172a1fbaaeb65dd3db8d4adb",
-								"9fa84938144a187d01da2ac243d0b7f0a2f8000cef246706134cff6050677c94",
-							].includes(tx.transactionHash),
-							b:
-								block.blockHash ===
-								"00000000000306722ee145304ec09640853895bcb4c01974d5211019e40dd7f0",
-						});
 						missedTransactions.add(tx.transactionHash);
 						logger.debug(
 							`Missing transaction inputs details, (1) aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`,
@@ -578,7 +550,6 @@ export default {
 
 					transactionMap.set(tx.transactionHash, found);
 					if (!found) {
-						console.log({ tx, found });
 						missedTransactions.add(tx.transactionHash);
 						throw new Error(
 							`Missing transaction from explorer, getBlocksFromTimestamp, must retry ${
@@ -593,7 +564,6 @@ export default {
 					);
 
 					if (tx.inputs.length !== alphInputs.length) {
-						console.log({ found, tx });
 						missedTransactions.add(tx.transactionHash);
 						logger.debug(
 							`Missing transaction inputs details, (3) aborting. ${tx.inputs.length} on node, ${alphInputs.length} on explorer`,
