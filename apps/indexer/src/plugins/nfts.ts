@@ -365,7 +365,6 @@ export class NftPlugin extends Plugin<PluginData> {
 			};
 		}
 		if (response.status !== 200) {
-			console.log(nft);
 			throw new Error(
 				`Invalid response: ${response.status} => ${nft.tokenUri}`,
 			);

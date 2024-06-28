@@ -243,36 +243,36 @@ const { session, loadSession, setLoaded } = useDiscordAccount();
 router.beforeEach(async (to, _from) => {
 	NProgress.start();
 
-	if (to.meta.needsWallet) {
-		const addressParam = Array.isArray(to.params.address)
-			? to.params.address[0]
-			: to.params.address;
+	if (!session?.loaded) {
+		try {
+			await loadSession();
+		} catch {
+			setLoaded();
+		}
+	}
 
-		if (!addressParam && !user.wallet) {
+	if (to.meta.needsWallet) {
+		const addressParams = Array.isArray(to.params.address)
+			? to.params.address
+			: to.params.address.split(",");
+
+		if (!addressParams?.length && !user.wallet) {
 			// no usable wallet in link
 			return "/";
 		}
 
-		if (!addressParam && user.wallet) {
+		if (!addressParams?.length && user.wallet) {
 			// redirect to default wallet
-			await loadBalances(user.wallet);
+			await loadBalances([user.wallet]);
 			return {
 				name: to.name as RouteRecordName,
 				params: { address: user.wallet },
 			};
 		}
 
-		await loadBalances(addressParam);
+		await loadBalances(addressParams);
 
 		// redirect to use users default wallet
-	}
-
-	if (to.meta.needsDiscord && !session?.loaded) {
-		try {
-			await loadSession();
-		} catch {
-			setLoaded();
-		}
 	}
 
 	if (to.meta.needsDiscord && !session?.user?.name) {

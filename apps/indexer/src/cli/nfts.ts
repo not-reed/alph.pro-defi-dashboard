@@ -274,11 +274,9 @@ export async function findUnprocessedNfts() {
 		)
 		.execute()
 		.then((a) => a.map((b) => b.tokenAddress))) as ContractAddress[];
-	// if (unprocessed.length === 0) {
-	// }
+
 	const one = unprocessed[0];
-	// console.log({ one });
-	// return;
+
 	// get parent of above contract
 	const parent = await fetchOrCallback(
 		`${config.EXPLORER_URL}/contracts/${one}/parent`,

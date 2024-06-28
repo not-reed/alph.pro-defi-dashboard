@@ -109,7 +109,6 @@ const addressRoute = createRoute({
 });
 app.openapi(addressRoute, async (c) => {
 	const { address } = c.req.valid("param");
-	console.log({ address });
 	const tokens = await db
 		.selectFrom("Token")
 		.selectAll()

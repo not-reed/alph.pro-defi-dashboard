@@ -30,7 +30,32 @@ function getPoolValue(a: FarmBalance) {
     return 0
 }
 
-const farms = computed(() => Array.from(user.farms).sort((a,b) => {
+const mergedFarms = computed(() => {
+    return Array.from(user.farms.reduce((acc,cur) => {
+        const key = cur.single?.address || cur.pool?.pair?.address
+        if (!key) {
+            console.warn(`Missing Farm for user ${cur.userAddress}`)
+            return acc;
+        }
+        
+        const prev = acc.get(key)
+
+        if (prev) {
+            prev.balance += cur.balance
+            acc.set(key, prev)
+        } else {
+            acc.set(key, {
+                ...cur,
+                balance: cur.balance,
+                userAddress: '', // merged positions, so no userAddress available
+            })
+        }
+        
+        return acc;
+    }, new Map<string, typeof user.farms[number]>()).values())
+})
+
+const farms = computed(() => Array.from(mergedFarms.value).sort((a,b) => {
     const aValue = getPoolValue(a)
     const bValue = getPoolValue(b)
     return bValue - aValue

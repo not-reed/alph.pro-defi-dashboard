@@ -42,20 +42,10 @@ export default {
 	},
 	blockFlow: {
 		blockWithEventsFromHash: async (hash: BlockHash): Promise<Block> => {
-			// has to use this URL for backfill...
-			const url = `https://node.mainnet.alephium.org/blockflow/blocks-with-events/${hash}`;
-			//   const url = `${config.NODE_URL}/blockflow/blocks-with-events/${hash}`;
+			const url = `${config.NODE_URL}/blockflow/blocks-with-events/${hash}`;
 			const remainingRequests = await publicLimiter.removeTokens(1);
 			const result = await fetch(url).then((a) => a.json());
-			//   const result = await fetch(url, { headers }).then((a) => a.json());
-			if (
-				[
-					"00000000000306722ee145304ec09640853895bcb4c01974d5211019e40dd7f0",
-					"000000000001941a40052289f0c2920a4d443b0e7cdfb0191c6498cb329b8740",
-				].includes(hash)
-			) {
-				console.log(result);
-			}
+
 			return {
 				blockHash: result.block.hash as BlockHash,
 				timestamp: result.block.timestamp as number,

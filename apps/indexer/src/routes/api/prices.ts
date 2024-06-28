@@ -138,7 +138,6 @@ app.openapi(route, async (c) => {
 });
 import { env } from "hono/adapter";
 app.get("/fiat", async (c) => {
-	console.log({ env: env(c)["AUTH_URL"] });
 	return c.json({
 		currency: await db
 			.selectFrom("FiatExchange")

@@ -60,7 +60,6 @@ function authHandler(): MiddlewareHandler {
 		if (!config.secret) {
 			throw new HTTPException(500, { message: "Missing AUTH_SECRET" });
 		}
-		console.log("beep boop");
 		const res = await Auth(reqWithEnvUrl(c.req.raw, env(c).AUTH_URL), config);
 		return new Response(res.body, res);
 	};

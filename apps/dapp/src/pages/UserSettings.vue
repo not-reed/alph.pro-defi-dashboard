@@ -4,8 +4,7 @@ import { ExclamationCircleIcon } from '@heroicons/vue/24/solid';
 import { AlephiumConnect, useAccount, useConnect } from '@alphpro/web3-vue'
 import { computed, onMounted, ref } from 'vue';
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
-import { useUser } from '../hooks/useUser';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import {
     TransitionRoot,
     TransitionChild,
@@ -29,14 +28,11 @@ function openModal() {
     isOpen.value = true
 }
 
-const { setWallet } = useUser()
 const { onConnect } = useConnect();
 const { account } = useAccount()
 const router = useRouter()
 
 onConnect(() => closeModal())
-
-
 
 const { saveUnverifiedWallet, deleteWallet, refreshWallets, wallets, tipBotAddress, setTipBotAddress, signWallet, signOut } = useDiscordAccount()
 
@@ -49,11 +45,6 @@ onMounted(async () => {
     await refreshWallets()
 })
 
-
-async function viewWallet(address: string) {
-    setWallet(address)
-    await router.push(`/portfolio/overview/${address}`)
-}
 const inputWallet = ref('')
 async function saveWallet() {
     await saveUnverifiedWallet(inputWallet.value)
@@ -70,8 +61,16 @@ const activeAccountIsVerified = computed(() => {
     return wallets.value.some(a => a.address === account.address && a.verified)
 })
 
-
 const { mode, nextTheme } = useDarkMode()
+
+const includeNftValue = computed({
+  get() {
+    return localStorage.getItem("includeNftValue") !== 'false'
+  },
+  set(newValue) {
+    localStorage.setItem('includeNftValue', newValue.toString())
+  }
+})
 </script>
 
 <template>
@@ -97,6 +96,14 @@ const { mode, nextTheme } = useDarkMode()
                     <MoonIcon v-if="mode === 'dark'" class="w-6 h-6" />
                     <ComputerDesktopIcon v-if="mode === 'system'" class="w-6 h-6" />
                 </div>
+            </div>
+
+            <div>
+                <label class="flex items-center gap-2">
+                    <span class="opacity-50">Include NFT's in NetWorth</span>
+                    <input type="checkbox" v-model="includeNftValue"
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                </label>
             </div>
 
 
@@ -160,15 +167,15 @@ const { mode, nextTheme } = useDarkMode()
 
                 <li v-for="wallet in wallets" :key="wallet.address" class="grid grid-cols-2 gap-2">
                     <div class="flex items-center justify-start">
-                        <button @click="viewWallet(wallet.address)"
+                        <RouterLink :to="`/portfolio/overview/${wallet.address}`"
                             class="hover:underline cursor-pointer hidden md:inline-flex text-left">
                             {{ truncateAddress(wallet.address) }}
-                        </button>
+                        </RouterLink>
 
-                        <button @click="viewWallet(wallet.address)"
+                        <RouterLink :to="`/portfolio/overview/${wallet.address}`"
                             class="hover:underline cursor-pointer md:hidden text-left">
                             {{ truncateAddress(wallet.address, 16) }}
-                        </button>
+                        </RouterLink>
                     </div>
 
                     <div class="flex gap-2 items-center justify-center md:w-64">
