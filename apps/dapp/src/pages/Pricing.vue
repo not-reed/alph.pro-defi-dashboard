@@ -65,22 +65,18 @@ async function signUp() {
                         <li class="flex gap-2 italic font-bold">
                             <CheckBadgeIcon class="h-6 w-6" /> Everything in Free
                         </li>
-
                         <li class="flex gap-2">
                             <CheckBadgeIcon class="h-6 w-6" /> Multiple Wallets
                         </li>
-
                         <li class="flex gap-2">
                             <CheckBadgeIcon class="h-6 w-6" /> All Tokens in Wallet
                         </li>
                         <li class="flex gap-2">
                             <CheckBadgeIcon class="h-6 w-6" /> All NFTs in Wallet
                         </li>
-
                         <li class="flex gap-2">
                             <CheckBadgeIcon class="h-6 w-6" /> Pool Breakdowns
                         </li>
-
                         <li class="flex gap-2">
                             <CheckBadgeIcon class="h-6 w-6" /> Staking Breakdowns
                         </li>

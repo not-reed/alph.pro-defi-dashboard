@@ -302,9 +302,10 @@ watch(route, (route) => {
                                             </div>
                                         </li>
 
-                                        <li v-if="!isActiveSubscription"
-                                            class="bg-calypso-800 rounded shadow p-2 gap-2 flex flex-col">
-                                            Subscribe to Pro to view multiple wallets
+                                        <li v-if="!isActiveSubscription" class="bg-calypso-800 rounded shadow p-2">
+                                            Subscribe to Pro to view multiple wallets.
+                                            <RouterLink to="/pricing" class="italic underline -mt-1 text-calypso-500">
+                                                Pricing</RouterLink>
                                         </li>
                                     </ul>
                                 </div>
