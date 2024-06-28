@@ -29,7 +29,6 @@ onBeforeRouteUpdate(async (to, from) => {
 async function loadActive(address = route.params.address) {
     const results2 = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/tokens/holders/${address}`, { credentials: 'include' }).then(a => a.json())
     updatePrices([results2.holders[0].token.address])
-    console.log({ results2 })
     active.value = {
         holderCount: results2.holders[0].holderCount,
         circulatingSupply: results2.holders[0].circulatingSupply,
@@ -172,7 +171,7 @@ const liquidity = computed(() => {
                             <RouterLink :to="`/portfolio/overview/${holder.userAddress}`"
                                 class="text-calypso-500 cursor-pointer flex items-center justify-start">
                                 <span class="w-28">{{ holder.userAddress.slice(0, 4) }}...{{
-                        holder.userAddress.slice(-4) }}</span>
+                                    holder.userAddress.slice(-4) }}</span>
                                 <span v-if="holder.isContract"
                                     class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span>
                             </RouterLink>

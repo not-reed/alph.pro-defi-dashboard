@@ -27,7 +27,6 @@ async function loadActive(address: string) {
         uri: results2.holders[0].uri,
         holders: results2.holders[0].holders,
     }
-    console.log({ results2 })
 }
 
 const activeHolders = computed(() => Array.from(active?.value.holders.reduce((acc, cur) => {
@@ -104,7 +103,7 @@ const activeHolders = computed(() => Array.from(active?.value.holders.reduce((ac
                                 <RouterLink :to="`/portfolio/overview/${holder.userAddress}`"
                                     class="text-calypso-500 cursor-pointer  flex items-center justify-start">
                                     <span class="w-28">{{ holder.userAddress.slice(0, 4) }}...{{
-                holder.userAddress.slice(-4) }}</span>
+                                        holder.userAddress.slice(-4) }}</span>
                                     <span v-if="holder.isContract"
                                         class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span>
                                 </RouterLink>

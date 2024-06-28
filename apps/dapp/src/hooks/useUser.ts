@@ -1,5 +1,7 @@
 import { reactive } from "vue";
 import { usePrices } from "./usePrices";
+import NProgress from "nprogress";
+import { useDiscordAccount } from "./useDiscordAccount";
 interface Social {
 	name: string;
 	github: string | null;
@@ -152,18 +154,22 @@ function setBalances(balances: RawBalance) {
 	}));
 }
 
-async function loadBalances(wallet: string) {
-	if (!wallet) {
+async function loadBalances(wallets: string[]) {
+	if (!wallets || !wallets.length) {
 		setBalances({ tokens: [], nfts: [], pools: [], farms: [] });
 		return;
 	}
 
 	const { updatePrices } = usePrices();
+	const { isActiveSubscription } = useDiscordAccount();
 	//TODO: if user is logged in with discord, load all saved wallets + connected/requested wallet
 	// if the user is not logged in with discord, only load connected/requested wallet
 
+	const addressQuery = isActiveSubscription?.value ? wallets : [wallets[0]];
+
 	// pass array to make multiple wallets easier later
-	const query = new URLSearchParams({ address: [wallet].join(",") });
+	const query = new URLSearchParams({ address: addressQuery.join(",") });
+
 	const url = `${import.meta.env.VITE_API_ENDPOINT}/api/v2/balances?${query}`;
 	const data = await fetch(url).then((a) => a.json());
 
@@ -193,21 +199,26 @@ async function loadBalances(wallet: string) {
 	setBalances(data);
 }
 
-async function refreshWallet(wallet: string) {
-	const params = new URLSearchParams();
-	params.set("address", wallet);
+async function fixWallet(walletToFix: string, loadedWallets: string[]) {
+	NProgress.start();
+	try {
+		const params = new URLSearchParams();
+		params.set("address", walletToFix);
 
-	const url = `${
-		import.meta.env.VITE_API_ENDPOINT
-	}/api/balances/fix?${params.toString()}`;
+		const url = `${
+			import.meta.env.VITE_API_ENDPOINT
+		}/api/balances/fix?${params.toString()}`;
 
-	const data = await fetch(url, {
-		method: "POST",
-		credentials: "include",
-	}).then((a) => a.json());
+		const data = await fetch(url, {
+			method: "POST",
+			credentials: "include",
+		}).then((a) => a.json());
 
-	if (data.success) {
-		await loadBalances(wallet);
+		if (data.success) {
+			await loadBalances(loadedWallets);
+		}
+	} finally {
+		NProgress.done();
 	}
 }
 
@@ -227,6 +238,6 @@ export function useUser() {
 		setBalances,
 		resetUser,
 		loadBalances,
-		refreshWallet,
+		fixWallet,
 	};
 }

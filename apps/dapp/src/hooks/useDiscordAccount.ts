@@ -100,7 +100,7 @@ async function signOut() {
 	// redirect to home page
 	// update session info
 	await discordSignOut();
-	const y = await loadSession();
+	await loadSession();
 	subscription.expires = null;
 	// TODO: redirect to home page and clear settings
 	// localStorage.clear();
@@ -128,8 +128,6 @@ async function loadSession() {
 		}
 	}
 
-	setLoaded();
-
 	if (session_) {
 		session.expires = session_.expires;
 		session.user = session_.user;
@@ -140,6 +138,8 @@ async function loadSession() {
 		// session.user.email = null;
 		// session.user.image = null;
 	}
+
+	setLoaded();
 	return session_;
 }
 
@@ -147,12 +147,17 @@ async function loadSession() {
  * Wallet Management
  */
 async function refreshWallets() {
-	const response = await fetch(
-		`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`,
-		{ credentials: "include" },
-	).then((a) => a.json());
+	try {
+		const response = await fetch(
+			`${import.meta.env.VITE_API_ENDPOINT}/api/wallets`,
+			{ credentials: "include" },
+		).then((a) => a.json());
 
-	wallets.value = response.wallets;
+		wallets.value = response.wallets;
+	} catch {
+		console.warn("Could not refresh wallets");
+		wallets.value = [];
+	}
 }
 
 async function saveUnverifiedWallet(address: string) {
@@ -195,7 +200,6 @@ async function setTipBotAddress(address: string) {
 			credentials: "include",
 		},
 	).then((a) => a.json());
-	console.log({ resp, address });
 	await refreshWallets();
 }
 

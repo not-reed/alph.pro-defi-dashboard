@@ -92,7 +92,8 @@ const numberFormat = new Intl.NumberFormat("en-US", options);
                                 <div class="opacity-50">{{ farm.pool.token0.symbol}}</div>
                             </div>
                             <div class="leading-3 text-xs flex gap-4 justify-between">
-                                <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}">
+                                <div class="opacity-75" :class="{ ['blur-[1.5px]']: !isActiveSubscription}"
+                                    v-if="token1Balance">
                                     {{numberFormat.format(token1Balance) }}</div>
                                 <div class="opacity-50">{{ farm.pool.token1.symbol}}</div>
                             </div>

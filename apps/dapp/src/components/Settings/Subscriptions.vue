@@ -42,7 +42,7 @@ function handleNewTransaction(txHash: string) {
     })
   }
   function handleFailedTransaction(e: Error) {
-    console.log(e )
+    console.error(e )
     toast.error("Something went wrong. Try again, or reach out if you need support.", {
         onClick: () => window.open("https://twitter.com/AlphDotPro", '_blank')
     })

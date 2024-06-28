@@ -269,7 +269,6 @@ export function KyselyAdapter(db: Kysely<Database>) {
 	const from = isSqlite ? format.from : <T>(x: T) => x as T;
 	return {
 		async createUser(data: NewUser) {
-			console.log({ data });
 			const user = { ...data };
 			const created = await db
 				.insertInto("User")
@@ -305,7 +304,6 @@ export function KyselyAdapter(db: Kysely<Database>) {
 			return from(result);
 		},
 		async updateUser({ id, ...user }: UserUpdate) {
-			console.log({ id, user });
 			const userData = to(user);
 			const query = db
 				.updateTable("User")

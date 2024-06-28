@@ -21,8 +21,31 @@ function getPoolValue(a: PoolBalance) {
     return token0Value + token1Value
 }
 
-const pools = computed(() => Array.from(user.pools).sort((a,b) => {
+const mergedPools = computed(() => {
+    return Array.from(user.pools.reduce((acc,cur) => {
+        
+        if (!cur.pool.pair) {
+            console.warn(`Unknown pair for user: ${cur.userAddress} ... likely ${cur.pool.token0?.symbol}/${cur.pool.token1?.symbol}`)
+            return acc
+        }
+        const prev = acc.get(cur.pool.pair.address)
 
+        if (prev) {
+            prev.balance += cur.balance
+            acc.set(cur.pool.pair.address, prev)
+        } else {
+            acc.set(cur.pool.pair.address, {
+                balance: cur.balance,
+                userAddress: '', // merged positions, so no userAddress available
+                pool: cur.pool
+            })
+        }
+        
+        return acc;
+    }, new Map<string, typeof user.pools[number]>()).values())
+})
+
+const pools = computed(() => Array.from(mergedPools.value).sort((a,b) => {
     const aValue = getPoolValue(a)
     const bValue = getPoolValue(b)
     return bValue - aValue

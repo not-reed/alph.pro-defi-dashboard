@@ -24,8 +24,26 @@ interface PricedToken extends Omit<TokenBalance, "balance"> {
   price: number;
 }
 
+const mergedTokens = computed(() => {
+    return Array.from(user.tokens.reduce((acc,cur) => {
+        const prev = acc.get(cur.token.address)
+
+        if (prev) {
+            prev.balance += cur.balance
+            acc.set(cur.token.address, prev)
+        } else {
+            acc.set(cur.token.address, {
+                balance: cur.balance,
+                userAddress: '', // merged positions, so no userAddress available
+                token: cur.token
+            })
+        }
+        return acc
+    }, new Map<string, typeof user.tokens[number]>()).values())
+})
+
 const pricedTokens = computed(() => {
-  return user.tokens
+  return mergedTokens.value
     .reduce((acc, balance) => {
       if (!balance.token?.listed) {
         return acc;
@@ -51,7 +69,6 @@ const tokens = computed(() => {
     if (isActiveSubscription.value) {
         return pricedTokens.value
     }
-
     return pricedTokens.value.slice(0, 5)
 })
 

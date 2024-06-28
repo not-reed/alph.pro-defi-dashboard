@@ -17,7 +17,7 @@ import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
 import {  useRoute, useRouter } from 'vue-router';
 
-import { ArrowPathIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/24/outline';
+import { ArrowPathIcon, CheckIcon, ChevronUpDownIcon, EyeIcon } from '@heroicons/vue/24/outline';
 import UserTokens from '../../components/UserPanels/UserTokens.vue';
 import UserPools from '../../components/UserPanels/UserPools.vue';
 import UserFarms from '../../components/UserPanels/UserFarms.vue';
@@ -26,7 +26,7 @@ import { getPoolBreakdown } from '../../utils/pools';
 import { useDiscordAccount } from '../../hooks/useDiscordAccount';
 import Clipboard from '../../components/Clipboard.vue';
 
-const { user, refreshWallet} = useUser()
+const { user, fixWallet} = useUser()
 const { currency, format } = useCurrency()
 const route = useRoute()
 const { wallets, isActiveSubscription } = useDiscordAccount()
@@ -38,8 +38,8 @@ const router = useRouter()
   const query = ref('')
   const filteredAddresses = computed(() =>
     query.value === ''
-      ? wallets.value.map(w => w.address)
-      : wallets.value.map(w => w.address).filter((person) => person.toLowerCase().includes(query.value.toLowerCase()))
+      ? Array.from(new Set(wallets.value.map(w => w.address).concat(routeUserAddress.value)))
+      : Array.from(new Set(wallets.value.map(w => w.address).concat(routeUserAddress.value).filter((person) => person.toLowerCase().includes(query.value.toLowerCase()))))
   )
 
 const tokenWorth = computed(() => {
@@ -78,26 +78,43 @@ const nftWorth = computed(() => {
     }, 0)
 })
 
-
-
-
-const netWorth = computed(() => tokenWorth.value + nftWorth.value + lpWorth.value + stakedWorth.value)
+const netWorth = computed(() => {
+    const storedSetting = localStorage.getItem("includeNftValue")
+    if (storedSetting !== 'false') {
+        return tokenWorth.value + nftWorth.value + lpWorth.value + stakedWorth.value
+    }
+    
+    return tokenWorth.value + lpWorth.value + stakedWorth.value
+})
 
 const secondaryCurrencies = computed(() => {
     const options = ['USD', 'ALPH', 'BTC', 'ETH'] as const
     return options.filter(a => a !== currency.value).slice(0, 3)
 })
 
-const routeUserAddress = ref(route.params.address as string)
-const isContract = computed(() => bs58.decode(routeUserAddress.value)[0] === 0x03)
+const routeUserAddress = ref((route.params.address as string).split(','))
+
+function isContract(address: string) {
+    try {
+        if (!address) return false
+        return bs58.decode(address)[0] === 0x03
+    } catch {
+        return false
+    }
+}
 
 function viewWallet(address: string) {
-    router.push(`/portfolio/overview/${address}`)
+    if (isActiveSubscription.value) {
+        router.push(`/portfolio/overview/${address}`)
+    } else {
+        const addresses = address.split(',')
+        router.push(`/portfolio/overview/${addresses[addresses.length - 1]}`)
+    }
 }
 
 
 watch(route, (route) => {
-    routeUserAddress.value = route.params.address as string
+    routeUserAddress.value = (route.params.address as string).split(',')
 })
 
 </script>
@@ -146,87 +163,156 @@ watch(route, (route) => {
             <div
                 class="px-4 py-2 bg-zinc-200 dark:bg-calypso-900 shadow-xl rounded flex flex-col md:items-center justify-between border-b border-b-calypso-800 w-full gap-2">
                 <div class="w-full flex items-center gap-2">
-                    <form @submit.prevent="viewWallet(routeUserAddress)" class="w-full">
-                        <Combobox v-model="routeUserAddress" @update:model-value="viewWallet(routeUserAddress)"
-                            name="userAddress" class="w-full" readonly>
-                            <div class="relative mt-1">
+                    <form @submit.prevent="viewWallet(routeUserAddress.join(','))" class="w-full">
+                        <Combobox v-model="routeUserAddress" multiple
+                            @update:model-value="viewWallet(routeUserAddress.join(','))" name="userAddress"
+                            class="w-full" readonly>
+                            <div class="relative mt-1 flex gap-2 flex-col">
                                 <div
                                     class="relative w-full cursor-default overflow-hidden rounded-lg bg-zinc-200 dark:bg-calypso-900  text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-
                                     <ComboboxInput
                                         class="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 focus:ring-0 dark:bg-calypso-800"
-                                        @keyDown.enter="viewWallet(query)"
-                                        :displayValue="() => truncateAddress(routeUserAddress, 50)"
-                                        @change="query = $event.target.value" />
+                                        @keyDown.enter="viewWallet(query)" @change="query = $event.target.value" />
 
                                     <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
                                         <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
                                     </ComboboxButton>
                                 </div>
+                                <div>
+                                    <TransitionRoot leave="transition ease-in duration-100" leaveFrom="opacity-100"
+                                        leaveTo="opacity-0" @after-leave="query = ''">
+                                        <ComboboxOptions
+                                            class="absolute z-10 max-h-60 w-full overflow-auto rounded-md bg-zinc-200 dark:bg-calypso-900 py-1  shadow-lg  focus:outline-none sm:text-sm">
 
-                                <TransitionRoot leave="transition ease-in duration-100" leaveFrom="opacity-100"
-                                    leaveTo="opacity-0" @after-leave="query = ''">
-                                    <ComboboxOptions
-                                        class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-zinc-200 dark:bg-calypso-900 py-1  shadow-lg  focus:outline-none sm:text-sm">
+                                            <ComboboxOption v-for="person in filteredAddresses" as="template"
+                                                :key="person" v-if="isActiveSubscription" :value="person"
+                                                v-slot="{ selected, active }">
+                                                <li class="relative cursor-default select-none py-2 pl-10 pr-4"
+                                                    :class="{ 'bg-teal-600 text-white': active, 'text-gray-900': !active }">
+                                                    <span class="block truncate text-calypso-400"
+                                                        :class="{ 'font-medium': selected, 'font-normal': !selected }">
+                                                        {{ person }}
+                                                    </span>
+                                                    <span v-if="selected"
+                                                        class="absolute inset-y-0 left-0 flex items-center pl-3"
+                                                        :class="{ 'text-white': active, 'text-teal-600': !active }">
+                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                    </span>
+                                                </li>
+                                            </ComboboxOption>
+                                            <ComboboxOption as="template" :value="query" v-slot="{ selected, active }"
+                                                v-if="!filteredAddresses.some(a => a === (query || routeUserAddress)) && query">
+                                                <li class="relative cursor-default select-none py-2 pl-10 pr-4"
+                                                    :class="{ 'bg-zinc-300 dark:bg-calypso-700 text-zinc-700': active, 'text-gray-900': !active }">
+                                                    <span class="block truncate dark:text-calypso-400"
+                                                        :class="{ 'font-medium': selected, 'font-normal': !selected }">
+                                                        {{ query }}
+                                                    </span>
+                                                    <span v-if="selected"
+                                                        class="absolute inset-y-0 left-0 flex items-center pl-3"
+                                                        :class="{ 'text-white': active, 'text-teal-600': !active }">
+                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                    </span>
+                                                </li>
+                                            </ComboboxOption>
+                                        </ComboboxOptions>
+                                    </TransitionRoot>
 
-                                        <ComboboxOption v-for="person in filteredAddresses" as="template" :key="person"
-                                            v-if="isActiveSubscription" :value="person" v-slot="{ selected, active }">
-                                            <li class="relative cursor-default select-none py-2 pl-10 pr-4"
-                                                :class="{ 'bg-teal-600 text-white': active, 'text-gray-900': !active }">
-                                                <span class="block truncate text-calypso-400"
-                                                    :class="{ 'font-medium': selected, 'font-normal': !selected }">
-                                                    {{ person }}
-                                                </span>
-                                                <span v-if="selected"
-                                                    class="absolute inset-y-0 left-0 flex items-center pl-3"
-                                                    :class="{ 'text-white': active, 'text-teal-600': !active }">
-                                                    <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                                </span>
-                                            </li>
-                                        </ComboboxOption>
-                                        <ComboboxOption as="template" :value="query" v-slot="{ selected, active }"
-                                            v-if="!filteredAddresses.some(a => a === (query || routeUserAddress))">
-                                            <li class="relative cursor-default select-none py-2 pl-10 pr-4"
-                                                :class="{ 'bg-zinc-300 dark:bg-calypso-700 text-zinc-700': active, 'text-gray-900': !active }">
-                                                <span class="block truncate dark:text-calypso-400"
-                                                    :class="{ 'font-medium': selected, 'font-normal': !selected }">
-                                                    {{ query || routeUserAddress }}
-                                                </span>
-                                                <span v-if="selected"
-                                                    class="absolute inset-y-0 left-0 flex items-center pl-3"
-                                                    :class="{ 'text-white': active, 'text-teal-600': !active }">
-                                                    <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                                </span>
-                                            </li>
-                                        </ComboboxOption>
-                                    </ComboboxOptions>
-                                </TransitionRoot>
+                                    <ul class="grid md:grid-cols-2 gap-2">
+                                        <!-- Active subscriptions get multi wallet support -->
+                                        <li v-for="address in routeUserAddress" v-if="isActiveSubscription"
+                                            class="bg-zinc-100 dark:bg-calypso-800 rounded shadow p-2 gap-2 flex flex-col">
+                                            <div class="flex justify-between items-center">
+                                                <div class="font-mono">{{ truncateAddress(address, 18) }}</div>
+                                                <div class="flex items-center gap-2">
+                                                    <RouterLink :to="`/portfolio/overview/${address}`">
+                                                        <EyeIcon
+                                                            class="h-6 w-6 text-calypso-500 hover:text-calypso-600 transition" />
+                                                    </RouterLink>
+                                                    <Clipboard :text="address"
+                                                        class="h-6 w-6 relative text-calypso-500 hover:text-calypso-600 transition" />
+
+                                                    <button @click="() => fixWallet(address, routeUserAddress)">
+                                                        <ArrowPathIcon class="h-4 w-4 text-calypso-500" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex gap-4 justify-between w-full">
+                                                <div class="flex gap-4">
+                                                    <ExternalLink
+                                                        :href="`https://explorer.alephium.org/addresses/${address}`"
+                                                        class="">
+                                                        Explorer
+                                                    </ExternalLink>
+
+                                                    <ExternalLink :href="`https://deadrare.io/account/${address}`"
+                                                        class="">
+                                                        DeadRare
+                                                    </ExternalLink>
+                                                </div>
+
+                                                <div v-if="isContract(address)"
+                                                    class="bg-calypso-900 text-xs p-1 flex items-center justify-center w-14 rounded-lg">
+                                                    Contract</div>
+
+                                            </div>
+                                        </li>
+
+                                        <!-- Free users get single wallet -->
+                                        <li v-if="!isActiveSubscription"
+                                            class="bg-calypso-800 rounded shadow p-2 gap-2 flex flex-col">
+                                            <div class="flex justify-between items-center">
+                                                <div class="font-mono">{{ truncateAddress(routeUserAddress[0], 18) }}
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <RouterLink :to="`/portfolio/overview/${routeUserAddress[0]}`">
+                                                        <EyeIcon
+                                                            class="h-6 w-6 text-calypso-500 hover:text-calypso-600 transition" />
+                                                    </RouterLink>
+                                                    <Clipboard :text="routeUserAddress[0]"
+                                                        class="h-6 w-6 relative text-calypso-500 hover:text-calypso-600 transition" />
+
+                                                    <button
+                                                        @click="() => fixWallet(routeUserAddress[0], routeUserAddress)">
+                                                        <ArrowPathIcon class="h-4 w-4 text-calypso-500" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex gap-4 justify-between w-full">
+                                                <div class="flex gap-4">
+                                                    <ExternalLink
+                                                        :href="`https://explorer.alephium.org/addresses/${routeUserAddress[0]}`"
+                                                        class="">
+                                                        Explorer
+                                                    </ExternalLink>
+
+                                                    <ExternalLink
+                                                        :href="`https://deadrare.io/account/${routeUserAddress[0]}`"
+                                                        class="">
+                                                        DeadRare
+                                                    </ExternalLink>
+                                                </div>
+
+                                                <div v-if="isContract(routeUserAddress[0])"
+                                                    class="bg-calypso-900 text-xs p-1 flex items-center justify-center w-14 rounded-lg">
+                                                    Contract</div>
+
+                                            </div>
+                                        </li>
+
+                                        <li v-if="!isActiveSubscription"
+                                            class="bg-calypso-800 rounded shadow p-2 gap-2 flex flex-col">
+                                            Subscribe to Pro to view multiple wallets
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </Combobox>
                     </form>
 
-                    <Clipboard :text="routeUserAddress"
-                        class="h-6 w-6 relative text-calypso-500 hover:text-calypso-600 transition" />
 
-                    <button @click="() => refreshWallet(routeUserAddress)">
-                        <ArrowPathIcon class="h-4 w-4 text-calypso-500" />
-                    </button>
-                </div>
-
-                <div class="flex gap-4 justify-between w-full">
-                    <span v-if="isContract"
-                        class="bg-calypso-800 text-xs px-1 py-px flex items-center justify-center w-14 rounded-lg">Contract</span>
-
-
-                    <div class="flex gap-4">
-                        <ExternalLink :href="`https://explorer.alephium.org/addresses/${routeUserAddress}`" class="">
-                            Explorer
-                        </ExternalLink>
-
-                        <ExternalLink :href="`https://deadrare.io/account/${routeUserAddress}`" class="">
-                            DeadRare
-                        </ExternalLink>
-                    </div>
                 </div>
             </div>
         </div>
