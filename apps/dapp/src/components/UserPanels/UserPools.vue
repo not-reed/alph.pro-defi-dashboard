@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { type PoolBalance, useUser } from '../../hooks/useUser';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
-import UserPool from './UserPool.vue';
 import { computed } from 'vue';
-import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
+import { usePrices } from '../../hooks/usePrices';
+import { type PoolBalance, useUser } from '../../hooks/useUser';
+import UserPool from './UserPool.vue';
 
 const { format } = useCurrency()
 const { user } = useUser()

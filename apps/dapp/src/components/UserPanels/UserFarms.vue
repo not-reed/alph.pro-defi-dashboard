@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { type FarmBalance, useUser  } from '../../hooks/useUser'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
-import UserFarm from './UserFarm.vue';
 import { computed } from 'vue';
-import { usePrices } from '../../hooks/usePrices';
 import { useCurrency } from '../../hooks/useCurrency';
+import { usePrices } from '../../hooks/usePrices';
+import { type FarmBalance, useUser  } from '../../hooks/useUser'
+import UserFarm from './UserFarm.vue';
 
 const { format } = useCurrency()
 const { user } = useUser()
@@ -17,14 +17,14 @@ function getPoolValue(a: FarmBalance) {
         const poolShare = Number(a.balance) / Number(a.pool.totalSupply)
         const token0Balance = Number(a.pool.amount0 / 10n ** BigInt(a.pool.token0.decimals)) * poolShare
         const token1Balance = Number(a.pool.amount1 / 10n ** BigInt(a.pool.token1.decimals)) * poolShare
-        const token0Value = token0Balance * prices[a.pool.token0.address]
-        const token1Value = token1Balance * prices[a.pool.token1.address]
+        const token0Value = token0Balance * (prices[a.pool.token0.address] || 0)
+        const token1Value = token1Balance * (prices[a.pool.token1.address] || 0)
         return token0Value + token1Value
     }
 
     if (a.single) {
         const b = Number(a.balance) / 10 ** a.single.decimals
-        return b * prices[a.single.address]
+        return b * (prices[a.single.address] || 0)
     }
 
     return 0

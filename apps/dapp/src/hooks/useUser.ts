@@ -1,7 +1,7 @@
-import { reactive } from "vue";
-import { usePrices } from "./usePrices";
 import NProgress from "nprogress";
+import { reactive } from "vue";
 import { useDiscordAccount } from "./useDiscordAccount";
+import { usePrices } from "./usePrices";
 interface Social {
 	name: string;
 	github: string | null;
@@ -172,7 +172,6 @@ async function loadBalances(wallets: string[]) {
 
 	const url = `${import.meta.env.VITE_API_ENDPOINT}/api/v2/balances?${query}`;
 	const data = await fetch(url).then((a) => a.json());
-
 	const tokens = data.tokens
 		.reduce(
 			(acc: string[], balance: TokenBalance) =>
@@ -191,7 +190,7 @@ async function loadBalances(wallets: string[]) {
 				if (f.pool) {
 					return acc.concat(f.pool.token0.address, f.pool.token1.address);
 				}
-				return f.single.address;
+				return acc.concat(f.single.address);
 			}, []),
 		);
 

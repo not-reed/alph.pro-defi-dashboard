@@ -1,14 +1,14 @@
+import NProgress from "nprogress";
 import {
+	type RouteRecordName,
 	type RouteRecordRaw,
 	createRouter,
 	createWebHistory,
-	type RouteRecordName,
 } from "vue-router";
-import NProgress from "nprogress";
-import type { icons } from "./utils/icons";
-import { useUser } from "./hooks/useUser";
 import { useDiscordAccount } from "./hooks/useDiscordAccount";
+import { useUser } from "./hooks/useUser";
 import Api from "./pages/Api.vue";
+import type { icons } from "./utils/icons";
 
 const { loadBalances, user } = useUser();
 declare module "vue-router" {
@@ -195,6 +195,11 @@ export const routes = [
 		name: "More",
 		component: () => import("./pages/PageShell.vue"),
 		children: [
+			{
+				path: "https://snacks.alph.pro",
+				name: "Snacks!",
+				component: () => import("./pages/Home.vue"),
+			},
 			{
 				path: "https://twitter.com/alphdotpro",
 				name: "Twitter",

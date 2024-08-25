@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import {
     Combobox,
-    ComboboxInput,
-    ComboboxOptions,
-    ComboboxOption,
     ComboboxButton,
+    ComboboxInput,
+    ComboboxOption,
+    ComboboxOptions,
     TransitionRoot
   } from '@headlessui/vue'
-import { type TokenBalance, useUser, type PoolBalance, type FarmBalance, type NftBalance } from '../../hooks/useUser';
-import { usePrices } from '../../hooks/usePrices';
+import { computed, ref, watch } from 'vue';
 import { useCurrency } from '../../hooks/useCurrency';
+import { usePrices } from '../../hooks/usePrices';
+import { type FarmBalance, type NftBalance, type PoolBalance, type TokenBalance, useUser } from '../../hooks/useUser';
 
 import { bs58 } from '@alephium/web3';
+import {  useRoute, useRouter } from 'vue-router';
 import ExternalLink from '../../components/ExternalLink.vue';
 import { truncateAddress } from '../../utils/addresses';
-import {  useRoute, useRouter } from 'vue-router';
 
 import { ArrowPathIcon, CheckIcon, ChevronUpDownIcon, EyeIcon } from '@heroicons/vue/24/outline';
-import UserTokens from '../../components/UserPanels/UserTokens.vue';
-import UserPools from '../../components/UserPanels/UserPools.vue';
+import Clipboard from '../../components/Clipboard.vue';
 import UserFarms from '../../components/UserPanels/UserFarms.vue';
 import UserNfts from '../../components/UserPanels/UserNfts.vue';
-import { getPoolBreakdown } from '../../utils/pools';
+import UserPools from '../../components/UserPanels/UserPools.vue';
+import UserTokens from '../../components/UserPanels/UserTokens.vue';
 import { useDiscordAccount } from '../../hooks/useDiscordAccount';
-import Clipboard from '../../components/Clipboard.vue';
+import { getPoolBreakdown } from '../../utils/pools';
 
 const { user, fixWallet} = useUser()
 const { currency, format } = useCurrency()
@@ -61,13 +61,15 @@ const stakedWorth = computed(() => {
     return user.farms.reduce((acc: number, farm: FarmBalance) => {
         if (farm.pool) {
             const { token0Balance, token1Balance } = getPoolBreakdown(farm)
-            return acc
+            const poolValue = acc
             + token0Balance * prices[farm.pool.token0.address]
             + token1Balance * prices[farm.pool.token1.address]
+            return poolValue
         }
 
         const balance = Number(farm.balance) / 10 ** farm.single.decimals
-        return balance * prices[farm.single.address]
+        const singleValue = balance * prices[farm.single.address]
+        return acc + singleValue
     }, 0)
 })
 

@@ -28,11 +28,15 @@ async function updateAllPrices() {
 
 setInterval(updateAllPrices, 1000 * 30);
 
-async function updatePrices(tokenAddresses: string[]) {
-	if (!tokenAddresses.length) {
+async function updatePrices(_newTokenAddresses: string[]) {
+	const allTokens = Array.from(
+		new Set([...Object.keys(tokens), ..._newTokenAddresses]),
+	);
+
+	if (!allTokens.length) {
 		return;
 	}
-	const query = new URLSearchParams({ address: [tokenAddresses].join(",") });
+	const query = new URLSearchParams({ address: allTokens.join(",") });
 	const url = `${import.meta.env.VITE_API_ENDPOINT}/api/prices?${query}`;
 	const data = await fetch(url).then((a) => a.json());
 
