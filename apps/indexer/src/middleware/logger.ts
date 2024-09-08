@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import { createMiddleware } from "hono/factory";
 import { type Logger, pino } from "pino";
+import { config } from "../config";
 import { HEADER_REQUEST_ID } from "./request-id";
 
 // https://github.com/honojs/hono/blob/main/src/utils/url.ts
@@ -80,7 +81,11 @@ function log(
 	}
 }
 
-export const logger = (logger = pino()) => {
+export const logger = (
+	logger = pino({
+		level: config.LOG_LEVEL,
+	}),
+) => {
 	const child = logger.child({ module: "http request" });
 	return createMiddleware(async (c, next) => {
 		const { method } = c.req;

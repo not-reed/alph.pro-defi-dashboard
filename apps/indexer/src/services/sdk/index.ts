@@ -1,22 +1,22 @@
-import { ALPH_ADDRESS, MAX_DURATION } from "../../core/constants";
-import type { Block } from "./types/block";
-import type { Block as NodeBlock } from "../node/types/blocks";
-import nodeService from "../node";
-import explorerService from "../explorer";
+import { addressFromTokenId } from "@alephium/web3";
 import DataLoader from "dataloader";
+import { ALPH_ADDRESS, MAX_DURATION } from "../../core/constants";
+import { chunkArray } from "../../utils/arrays";
+import type { Artifact } from "../common/types/artifact";
 import type {
 	BlockHash,
 	ContractAddress,
 	FieldType,
 	UserAddress,
 } from "../common/types/brands";
+import { parseValue } from "../common/types/fields";
+import explorerService from "../explorer";
 import type { ExplorerTransaction } from "../explorer/types/transactions";
 import { logger } from "../logger";
-import { chunkArray } from "../../utils/arrays";
-import type { Artifact } from "../common/types/artifact";
-import { parseValue } from "../common/types/fields";
-import { addressFromTokenId } from "@alephium/web3";
+import nodeService from "../node";
+import type { Block as NodeBlock } from "../node/types/blocks";
 import type { NodeState } from "../node/types/state";
+import type { Block } from "./types/block";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const timeoutMap = new Map<BlockHash, number>();
 const transactionMap = new Map<BlockHash, ExplorerTransaction[]>();
@@ -172,13 +172,14 @@ const basicBlockDataLoader = new DataLoader<
 	const results = await Promise.all(
 		timestamps.map(async (hash) => {
 			const [from, to] = hash.split("-").map(Number);
-			const cached = blockMap.get(`${from}-${to}`);
+			const key = `${from}-${to}` as const;
+			const cached = blockMap.get(key);
 			if (cached) {
 				cachedCounter++;
 				return cached;
 			}
 			const blocks = await nodeService.blockFlow.blocksWithEvents(from, to);
-			blockMap.set(`${from}-${to}`, blocks);
+			blockMap.set(key, blocks);
 			return blocks;
 		}),
 	);
@@ -581,7 +582,6 @@ export default {
 				}
 			}
 		}
-
 		return flatBlocks
 			.map((b) => {
 				return {

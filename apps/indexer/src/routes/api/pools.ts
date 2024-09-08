@@ -1,8 +1,8 @@
-import type { Env, Schema } from "hono";
-import { db } from "../../database/db";
 import { binToHex, contractIdFromAddress } from "@alephium/web3";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import type { Env, Schema } from "hono";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { db } from "../../database/db";
 import { TokenSchema } from "../schemas/token";
 
 const app = new OpenAPIHono<Env, Schema, "/api/pools">();
@@ -121,21 +121,21 @@ app.openapi(poolsRoute, async (c) => {
 				? {
 						...t.pair,
 						id: binToHex(contractIdFromAddress(t.pair.address)),
-				  }
+					}
 				: null;
 
 			const token0 = t.token0
 				? {
 						...t.token0,
 						id: binToHex(contractIdFromAddress(t.token0.address)),
-				  }
+					}
 				: null;
 
 			const token1 = t.token1
 				? {
 						...t.token1,
 						id: binToHex(contractIdFromAddress(t.token1.address)),
-				  }
+					}
 				: null;
 			return {
 				...t,
@@ -146,6 +146,39 @@ app.openapi(poolsRoute, async (c) => {
 			};
 		}),
 	});
+});
+
+const topPoolsRoute = createRoute({
+	method: "get",
+	tags: ["Pools"],
+	path: "top",
+	request: {},
+	responses: {
+		200: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						pools: z.array(
+							z.object({
+								factory: z.string(),
+								amount0: z.string().nullable(),
+								amount1: z.string().nullable(),
+								totalSupply: z.string().nullable(),
+								pair: TokenSchema,
+								token0: TokenSchema,
+								token1: TokenSchema,
+							}),
+						),
+					}),
+				},
+			},
+			description: "Fetch matching tokens",
+		},
+	},
+});
+
+app.openapi(topPoolsRoute, async (c) => {
+	return [];
 });
 
 export default app;

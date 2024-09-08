@@ -21,7 +21,6 @@ export const IndexerStatus: FC = () => {
 								"_",
 							)}]': !plugin.isBackfilling || plugin.status !== 'Active' }`}
 							style={`background: ${theme.calypso["800"]}`}
-							x-bind:style="plugin.isBackfilling && plugin.status === 'Active' ?  "
 						>
 							<div x-text="plugin.name" class="font-bold uppercase" />
 							<div class="flex gap-4">

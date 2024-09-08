@@ -1,11 +1,11 @@
 import { Hono, type Schema } from "hono";
 import { cors } from "hono/cors";
 import type { Swagger } from "atlassian-openapi";
-import { swaggerUI } from "@hono/swagger-ui";
+import { SwaggerUI, swaggerUI } from "@hono/swagger-ui";
 import { isErrorResult, merge, type MergeInput } from "openapi-merge";
 import { logger } from "../services/logger";
 import type { AuthUser, AuthConfig } from "@hono/auth-js";
-import { join } from "path";
+
 // indexer routes
 import status from "./api/status";
 import sse from "./api/sse";
@@ -23,7 +23,9 @@ import web3 from "./api/web3";
 import utils from "./api/utils";
 import swaps from "./api/swaps";
 import bot from "./api/bot";
-import { showRoutes } from "hono/dev";
+import {
+	trimTrailingSlash,
+  } from 'hono/trailing-slash'
 
 const app = new Hono<
 	{ Variables: { authUser: AuthUser; authConfig: AuthConfig } },
@@ -31,6 +33,7 @@ const app = new Hono<
 	"/api"
 >();
 
+app.use(trimTrailingSlash())
 app.route("/status", status);
 app.route("/sse", sse);
 
@@ -71,7 +74,24 @@ app.get("/docs.json", async (c) => {
 
 	return c.json(mergeResult.output);
 });
-app.get("/docs", swaggerUI({ url: "/api/docs.json" }));
+app.get("/docs", c => {
+	return c.html(`
+		<html lang="en">
+		  <head>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1" />
+			<meta name="description" content="Custom Swagger" />
+			<title>Custom Swagger</title>
+			<script>
+			window.addEventListener("load", function forceSwagger() {
+				window.ui = SwaggerUIBundle({ dom_id: '#swagger-ui',url: '/api/docs.json' })
+			})
+			</script>
+			</head>
+			${SwaggerUI({ url: '/api/doc.json' })}
+		</html>
+	  `)
+});
 
 const corsOptions = cors({
 	credentials: true,

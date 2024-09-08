@@ -1,12 +1,12 @@
 import chalk from "chalk";
+import { GENESIS_TS, MAX_DURATION } from "../core/constants";
 import {
 	autoLoadPluginsFromFolder,
 	filterUnprocessedBlocks,
 } from "../core/utils";
-import sdk from "../services/sdk";
 import { db } from "../database/db";
-import { GENESIS_TS, MAX_DURATION } from "../core/constants";
 import { findPlugins } from "../database/services/plugin";
+import sdk from "../services/sdk";
 
 const rawPlugins = await autoLoadPluginsFromFolder();
 const pluginState = await findPlugins();

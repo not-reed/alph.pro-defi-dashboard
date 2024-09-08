@@ -1,20 +1,20 @@
 import { config } from "../../config";
-import type { Block } from "../node/types/blocks";
 import type {
 	BlockHash,
 	ChainId,
 	ContractAddress,
 	TransactionHash,
 } from "../common/types/brands";
+import type { Block } from "../node/types/blocks";
 import type { BlockEvent } from "../node/types/events";
 
 import type { NodeTransaction } from "../node/types/transactions";
 
-import { mapRawInputToTokenBalance } from "../common/utils/token";
+import { RateLimiter } from "limiter";
 import type { Field } from "../common/types/fields";
+import { mapRawInputToTokenBalance } from "../common/utils/token";
 import { logger } from "../logger";
 import type { NodeState } from "./types/state";
-import { RateLimiter } from "limiter";
 
 const publicLimiter = new RateLimiter({
 	tokensPerInterval: 2,
@@ -156,7 +156,6 @@ export default {
 			);
 
 			const { blocks, detail } = result;
-
 			// TODO: fix types (check explorer)
 			return blocks.map((blockGroup) => {
 				if (!blockGroup || !Array.isArray(blockGroup)) {
@@ -175,6 +174,7 @@ export default {
 
 					const { hash, timestamp, chainFrom, chainTo, height, transactions } =
 						block.block as Record<string, unknown>;
+
 					if (!transactions || !Array.isArray(transactions)) {
 						throw new Error(
 							"Invalid BlockFlow.blocksAndEvents.block.transactions",

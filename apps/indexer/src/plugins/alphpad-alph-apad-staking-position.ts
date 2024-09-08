@@ -1,11 +1,12 @@
-import type { Block } from "../services/sdk/types/block";
-import type Database from "../database/schemas/Database";
+import { addressFromContractId } from "@alephium/web3";
 import type { Transaction } from "kysely";
+import { Plugin } from "../common/plugins/abstract";
+import { ALPH_ADDRESS } from "../core/constants";
+import { db } from "../database/db";
+import type Database from "../database/schemas/Database";
 import type { NewPluginBlock } from "../database/schemas/public/PluginBlock";
 import type { NewStakingEvent } from "../database/schemas/public/StakingEvent";
-import { addressFromContractId } from "@alephium/web3";
-import { Plugin } from "../common/plugins/abstract";
-import { db } from "../database/db";
+import type { Block } from "../services/sdk/types/block";
 
 interface PluginData {
 	positions: NewStakingEvent[];
@@ -13,7 +14,7 @@ interface PluginData {
 }
 
 const STAKING_CONTRACT = "yzoCumd4Fpi959NSis9Nnyr28UkgyRYqrKBgYNAuYj3m";
-const REWARD_TOKEN = "27HxXZJBTPjhHXwoF1Ue8sLMcSxYdxefoN2U6d8TKmZsm";
+const REWARD_TOKEN = ALPH_ADDRESS; //"27HxXZJBTPjhHXwoF1Ue8sLMcSxYdxefoN2U6d8TKmZsm";
 const LP_TOKEN = "27HxXZJBTPjhHXwoF1Ue8sLMcSxYdxefoN2U6d8TKmZsm"; //"vFpZ1DF93x1xGHoXM8rsDBFjpcoSsCi5ZEuA5NG5UJGX";
 
 enum StakingEvent {
@@ -100,11 +101,7 @@ export class AlphpadAlphApadStakingPositionPlugin extends Plugin<PluginData> {
 						});
 					}
 
-					if (
-						[StakingEvent.Withdraw, StakingEvent.Unstake].includes(
-							event.eventIndex,
-						)
-					) {
+					if (StakingEvent.Withdraw === event.eventIndex) {
 						transactionWithdraws.push({
 							transaction: transaction.transactionHash,
 							timestamp: new Date(block.timestamp),
@@ -116,6 +113,18 @@ export class AlphpadAlphApadStakingPositionPlugin extends Plugin<PluginData> {
 							action: "withdraw",
 						});
 					}
+					if (StakingEvent.Unstake === event.eventIndex) {
+						transactionWithdraws.push({
+							transaction: transaction.transactionHash,
+							timestamp: new Date(block.timestamp),
+							userAddress: event.fields[0].value as string,
+							accountAddress: accounts.get(event.fields[0].value as string),
+							contractAddress: STAKING_CONTRACT,
+							amount: BigInt(event.fields[1].value) * -1n,
+							tokenAddress: LP_TOKEN,
+							action: "unstake",
+						});
+					}
 
 					if ([StakingEvent.ClaimReward].includes(event.eventIndex)) {
 						transactionHarvests.push({
@@ -124,7 +133,9 @@ export class AlphpadAlphApadStakingPositionPlugin extends Plugin<PluginData> {
 							userAddress: event.fields[0].value as string,
 							accountAddress: accounts.get(event.fields[0].value as string),
 							contractAddress: STAKING_CONTRACT,
-							amount: BigInt(event.fields[1].value),
+							amount:
+								BigInt(event.fields[1].value) -
+								transaction.gasAmount * transaction.gasPrice,
 							tokenAddress: REWARD_TOKEN,
 							action: "harvest",
 						});

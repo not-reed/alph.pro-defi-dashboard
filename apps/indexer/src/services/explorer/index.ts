@@ -10,11 +10,11 @@ import type { ContractEvent } from "../node/types/events";
 
 import type { ExplorerTransaction } from "./types/transactions";
 
-import { mapRawInputToTokenBalance } from "../common/utils/token";
-import { transformField } from "../common/types/fields";
-import { logger } from "../logger";
-import { chunkArray } from "../../utils/arrays";
 import { RateLimiter } from "limiter";
+import { chunkArray } from "../../utils/arrays";
+import { transformField } from "../common/types/fields";
+import { mapRawInputToTokenBalance } from "../common/utils/token";
+import { logger } from "../logger";
 
 const limiter = new RateLimiter({ tokensPerInterval: 30, interval: "second" });
 
@@ -176,6 +176,7 @@ export default {
 			blockHash: BlockHash,
 		): Promise<ExplorerTransaction[]> => {
 			const url = `${config.EXPLORER_URL}/blocks/${blockHash}/transactions`;
+			logger.info(`Fetching Transactions for ${url}`);
 			const transactions = await getPaginatedResults(url);
 
 			return transactions.map((transaction): ExplorerTransaction => {

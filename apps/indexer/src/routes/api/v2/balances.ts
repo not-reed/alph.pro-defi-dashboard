@@ -1,11 +1,11 @@
-import type { Env, Schema } from "hono";
-import { db } from "../../../database/db";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import type { Env, Schema } from "hono";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { db } from "../../../database/db";
 
 import { BalanceSchema } from "../../schemas/balance";
 
-const app = new OpenAPIHono<Env, Schema, "/api/balances">();
+const app = new OpenAPIHono<Env, Schema, "/api/v2/balances">();
 
 app.doc("/docs.json", {
 	info: {
@@ -52,6 +52,7 @@ app.openapi(v2Route, async (c) => {
 	const addresses = address.split(",");
 	const balances = await db
 		.selectNoFrom((eb) => [
+			// Token Balances
 			jsonArrayFrom(
 				eb
 					.selectFrom("Balance")
@@ -110,6 +111,8 @@ app.openapi(v2Route, async (c) => {
 					.where("userAddress", "in", addresses)
 					.where("balance", ">", 0n),
 			).as("tokens"),
+
+			// NFTS
 			jsonArrayFrom(
 				eb
 					.selectFrom("Balance")
@@ -275,6 +278,7 @@ app.openapi(v2Route, async (c) => {
 					.where("balance", ">", 0n),
 			).as("nfts"),
 
+			// Liquidity Pools
 			jsonArrayFrom(
 				eb
 					.selectFrom("Balance")
@@ -401,6 +405,7 @@ app.openapi(v2Route, async (c) => {
 					.where("balance", ">", 0n),
 			).as("pools"),
 
+			// Staking Positions
 			jsonArrayFrom(
 				eb
 					.selectFrom("StakingEvent")
@@ -547,6 +552,11 @@ app.openapi(v2Route, async (c) => {
 							).as("pool"),
 					])
 					.where("userAddress", "in", addresses)
+					.where(
+						"StakingEvent.contractAddress",
+						"<>",
+						"yzoCumd4Fpi959NSis9Nnyr28UkgyRYqrKBgYNAuYj3m",
+					) // temporarily disable alph-pad staking
 					.where((eb) =>
 						eb.or([
 							eb("accountAddress", "is", null), // bread didn't track stake account at first?

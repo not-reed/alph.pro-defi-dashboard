@@ -17,6 +17,8 @@ import { binToHex, contractIdFromAddress } from "@alephium/web3";
 
 import { parseArgs } from "node:util";
 import { updateFiatRates } from "../tasks/fiat";
+import { showRoutes } from "hono/dev";
+import app from "..";
 
 switch (argv._[0]) {
 	case "help":
@@ -52,6 +54,9 @@ Commands:
 				);
 				break;
 		}
+		break;
+	case "routes":
+		showRoutes(app, { verbose: true })
 		break;
 	case "nft":
 		await processCollection(argv._[1] as ContractAddress, Boolean(argv.force));

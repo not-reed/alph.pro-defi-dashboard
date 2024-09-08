@@ -1,6 +1,6 @@
 export const config = {
 	// 'fatal', 'error', 'warn', 'info', 'debug', 'trace' or 'silent'
-	LOG_LEVEL: process.env.LOG_LEVEL || "info",
+	LOG_LEVEL: process.env.LOG_LEVEL || "error",
 
 	// disable indexing, and only serve API
 	INDEXING_DISABLED: process.env.INDEXING_DISABLED === "true",
