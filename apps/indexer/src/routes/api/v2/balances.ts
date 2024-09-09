@@ -552,11 +552,6 @@ app.openapi(v2Route, async (c) => {
 							).as("pool"),
 					])
 					.where("userAddress", "in", addresses)
-					.where(
-						"StakingEvent.contractAddress",
-						"<>",
-						"yzoCumd4Fpi959NSis9Nnyr28UkgyRYqrKBgYNAuYj3m",
-					) // temporarily disable alph-pad staking
 					.where((eb) =>
 						eb.or([
 							eb("accountAddress", "is", null), // bread didn't track stake account at first?

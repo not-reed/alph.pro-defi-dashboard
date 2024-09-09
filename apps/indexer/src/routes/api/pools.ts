@@ -148,37 +148,4 @@ app.openapi(poolsRoute, async (c) => {
 	});
 });
 
-const topPoolsRoute = createRoute({
-	method: "get",
-	tags: ["Pools"],
-	path: "top",
-	request: {},
-	responses: {
-		200: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						pools: z.array(
-							z.object({
-								factory: z.string(),
-								amount0: z.string().nullable(),
-								amount1: z.string().nullable(),
-								totalSupply: z.string().nullable(),
-								pair: TokenSchema,
-								token0: TokenSchema,
-								token1: TokenSchema,
-							}),
-						),
-					}),
-				},
-			},
-			description: "Fetch matching tokens",
-		},
-	},
-});
-
-app.openapi(topPoolsRoute, async (c) => {
-	return [];
-});
-
 export default app;
